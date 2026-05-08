@@ -13,6 +13,9 @@
       "default": "./dist/index.js"
     }
   },
+  "bin": {
+    "cham-epub": "./dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run"

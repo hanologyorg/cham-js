@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'fs'
 import { join, basename } from 'path'
 import { unzipSync } from 'fflate'
 import type {
@@ -537,7 +537,9 @@ export class EpubConverter {
   private extractEpub(epubPath: string): string {
     const data = readFileSync(epubPath)
     const unzipped = unzipSync(new Uint8Array(data))
-    const tmpDir = join(epubPath, '..', '.epub_extracted')
+    const epubBasename = basename(epubPath, '.epub')
+    const tmpDir = join(epubPath, '..', `.epub_extracted_${epubBasename}`)
+    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true })
     mkdirSync(tmpDir, { recursive: true })
 
     for (const [fpath, content] of Object.entries(unzipped)) {
