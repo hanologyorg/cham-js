@@ -1,0 +1,27 @@
+{
+  "name": "@hanology/cham",
+  "version": "0.1.0",
+  "description": "Classical Han Annotated Markdown — parser, serializer, ePub converter, and validator",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "fflate": "^0.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.2",
+    "typescript": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "license": "MIT"
+}
