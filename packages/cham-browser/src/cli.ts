@@ -3,7 +3,6 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSy
 import { join, resolve, dirname, basename } from 'path'
 import { fileURLToPath } from 'url'
 import { parse as parseYaml } from 'yaml'
-import { parseYaml as parseYamlSimple } from '@hanology/cham/yaml'
 import {
   buildPieceFromCham, buildBookData, buildLibraryIndex,
   buildAuthorsJson, buildDynastiesJson,
