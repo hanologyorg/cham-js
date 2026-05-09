@@ -12,7 +12,11 @@ const props = defineProps<{
   style?: Record<string, string>
 }>()
 
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{
+  close: []
+  tooltipEnter: []
+  tooltipLeave: []
+}>()
 const { layout } = useReadingMode()
 const isMobile = computed(() => window.innerWidth < 768)
 
@@ -43,6 +47,8 @@ function onBackdropTouchMove() {
           :style="style"
           @click.stop
           @touchmove.stop
+          @mouseenter="emit('tooltipEnter')"
+          @mouseleave="emit('tooltipLeave')"
         >
           <button v-if="isMobile" class="ann-handle" @click="emit('close')">
             <span class="ann-handle-bar" />

@@ -152,16 +152,33 @@ const proseSections = computed(() => {
   return result
 })
 
+let hideTimer: ReturnType<typeof setTimeout> | null = null
+function cancelHide() {
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
+}
+function scheduleHide(delay = 150) {
+  cancelHide()
+  hideTimer = setTimeout(() => { tooltip.hide(); hideTimer = null }, delay)
+}
+
 function handleAnnotationHover(event: MouseEvent, annotations: Annotation[]) {
+  cancelHide()
   tooltip.show(event, annotations)
 }
 function handleAnnotationLeave() {
-  if (window.innerWidth >= 768) tooltip.hide()
+  if (window.innerWidth >= 768) scheduleHide()
 }
 function handleAnnotationTap(event: MouseEvent, annotations: Annotation[]) {
+  cancelHide()
   tooltip.toggle(event, annotations)
 }
-function dismissTooltip() { tooltip.hide() }
+function handleTooltipEnter() {
+  cancelHide()
+}
+function handleTooltipLeave() {
+  if (window.innerWidth >= 768) scheduleHide()
+}
+function dismissTooltip() { cancelHide(); tooltip.hide() }
 const { getAuthor, loadShared } = useData()
 await loadShared()
 
@@ -321,6 +338,8 @@ function tcy(n: number): string {
         :layer-labels="layerLabels"
         :style="tooltip.style"
         @close="dismissTooltip"
+        @tooltip-enter="handleTooltipEnter"
+        @tooltip-leave="handleTooltipLeave"
       />
 
       <Teleport to="body">
@@ -443,6 +462,8 @@ function tcy(n: number): string {
         :layer-labels="layerLabels"
         :style="tooltip.style"
         @close="dismissTooltip"
+        @tooltip-enter="handleTooltipEnter"
+        @tooltip-leave="handleTooltipLeave"
       />
 
       <Teleport to="body">
