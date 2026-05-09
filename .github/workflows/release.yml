@@ -3,7 +3,8 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'cham/v*'
+      - 'cham-browser/v*'
   workflow_dispatch:
     inputs:
       package:
@@ -13,6 +14,7 @@ on:
         options:
           - cham
           - cham-browser
+          - both
       version:
         description: 'Version to release (e.g. 0.2.1)'
         required: true
@@ -20,10 +22,29 @@ on:
 
 permissions:
   id-token: write
-  contents: write
 
 jobs:
-  publish:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      publish_cham: ${{ steps.detect.outputs.publish_cham }}
+      publish_browser: ${{ steps.detect.outputs.publish_browser }}
+    steps:
+      - id: detect
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pkg="${{ inputs.package }}"
+            echo "publish_cham=$( [[ "$pkg" == "cham" || "$pkg" == "both" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+            echo "publish_browser=$( [[ "$pkg" == "cham-browser" || "$pkg" == "both" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+          else
+            tag="${{ github.ref_name }}"
+            echo "publish_cham=$( [[ "$tag" == cham/* ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+            echo "publish_browser=$( [[ "$tag" == cham-browser/* ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-cham:
+    needs: detect
+    if: needs.detect.outputs.publish_cham == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,35 +56,53 @@ jobs:
       - run: npm run build
       - name: Set version from workflow input
         if: github.event_name == 'workflow_dispatch'
-        working-directory: packages/${{ inputs.package || 'cham' }}
+        working-directory: packages/cham
         run: |
           current=$(node -p "require('./package.json').version")
           if [ "$current" != "${{ inputs.version }}" ]; then
             npm version ${{ inputs.version }} --no-git-tag-version
           fi
-      - name: Publish @hanology/cham
-        if: inputs.package == 'cham' || startsWith(github.ref, 'refs/tags/')
+      - run: npm publish --provenance
         working-directory: packages/cham
-        run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Publish @hanology/cham-browser
-        if: inputs.package == 'cham-browser'
-        working-directory: packages/cham-browser
-        run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  github-release:
-    needs: publish
+  publish-cham-browser:
+    needs: detect
+    if: needs.detect.outputs.publish_browser == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Determine version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - run: npm run build
+      - name: Set version from workflow input
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: packages/cham-browser
+        run: |
+          current=$(node -p "require('./package.json').version")
+          if [ "$current" != "${{ inputs.version }}" ]; then
+            npm version ${{ inputs.version }} --no-git-tag-version
+          fi
+      - run: npm publish --provenance
+        working-directory: packages/cham-browser
+
+  github-release:
+    needs: [publish-cham, publish-cham-browser]
+    permissions:
+      contents: write
+    if: always() && (needs.publish-cham.result == 'success' || needs.publish-cham-browser.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine tag and label
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            pkg="${{ inputs.package }}"
+            label="${pkg#@hanology/}"
+            echo "tag=${label}-${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
