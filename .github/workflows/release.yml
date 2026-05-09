@@ -70,10 +70,13 @@ jobs:
         working-directory: packages/${{ matrix.package }}
 
   github-release:
-    needs: publish
+    needs: [prepare, publish]
     if: always() && needs.publish.result == 'success'
     permissions:
       contents: write
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.prepare.outputs.matrix) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,8 +84,7 @@ jobs:
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            pkg="${{ inputs.package }}"
-            echo "tag=${pkg}-${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=${{ matrix.package }}/v${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
