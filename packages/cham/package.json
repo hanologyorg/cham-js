@@ -22,6 +22,10 @@
       "import": "./dist/types.js",
       "types": "./dist/types.d.ts"
     },
+    "./pipeline": {
+      "import": "./dist/pipeline.js",
+      "types": "./dist/pipeline.d.ts"
+    },
     "./yaml": {
       "import": "./dist/yaml.js",
       "types": "./dist/yaml.d.ts"
