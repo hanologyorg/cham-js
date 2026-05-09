@@ -2,9 +2,11 @@ import type {
   ChamMeta, PrimaryMeta, SecondaryMeta, ChamContributor, ChamDate, PieceSource,
   TextBlock, Marker, MarkerTable,
   AnnotationSection, SectionMeta, AnnotationEntry, AnnotationTarget,
-  ChamDocument,
+  ChamDocument, BookConfig,
 } from './types.js'
 import { parseYaml as parseYamlSimple } from './yaml.js'
+import { readFileSync, readdirSync, existsSync } from 'fs'
+import { join } from 'path'
 
 // ─── Errors ───────────────────────────────────────────────────
 
@@ -366,6 +368,52 @@ export class ChamParser {
     const sections = parseAnnotationSections(annotationBody)
 
     return { meta, textBlocks, markers, sections }
+  }
+
+  parsePiece(pieceDir: string, bookConfig?: BookConfig): ChamDocument {
+    const chamPath = join(pieceDir, 'text.cham.md')
+    if (!existsSync(chamPath)) throw new ChamParseError(`Missing text.cham.md in ${pieceDir}`)
+
+    const primary = this.parse(readFileSync(chamPath, 'utf-8'))
+    if (primary.meta.type !== 'primary') {
+      throw new ChamParseError(`Expected primary frontmatter type in ${chamPath}`)
+    }
+
+    const mergedSections = [...primary.sections]
+
+    for (const f of readdirSync(pieceDir).sort()) {
+      if (!f.endsWith('.cham.md') || f === 'text.cham.md') continue
+      const filePath = join(pieceDir, f)
+      const src = readFileSync(filePath, 'utf-8')
+      const sub = this.parse(src)
+
+      if (sub.meta.type !== 'secondary') continue
+
+      for (const entry of sub.sections.flatMap(s => s.entries)) {
+        if (entry.target.type === 'marker' && !primary.markers.has(entry.target.markerId)) {
+          throw new ChamParseError(
+            `Subordinate ${f} references marker {${entry.target.markerId}} not in primary text`,
+          )
+        }
+      }
+
+      mergedSections.push(...sub.sections)
+    }
+
+    if (bookConfig) {
+      const pm = primary.meta as PrimaryMeta
+      if (!pm.contributors?.length && bookConfig.contributors?.length) {
+        (primary.meta as PrimaryMeta).contributors = bookConfig.contributors
+      }
+      if (!pm.genre && bookConfig.genre) {
+        (primary.meta as PrimaryMeta).genre = bookConfig.genre
+      }
+      if (!pm.date && bookConfig.date) {
+        (primary.meta as PrimaryMeta).date = bookConfig.date
+      }
+    }
+
+    return { ...primary, sections: mergedSections }
   }
 }
 

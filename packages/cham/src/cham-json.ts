@@ -1,11 +1,12 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'fs'
-import { join, basename } from 'path'
+import { join, basename, dirname } from 'path'
 import { parse } from './parser.js'
 import { loadYaml, parseYaml } from './yaml.js'
 import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale, CrossRef,
   OutputPiece, OutputAnnotation, OutputRange, OutputAnnotationLayer, OutputProseSection,
   ChamDocument, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
+  ChamDate,
 } from './types.js'
 
 // ─── Markdown Helpers ─────────────────────────────────────────
@@ -71,10 +72,9 @@ class PieceBuilder {
     }))
     const authorId = contributors[0]?.id || ''
     const authorName = contributors[0]?.name || ''
-    const dynastyName = this.authors[authorId]?.dynasty
-      || pmeta.date?.dynasty
-      || this.bookConfig.date?.dynasty
-      || ''
+
+    const date: ChamDate | undefined = pmeta.date || this.bookConfig.date
+    const dynastyName = this.authors[authorId]?.dynasty || date?.dynasty || ''
 
     const layers = this.loadCommentaryLayers(pieceDir, doc)
     const annotationLayers = this.buildAnnotationLayers(layers)
@@ -437,7 +437,7 @@ export class ChamJsonConverter {
   }
 
   private loadBookConfig(bookDir: string): BookConfig {
-    const raw = loadYaml(join(bookDir, 'book.yaml'))
+    const raw = this.loadMergedBookYaml(bookDir)
     return {
       id: raw.id as string || basename(bookDir),
       title: raw.title as string || '',
@@ -451,6 +451,30 @@ export class ChamJsonConverter {
       layers: raw.layers as BookConfig['layers'],
       annotation: raw.annotation as BookConfig['annotation'],
     }
+  }
+
+  private loadMergedBookYaml(bookDir: string): Record<string, unknown> {
+    const configs: Record<string, unknown>[] = []
+    let dir = bookDir
+
+    while (dir && dir !== '/' && existsSync(dir)) {
+      const yamlPath = join(dir, 'book.yaml')
+      if (existsSync(yamlPath)) {
+        const raw = loadYaml(yamlPath)
+        configs.unshift(raw)
+      }
+      const parent = dirname(dir)
+      if (parent === dir) break
+      dir = parent
+    }
+
+    return configs.reduce<Record<string, unknown>>((merged, cfg) => ({
+      ...merged,
+      ...cfg,
+      ...(cfg.contributors ? { contributors: cfg.contributors } : {}),
+      ...(cfg.date ? { date: { ...(merged.date as Record<string, unknown> || {}), ...cfg.date } } : {}),
+      ...(cfg.layers ? { layers: cfg.layers } : {}),
+    }), {})
   }
 
   private scanBooks(libraryDir: string): { config: BookConfig; dir: string }[] {
