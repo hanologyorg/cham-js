@@ -6,7 +6,7 @@ import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale, CrossRef,
   OutputPiece, OutputAnnotation, OutputRange, OutputAnnotationLayer, OutputProseSection,
   ChamDocument, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
-  ChamDate,
+  ChamDate, AuthorRecord,
 } from './types.js'
 
 // ─── Markdown Helpers ─────────────────────────────────────────
@@ -36,12 +36,6 @@ function splitMdFrontmatter(content: string): {
 }
 
 // ─── PieceBuilder ─────────────────────────────────────────────
-
-export interface AuthorRecord {
-  name: string
-  dynasty: string
-  bio?: string
-}
 
 class PieceBuilder {
   constructor(

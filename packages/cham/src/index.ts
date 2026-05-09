@@ -22,7 +22,7 @@ export type {
 export { isSecondaryMeta } from './types.js'
 
 // Parser & Serializer
-export { ChamParser, parse } from './parser.js'
+export { ChamParser, parse, ChamParseError } from './parser.js'
 export { ChamSerializer, serialize } from './serializer.js'
 
 // Validator
