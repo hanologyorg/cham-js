@@ -15,6 +15,8 @@ export type {
   OutputProseSection, OutputPiece, PieceContributor,
   ValidationSeverity, ValidationIssue, ValidationResult,
   EpubConversionOptions, EpubAnnotation, EpubSection, EpubVolume,
+  AuthorRecord, DynastyRecord, EraRecord, SexagenaryRecord,
+  PlaceRecord, EventRecord, LexiconEntry, ChamRegistries,
 } from './types.js'
 
 export { isSecondaryMeta } from './types.js'
@@ -31,4 +33,12 @@ export { EpubConverter } from './epub.js'
 
 // CHAM-JSON Converter
 export { ChamJsonConverter } from './cham-json.js'
-export type { AuthorRecord, BookConvertOptions, LibraryConvertOptions, LibraryConvertResult } from './cham-json.js'
+export type { BookConvertOptions, LibraryConvertOptions, LibraryConvertResult } from './cham-json.js'
+
+// Registry
+export { RegistryLoader } from './registry.js'
+export type { RegistryLoadOptions } from './registry.js'
+
+// Lexicon
+export { LexiconApplier } from './lexicon.js'
+export type { LexiconOptions } from './lexicon.js'
