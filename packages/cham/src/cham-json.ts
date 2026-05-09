@@ -1,95 +1,12 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'fs'
 import { join, basename } from 'path'
 import { parse } from './parser.js'
+import { loadYaml, parseYaml } from './yaml.js'
 import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale, CrossRef,
   OutputPiece, OutputAnnotation, OutputRange, OutputAnnotationLayer, OutputProseSection,
   ChamDocument, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
 } from './types.js'
-
-// ─── YAML Parsing ─────────────────────────────────────────────
-
-function loadYaml(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {}
-  const src = readFileSync(path, 'utf-8')
-  return parseSimpleYaml(src)
-}
-
-function parseSimpleYaml(text: string): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-  const lines = text.split('\n')
-  let currentKey = ''
-  let currentObj: Record<string, unknown> | null = null
-  let arrayKey = ''
-  let arrayItems: unknown[] = []
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const indent = line.length - line.trimStart().length
-
-    if (indent === 0) {
-      if (arrayKey) {
-        result[arrayKey] = arrayItems
-        arrayKey = ''
-        arrayItems = []
-      }
-      currentObj = null
-      const ci = trimmed.indexOf(':')
-      if (ci === -1) continue
-      const key = trimmed.slice(0, ci).trim()
-      const val = trimmed.slice(ci + 1).trim()
-
-      if (val === '') {
-        if (key === 'contributors' || key === 'layers' || key === 'volumes' || key === 'hero') {
-          arrayKey = key
-          arrayItems = []
-        } else {
-          result[key] = {}
-          currentKey = key
-          currentObj = result[key] as Record<string, unknown>
-        }
-      } else {
-        result[key] = parseYamlValue(val)
-      }
-    } else if (arrayKey && trimmed.startsWith('- ')) {
-      const val = trimmed.slice(2).trim()
-      if (val.includes(':')) {
-        const obj: Record<string, unknown> = {}
-        const ci = val.indexOf(':')
-        obj[val.slice(0, ci).trim()] = parseYamlValue(val.slice(ci + 1).trim())
-        arrayItems.push(obj)
-        currentObj = obj
-      } else {
-        arrayItems.push(parseYamlValue(val))
-        currentObj = null
-      }
-    } else if (currentObj && trimmed.includes(':') && !trimmed.startsWith('-')) {
-      const ci = trimmed.indexOf(':')
-      currentObj[trimmed.slice(0, ci).trim()] = parseYamlValue(trimmed.slice(ci + 1).trim())
-    } else if (currentKey && result[currentKey] && typeof result[currentKey] === 'object') {
-      const ci = trimmed.indexOf(':')
-      if (ci !== -1) {
-        ;(result[currentKey] as Record<string, unknown>)[trimmed.slice(0, ci).trim()] =
-          parseYamlValue(trimmed.slice(ci + 1).trim())
-      }
-    }
-  }
-
-  if (arrayKey) result[arrayKey] = arrayItems
-  return result
-}
-
-function parseYamlValue(val: string): unknown {
-  if (val === 'true') return true
-  if (val === 'false') return false
-  if (val === 'null' || val === '~') return null
-  if (/^-?\d+$/.test(val)) return parseInt(val, 10)
-  if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val)
-  if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'")))
-    return val.slice(1, -1)
-  return val
-}
 
 // ─── Markdown Helpers ─────────────────────────────────────────
 
@@ -109,7 +26,7 @@ function splitMdFrontmatter(content: string): {
   const end = trimmed.indexOf('\n---', 3)
   if (end === -1) return { frontmatter: null, body: trimmed }
   try {
-    const fm = parseSimpleYaml(trimmed.slice(3, end))
+    const fm = parseYaml(trimmed.slice(3, end))
     const body = trimmed.slice(end + 4)
     return { frontmatter: fm, body: body.startsWith('\n') ? body.slice(1) : body }
   } catch {

@@ -4,64 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-`@hanology/cham` is a TypeScript library implementing the CHAM (Classical Han with Annotations Markup) format — a structured markup format for classical Chinese texts. It provides a parser, serializer, validator, ePub-to-CHAM converter, and a CHAM-to-JSON pipeline.
+This is a monorepo for the CHAM (Classical Han with Annotations Markup) toolchain. CHAM is a structured markup format for classical Chinese texts.
+
+```
+packages/
+  cham/            → @hanology/cham (core: parser, serializer, validator, converters, CLI)
+  cham-browser/    → @hanology/cham-browser (browser re-export of parser + serializer only)
+```
 
 The CHAM spec lives at https://github.com/hanology/cham-format.
 
 ## Build & test commands
 
 ```bash
-npm run build    # tsc → dist/
-npm test         # vitest run
+npm run build      # build all workspaces
+npm test           # vitest run in packages/cham (currently no test files)
+npm run clean      # rm dist/ and node_modules/ from all packages
 ```
 
-There are no test files yet. The CI workflow also references `npm run lint` and `npm run test:coverage`, but these scripts don't exist in package.json yet.
+To build/test a single workspace:
+```bash
+npm run build --workspace=packages/cham
+npm run test --workspace=packages/cham
+```
 
-No linting is configured. When adding it, update both package.json scripts and the CI workflow.
+The CI workflow also references `npm run lint` but no linting is configured yet.
 
 ## Architecture
 
-All source is in `src/`. The module is ESM-only (`"type": "module"`), targets ES2022, and uses `NodeNext` module resolution (import paths must include `.js` extension).
+All core source is in `packages/cham/src/`. The module is ESM-only, targets ES2022, and uses `NodeNext` module resolution (import paths must include `.js` extension).
 
 ### Core pipeline
 
 ```
-src/parser.ts      → ChamParser: .cham.md source string → ChamDocument
-src/serializer.ts  → ChamSerializer: ChamDocument → .cham.md source string
-src/validator.ts   → ChamValidator: validates book directories and single files
-src/cham-json.ts   → ChamJsonConverter: book/library directories → JSON output (BookData, LibraryIndex)
-src/epub.ts        → EpubConverter: ePub files → CHAM book directories
-src/types.ts       → All type definitions (ChamDocument, AnnotationEntry, Marker, etc.)
-src/index.ts       → Public API re-exports
-src/cli.ts         → CLI entry point (cham-epub command)
+packages/cham/src/
+  yaml.ts          → Shared minimal YAML parser (parseYaml, loadYaml)
+  parser.ts        → ChamParser: .cham.md source string → ChamDocument
+  serializer.ts    → ChamSerializer: ChamDocument → .cham.md source string
+  validator.ts     → ChamValidator: validates book directories and single files
+  cham-json.ts     → ChamJsonConverter: book/library directories → JSON output
+  epub.ts          → EpubConverter: ePub files → CHAM book directories
+  types.ts         → All type definitions
+  index.ts         → Public API re-exports
+  cli.ts           → CLI entry point (cham-epub command)
 ```
 
 ### Key data model
 
-- **ChamDocument**: the central type — contains `meta` (frontmatter), `textBlocks`, `markers` (Map<number, Marker>), and `sections` (annotation sections).
-- **ChamMeta** is a discriminated union: `PrimaryMeta` (main file, no `base` field) vs `SecondaryMeta` (subordinate file, has `base` field).
-- **Markers** (`{N}`...`{/N}`) are zero-width, support overlapping and enclosed ranges. The parser strips them to produce clean text and builds a marker table mapping IDs to offsets.
-- **Annotation entries** target markers (`{N}`), `@title`, `@full`, or `@verse:L:C`, with a `kind` (pron, meaning, person, etc.) and bracket-enclosed values.
+- **ChamDocument**: central type — `meta` (frontmatter), `textBlocks`, `markers` (Map<number, Marker>), `sections` (annotation sections).
+- **ChamMeta** is a discriminated union: `PrimaryMeta` (main file) vs `SecondaryMeta` (subordinate file with `base` field).
+- **Markers** (`{N}`...`{/N}`) are zero-width, support overlapping and enclosed ranges. Parser strips them to produce clean text and builds a marker table mapping IDs to offsets.
+- **Annotation entries** target markers, `@title`, `@full`, or `@verse:L:C`, with a `kind` and bracket-enclosed values.
 
 ### YAML parsing
 
-Both `parser.ts` and `cham-json.ts` contain their own minimal YAML parsers (`parseYamlSimple` / `parseSimpleYaml`). There is no YAML library dependency — the format is restricted enough that hand-rolled parsing suffices. The validator in `validator.ts` also has its own copy.
+`yaml.ts` exports `parseYaml()` and `loadYaml()` — used by parser.ts, cham-json.ts, and validator.ts. No external YAML dependency.
 
 ### ePub converter
 
-The ePub converter (`src/epub.ts`) is specifically designed for Siku Quanshu (四庫全書) ePub files. It extracts XHTML content, detects inline `<small>` tags as annotations, and produces CHAM book directories with both primary text and commentary layers.
+Specifically designed for Siku Quanshu (四庫全書) ePub files. Extracts XHTML, detects `<small>` tags as annotations, produces CHAM directories.
 
-## CLI
+### Browser package
 
-Installed as `cham-epub`. Converts ePub files to CHAM book directories:
+`cham-browser` re-exports only parser + serializer (no Node.js deps like `fs`, `fflate`).
 
-```
-cham-epub <epub-path> [output-dir] [options]
-```
+## Known gaps against spec
 
-Supports auto-derivation of id/title from filenames matching the `標題_(四庫全書本).epub` pattern.
+See `TODO.features/` for tracked improvement items including registry loading, global lexicon, multi-file merge, and validator enhancements.
 
 ## Dependencies
 
-- `fflate` — used only by the ePub converter for ZIP extraction
+- `fflate` — used only by the ePub converter for ZIP extraction (packages/cham only)
 - Dev: `typescript`, `vitest`, `@types/node`

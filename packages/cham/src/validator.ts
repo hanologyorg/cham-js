@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, basename } from 'path'
 import { parse } from './parser.js'
+import { parseYaml } from './yaml.js'
 import type {
   ChamDocument, ValidationIssue, ValidationResult,
   BookConfig, BookLayer,
@@ -290,7 +291,7 @@ export class ChamValidator {
 
     const src = readFileSync(path, 'utf-8')
     try {
-      return this.parseSimpleYaml(src) as unknown as BookConfig
+      return parseYaml(src) as unknown as BookConfig
     } catch (e) {
       this.error(path, undefined, `Invalid YAML: ${(e as Error).message}`)
       return null
@@ -306,84 +307,6 @@ export class ChamValidator {
       }
     }
     return dirs
-  }
-
-  private parseSimpleYaml(text: string): Record<string, unknown> {
-    const result: Record<string, unknown> = {}
-    const lines = text.split('\n')
-    let currentKey = ''
-    let currentObj: Record<string, unknown> | null = null
-    let arrayKey = ''
-    let arrayItems: unknown[] = []
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('#')) continue
-
-      const indent = line.length - line.trimStart().length
-
-      if (indent === 0) {
-        if (arrayKey) {
-          result[arrayKey] = arrayItems
-          arrayKey = ''
-          arrayItems = []
-        }
-        currentObj = null
-
-        const ci = trimmed.indexOf(':')
-        if (ci === -1) continue
-        const key = trimmed.slice(0, ci).trim()
-        const val = trimmed.slice(ci + 1).trim()
-
-        if (val === '') {
-          if (key === 'contributors' || key === 'layers' || key === 'volumes') {
-            arrayKey = key
-            arrayItems = []
-          } else {
-            result[key] = {}
-            currentKey = key
-            currentObj = result[key] as Record<string, unknown>
-          }
-        } else {
-          result[key] = this.parseYamlValue(val)
-        }
-      } else if (arrayKey && trimmed.startsWith('- ')) {
-        const val = trimmed.slice(2).trim()
-        if (val.includes(':')) {
-          const obj: Record<string, unknown> = {}
-          const ci = val.indexOf(':')
-          obj[val.slice(0, ci).trim()] = this.parseYamlValue(val.slice(ci + 1).trim())
-          arrayItems.push(obj)
-          currentObj = obj
-        } else {
-          arrayItems.push(this.parseYamlValue(val))
-          currentObj = null
-        }
-      } else if (currentObj && trimmed.includes(':') && !trimmed.startsWith('-')) {
-        const ci = trimmed.indexOf(':')
-        currentObj[trimmed.slice(0, ci).trim()] = this.parseYamlValue(trimmed.slice(ci + 1).trim())
-      } else if (currentKey && result[currentKey] && typeof result[currentKey] === 'object') {
-        const ci = trimmed.indexOf(':')
-        if (ci !== -1) {
-          ;(result[currentKey] as Record<string, unknown>)[trimmed.slice(0, ci).trim()] =
-            this.parseYamlValue(trimmed.slice(ci + 1).trim())
-        }
-      }
-    }
-
-    if (arrayKey) result[arrayKey] = arrayItems
-    return result
-  }
-
-  private parseYamlValue(val: string): unknown {
-    if (val === 'true') return true
-    if (val === 'false') return false
-    if (val === 'null' || val === '~') return null
-    if (/^-?\d+$/.test(val)) return parseInt(val, 10)
-    if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val)
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'")))
-      return val.slice(1, -1)
-    return val
   }
 
   private error(file: string | undefined, line: number | undefined, message: string): void {
