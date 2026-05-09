@@ -3,13 +3,10 @@ import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale, CrossRef,
   OutputPiece, OutputAnnotation, OutputRange, OutputAnnotationLayer, OutputProseSection,
   ChamDocument, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
+  AuthorRecord,
 } from '@hanology/cham/types'
 
-export interface AuthorRecord {
-  name: string
-  dynasty: string
-  bio?: string
-}
+export type { AuthorRecord } from '@hanology/cham/types'
 
 // ─── Markdown Helpers ─────────────────────────────────────────
 
