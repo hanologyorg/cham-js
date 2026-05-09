@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables/useReadingMode'
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
+import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
 
 defineProps<{
   context?: string
@@ -16,6 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const { theme, layout, mainFontSize, bodyFontSize, setTheme, setLayout, setMainFontSize, setBodyFontSize } = useReadingMode()
+const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
 const settingsOpen = ref(false)
 
 function toggleSettings() { settingsOpen.value = !settingsOpen.value }
@@ -56,14 +58,14 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
     <Transition name="slide-left">
       <div v-if="settingsOpen" class="sn-settings" @click.stop>
         <div class="ss-group">
-          <div class="ss-label">版面</div>
+          <div class="ss-label">{{ t('settings.layout') }}</div>
           <div class="ss-options">
-            <button class="ss-opt" :class="{ active: layout === 'horizontal' }" @click="setLayout('horizontal' as LayoutMode)">橫排</button>
-            <button class="ss-opt" :class="{ active: layout === 'vertical' }" @click="setLayout('vertical' as LayoutMode)">直排</button>
+            <button class="ss-opt" :class="{ active: layout === 'horizontal' }" @click="setLayout('horizontal' as LayoutMode)">{{ t('settings.horizontal') }}</button>
+            <button class="ss-opt" :class="{ active: layout === 'vertical' }" @click="setLayout('vertical' as LayoutMode)">{{ t('settings.vertical') }}</button>
           </div>
         </div>
         <div class="ss-group">
-          <div class="ss-label">主題</div>
+          <div class="ss-label">{{ t('settings.theme') }}</div>
           <div class="ss-options">
             <button
               v-for="t in THEMES"
@@ -75,7 +77,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
           </div>
         </div>
         <div class="ss-group">
-          <div class="ss-label">正文字號</div>
+          <div class="ss-label">{{ t('settings.mainFontSize') }}</div>
           <div class="ss-size-row">
             <button class="ss-size-btn" @click="setMainFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(mainFontSize) - 1)] as FontSize)">−</button>
             <span class="ss-size-val">{{ mainFontSize }}</span>
@@ -83,11 +85,23 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
           </div>
         </div>
         <div class="ss-group">
-          <div class="ss-label">內文字號</div>
+          <div class="ss-label">{{ t('settings.bodyFontSize') }}</div>
           <div class="ss-size-row">
             <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(bodyFontSize) - 1)] as FontSize)">−</button>
             <span class="ss-size-val">{{ bodyFontSize }}</span>
             <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(bodyFontSize) + 1)] as FontSize)">+</button>
+          </div>
+        </div>
+        <div class="ss-group">
+          <div class="ss-label">{{ t('settings.language') }}</div>
+          <div class="ss-options">
+            <button
+              v-for="loc in availableLocales"
+              :key="loc"
+              class="ss-opt"
+              :class="{ active: locale === loc }"
+              @click="setLocale(loc as Locale)"
+            >{{ localeLabels[loc] }}</button>
           </div>
         </div>
       </div>
