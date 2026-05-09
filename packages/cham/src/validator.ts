@@ -8,12 +8,6 @@ import type {
   BookConfig, BookLayer, ChamRegistries,
 } from './types.js'
 
-const KNOWN_KINDS = new Set([
-  'pron', 'meaning', 'person', 'place', 'event',
-  'date', 'allusion', 'commentary', 'translation',
-  'collation', 'fanqie', 'variant',
-])
-
 const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = {
   pron: { required: ['type', 'lang'], optional: [] },
   meaning: { required: [], optional: ['lang'] },
@@ -29,11 +23,15 @@ const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = 
   variant: { required: [], optional: ['skqs'] },
 }
 
+const KNOWN_KINDS = new Set(Object.keys(KIND_PARAMS))
+
 export class ChamValidator {
   private issues: ValidationIssue[] = []
+  private lastParsedDocs: Array<{ filePath: string; doc: ChamDocument }> = []
 
   validateBook(bookDir: string): ValidationResult {
     this.issues = []
+    this.lastParsedDocs = []
 
     const bookYaml = this.loadBookYaml(bookDir)
     if (!bookYaml) {
@@ -75,7 +73,7 @@ export class ChamValidator {
     if (!result.valid) return result
 
     const registries = new RegistryLoader().loadAll(dataDir)
-    this.validateRegistryRefs(bookDir, registries)
+    this.validateRegistryRefs(this.lastParsedDocs, registries)
 
     result.valid = !this.issues.some(i => i.severity === 'error')
     result.issues = this.issues
@@ -198,6 +196,7 @@ export class ChamValidator {
       }
       this.validateFrontmatter(doc, chamPath)
       this.validateMarkerInterleaving(doc, chamPath)
+      this.lastParsedDocs.push({ filePath: chamPath, doc })
       return doc
     } catch (e) {
       this.error(chamPath, undefined, `Parse error: ${(e as Error).message}`)
@@ -237,6 +236,8 @@ export class ChamValidator {
           this.error(filePath, undefined, 'Subordinate file must not contain inline markers')
         }
 
+        this.lastParsedDocs.push({ filePath, doc })
+
         if (doc.meta.base !== 'text.cham.md') {
           this.warning(filePath, undefined, `Unexpected base reference: "${doc.meta.base}"`)
         }
@@ -260,31 +261,6 @@ export class ChamValidator {
   // ─── Marker Integrity ─────────────────────────────────────
 
   private validateMarkerIntegrity(doc: ChamDocument, context: string): void {
-    const textSource = doc.textBlocks.map(b => b.source).join('\n\n')
-    const openMarkers = new Set<number>()
-    const closeMarkers = new Set<number>()
-
-    for (const m of doc.markers.values()) {
-      openMarkers.add(m.id)
-      closeMarkers.add(m.id)
-    }
-
-    // Check for unclosed markers in source
-    const opens = [...textSource.matchAll(/\{(\d+)\}/g)].map(m => parseInt(m[1]))
-    const closes = [...textSource.matchAll(/\{\/(\d+)\}/g)].map(m => parseInt(m[1]))
-
-    for (const id of opens) {
-      if (!closes.includes(id)) {
-        this.error(context, undefined, `Unclosed marker {${id}}`)
-      }
-    }
-    for (const id of closes) {
-      if (!opens.includes(id)) {
-        this.error(context, undefined, `Orphan close marker {/${id}}`)
-      }
-    }
-
-    // Check marker text matches
     for (const [id, marker] of doc.markers) {
       if (marker.length > 0 && marker.text) {
         const block = doc.textBlocks[marker.blockIndex]
@@ -309,10 +285,6 @@ export class ChamValidator {
             this.error(context, undefined,
               `Annotation references missing marker {${entry.target.markerId}}`)
           }
-        }
-
-        if (!KNOWN_KINDS.has(entry.kind) && !entry.kind.includes(':')) {
-          this.warning(context, undefined, `Unknown annotation kind: "${entry.kind}"`)
         }
       }
     }
@@ -432,33 +404,24 @@ export class ChamValidator {
 
   // ─── Registry Ref Validation ────────────────────────────────
 
-  private validateRegistryRefs(bookDir: string, registries: ChamRegistries): void {
-    const pieceDirs = this.scanPieceDirs(bookDir)
-    for (const dir of pieceDirs) {
-      const files = readdirSync(dir)
-      for (const f of files) {
-        if (!f.endsWith('.cham.md')) continue
-        const filePath = join(dir, f)
-        const src = readFileSync(filePath, 'utf-8')
-        try {
-          const doc = parse(src)
-          for (const section of doc.sections) {
-            for (const entry of section.entries) {
-              const ref = entry.params.ref
-              if (!ref) continue
-              if (entry.kind === 'person' && registries.authors && !(ref in registries.authors)) {
-                this.warning(filePath, undefined, `Author ref "${ref}" not found in authors registry`)
-              }
-              if (entry.kind === 'place' && registries.places && !(ref in registries.places)) {
-                this.warning(filePath, undefined, `Place ref "${ref}" not found in places registry`)
-              }
-              if (entry.kind === 'event' && registries.events && !(ref in registries.events)) {
-                this.warning(filePath, undefined, `Event ref "${ref}" not found in events registry`)
-              }
-            }
+  private validateRegistryRefs(
+    docs: Array<{ filePath: string; doc: ChamDocument }>,
+    registries: ChamRegistries,
+  ): void {
+    for (const { filePath, doc } of docs) {
+      for (const section of doc.sections) {
+        for (const entry of section.entries) {
+          const ref = entry.params.ref
+          if (!ref) continue
+          if (entry.kind === 'person' && registries.authors && !(ref in registries.authors)) {
+            this.warning(filePath, undefined, `Author ref "${ref}" not found in authors registry`)
           }
-        } catch {
-          // Already caught in validateBook
+          if (entry.kind === 'place' && registries.places && !(ref in registries.places)) {
+            this.warning(filePath, undefined, `Place ref "${ref}" not found in places registry`)
+          }
+          if (entry.kind === 'event' && registries.events && !(ref in registries.events)) {
+            this.warning(filePath, undefined, `Event ref "${ref}" not found in events registry`)
+          }
         }
       }
     }
