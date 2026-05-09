@@ -24,27 +24,31 @@ permissions:
   id-token: write
 
 jobs:
-  detect:
+  prepare:
     runs-on: ubuntu-latest
     outputs:
-      publish_cham: ${{ steps.detect.outputs.publish_cham }}
-      publish_browser: ${{ steps.detect.outputs.publish_browser }}
+      matrix: ${{ steps.set.outputs.matrix }}
     steps:
-      - id: detect
+      - id: set
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             pkg="${{ inputs.package }}"
-            echo "publish_cham=$( [[ "$pkg" == "cham" || "$pkg" == "both" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-            echo "publish_browser=$( [[ "$pkg" == "cham-browser" || "$pkg" == "both" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+            if [ "$pkg" = "both" ]; then
+              echo 'matrix=["cham","cham-browser"]' >> "$GITHUB_OUTPUT"
+            else
+              echo "matrix=[\"$pkg\"]" >> "$GITHUB_OUTPUT"
+            fi
           else
-            tag="${{ github.ref_name }}"
-            echo "publish_cham=$( [[ "$tag" == cham/* ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
-            echo "publish_browser=$( [[ "$tag" == cham-browser/* ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+            pkg="${{ github.ref_name }}"
+            pkg="${pkg%%/*}"
+            echo "matrix=[\"$pkg\"]" >> "$GITHUB_OUTPUT"
           fi
 
-  publish-cham:
-    needs: detect
-    if: needs.detect.outputs.publish_cham == 'true'
+  publish:
+    needs: prepare
+    strategy:
+      matrix:
+        package: ${{ fromJson(needs.prepare.outputs.matrix) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,55 +58,31 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run build
-      - name: Set version from workflow input
+      - name: Set version
         if: github.event_name == 'workflow_dispatch'
-        working-directory: packages/cham
+        working-directory: packages/${{ matrix.package }}
         run: |
           current=$(node -p "require('./package.json').version")
           if [ "$current" != "${{ inputs.version }}" ]; then
             npm version ${{ inputs.version }} --no-git-tag-version
           fi
       - run: npm publish --provenance
-        working-directory: packages/cham
-
-  publish-cham-browser:
-    needs: detect
-    if: needs.detect.outputs.publish_browser == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm ci
-      - run: npm run build
-      - name: Set version from workflow input
-        if: github.event_name == 'workflow_dispatch'
-        working-directory: packages/cham-browser
-        run: |
-          current=$(node -p "require('./package.json').version")
-          if [ "$current" != "${{ inputs.version }}" ]; then
-            npm version ${{ inputs.version }} --no-git-tag-version
-          fi
-      - run: npm publish --provenance
-        working-directory: packages/cham-browser
+        working-directory: packages/${{ matrix.package }}
 
   github-release:
-    needs: [publish-cham, publish-cham-browser]
+    needs: publish
+    if: always() && needs.publish.result == 'success'
     permissions:
       contents: write
-    if: always() && (needs.publish-cham.result == 'success' || needs.publish-cham-browser.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Determine tag and label
+      - name: Determine tag
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             pkg="${{ inputs.package }}"
-            label="${pkg#@hanology/}"
-            echo "tag=${label}-${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "tag=${pkg}-${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
