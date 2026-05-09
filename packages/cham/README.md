@@ -21,13 +21,35 @@ const doc = parse(chamSource)
 const roundTripped = serialize(doc)
 ```
 
-### Sub-path Exports
+### Multi-file Merge
+
+Parse an entire piece directory (primary + subordinate `.cham.md` files):
 
 ```typescript
-import { parse } from '@hanology/cham/parser'
-import { serialize } from '@hanology/cham/serializer'
-import type { ChamDocument, PrimaryMeta } from '@hanology/cham/types'
-import { parseYaml } from '@hanology/cham/yaml'
+import { ChamParser } from '@hanology/cham'
+
+const parser = new ChamParser()
+const merged = parser.parsePiece('./content/poem-001', bookConfig)
+```
+
+### Validator
+
+Validate a single file or an entire book directory:
+
+```typescript
+import { ChamValidator } from '@hanology/cham'
+
+const validator = new ChamValidator()
+const result = validator.validateBook('./content/my-book')
+if (!result.valid) {
+  for (const issue of result.issues) console.log(`${issue.severity}: ${issue.message}`)
+}
+```
+
+With registry cross-reference validation:
+
+```typescript
+const result = validator.validateBookWithRegistries('./content/my-book', './data')
 ```
 
 ### ChamJsonConverter
@@ -45,7 +67,30 @@ const { library, allPieces } = converter.convertLibrary({
 })
 ```
 
+### Registry & Lexicon
+
+Load CHAM registry data (authors, dynasties, places, events, etc.) and apply lexicon-based pronunciation annotations:
+
+```typescript
+import { RegistryLoader, LexiconApplier } from '@hanology/cham'
+
+const registries = new RegistryLoader().loadAll('./data')
+const applier = new LexiconApplier({ entries: registries.lexicon, defaultLang: 'yue' })
+const autoAnnotations = applier.apply(doc, existingAnnotations)
+```
+
+### Sub-path Exports
+
+```typescript
+import { parse } from '@hanology/cham/parser'
+import { serialize } from '@hanology/cham/serializer'
+import type { ChamDocument, PrimaryMeta } from '@hanology/cham/types'
+import { parseYaml } from '@hanology/cham/yaml'
+```
+
 ### ePub Converter
+
+Convert Wikisource Siku Quanshu ePub files to CHAM format:
 
 ```bash
 npx cham-epub 帝學_\(四庫全書本\).epub --id skqs-dixue --title 帝學
