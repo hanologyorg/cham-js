@@ -1,0 +1,27 @@
+{
+  "name": "@hanology/cham-browser",
+  "version": "0.1.0",
+  "description": "CHAM — browser-compatible parser and serializer for Classical Han Annotated Markdown",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@hanology/cham": "*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
