@@ -105,6 +105,10 @@ function onTap(event: MouseEvent) {
   text-align: end;
   letter-spacing: 0;
 }
+:deep(.ann-num-long) {
+  font-size: 0.38em;
+  letter-spacing: -1px;
+}
 :deep(.ann-target:hover) {
   background: rgba(194, 58, 43, 0.08);
 }

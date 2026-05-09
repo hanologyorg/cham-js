@@ -27,17 +27,22 @@ function layerLabel(ann: Annotation): string {
   }
   return ''
 }
+
+function onBackdropTouchMove() {
+  emit('close')
+}
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="ann-fade">
-      <div v-if="visible && annotations.length" class="ann-backdrop" @click="emit('close')">
+      <div v-if="visible && annotations.length" class="ann-backdrop" @click="emit('close')" @touchmove="onBackdropTouchMove">
         <div
           class="ann-tooltip"
           :class="{ 'ann-vertical': layout === 'vertical', 'ann-mobile-bottom': isMobile }"
           :style="style"
           @click.stop
+          @touchmove.stop
         >
           <button v-if="isMobile" class="ann-handle" @click="emit('close')">
             <span class="ann-handle-bar" />
@@ -48,12 +53,10 @@ function layerLabel(ann: Annotation): string {
             class="ann-entry"
             :class="ann.kind"
           >
-            <div class="ann-header">
-              <span class="ann-kind">{{ ann.kind === 'pronunciation' ? '音' : '義' }}</span>
-              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
-            </div>
+            <span class="ann-kind">{{ ann.kind === 'pronunciation' ? '音' : '義' }}</span>
+            <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
-            <div v-else class="ann-body">{{ ann.text }}</div>
+            <span v-else class="ann-body">{{ ann.text }}</span>
           </div>
         </div>
       </div>
@@ -135,7 +138,6 @@ function layerLabel(ann: Annotation): string {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 2px;
 }
 .ann-layer {
   font-size: 11px;
@@ -153,7 +155,6 @@ function layerLabel(ann: Annotation): string {
 }
 
 .ann-body {
-  margin-top: 4px;
   line-height: 1.8;
 }
 
@@ -168,6 +169,7 @@ function layerLabel(ann: Annotation): string {
 .ann-vertical .ann-entry {
   margin-bottom: 0;
   margin-left: 12px;
+  display: inline;
 }
 .ann-vertical .ann-kind {
   margin-right: 0;
@@ -175,7 +177,6 @@ function layerLabel(ann: Annotation): string {
   vertical-align: baseline;
 }
 .ann-vertical .ann-body {
-  margin-top: 0;
   margin-left: 6px;
 }
 

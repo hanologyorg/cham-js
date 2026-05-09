@@ -56,7 +56,8 @@ export function renderAnnotatedText(text: string, spans: AnnSpan[], useRuby = fa
     const numText = toChineseNumber(annCounter)
     const body = esc(text.slice(span.start, span.end))
     if (useRuby) {
-      html += `<ruby class="ann-target ${kinds}" data-ann-ids="${ids}">${body}<rp></rp><rt class="ann-num">${numText}</rt><rp></rp></ruby>`
+      const rtCls = numText.length > 1 ? 'ann-num ann-num-long' : 'ann-num'
+      html += `<ruby class="ann-target ${kinds}" data-ann-ids="${ids}">${body}<rp></rp><rt class="${rtCls}">${numText}</rt><rp></rp></ruby>`
     } else {
       html += `<span class="ann-target ${kinds}" data-ann-ids="${ids}">${body}<sup class="ann-num">${numText}</sup></span>`
     }
@@ -151,7 +152,18 @@ export function useAnnotationTooltip() {
 
   function hide() { visible.value = false }
   function toggle(event: MouseEvent, annotations: Annotation[]) {
-    if (visible.value) { hide() } else { show(event, annotations) }
+    if (visible.value) {
+      const currentIds = items.value.map(a => a.id).sort().join(',')
+      const newIds = annotations.map(a => a.id).sort().join(',')
+      if (currentIds === newIds) {
+        // Same annotation: dismiss on mobile only (desktop uses hover to manage)
+        if (window.innerWidth < 768) hide()
+      } else {
+        show(event, annotations)
+      }
+    } else {
+      show(event, annotations)
+    }
   }
 
   return { visible, items, style, show, hide, toggle }

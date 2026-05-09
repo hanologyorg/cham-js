@@ -259,32 +259,33 @@ function tcy(n: number): string {
           />
         </section>
 
-        <SectionBlock
-          num=""
-          label="注釋"
-          :special="false"
-          :text="piece.sections.annotations || ''"
-          :is-annotations="true"
-          :vertical="true"
-          class="v-section"
-        />
-
-        <div v-if="hasLayers" class="v-layers-section">
-          <AnnotationLayerSelector
-            :layers="annotationLayers"
-            v-model:activeIds="activeLayerIds"
-          />
+        <div class="v-section">
           <SectionBlock
-            v-for="block in layerAnnotationBlocks"
-            :key="block.label"
             num=""
-            :label="block.label"
+            label="注釋"
             :special="false"
-            :text="block.text"
+            :text="piece.sections.annotations || ''"
             :is-annotations="true"
             :vertical="true"
-            class="v-section"
           />
+          <template v-if="hasLayers">
+            <div class="v-layers-inline">
+              <AnnotationLayerSelector
+                :layers="annotationLayers"
+                v-model:activeIds="activeLayerIds"
+              />
+            </div>
+            <SectionBlock
+              v-for="block in layerAnnotationBlocks"
+              :key="block.label"
+              num=""
+              :label="block.label"
+              :special="false"
+              :text="block.text"
+              :is-annotations="true"
+              :vertical="true"
+            />
+          </template>
         </div>
 
         <SectionBlock
@@ -382,20 +383,32 @@ function tcy(n: number): string {
           </div>
 
           <div class="h-sections">
-            <div v-if="hasLayers" class="h-layers-section">
-              <AnnotationLayerSelector
-                :layers="annotationLayers"
-                v-model:activeIds="activeLayerIds"
-              />
+            <div v-if="piece.sections.annotations || hasLayers" class="h-ann-section">
               <SectionBlock
-                v-for="block in layerAnnotationBlocks"
-                :key="block.label"
+                v-if="piece.sections.annotations"
                 num=""
-                :label="block.label"
+                label="注釋"
                 :special="false"
-                :text="block.text"
+                :text="piece.sections.annotations"
                 :is-annotations="true"
               />
+              <template v-if="hasLayers">
+                <div class="h-layers-inline">
+                  <AnnotationLayerSelector
+                    :layers="annotationLayers"
+                    v-model:activeIds="activeLayerIds"
+                  />
+                </div>
+                <SectionBlock
+                  v-for="block in layerAnnotationBlocks"
+                  :key="block.label"
+                  num=""
+                  :label="block.label"
+                  :special="false"
+                  :text="block.text"
+                  :is-annotations="true"
+                />
+              </template>
             </div>
 
             <SectionBlock
@@ -532,15 +545,11 @@ function tcy(n: number): string {
   flex-shrink: 0;
 }
 
-.v-layers-section {
-  flex-shrink: 0;
+.v-layers-inline {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  padding: 0 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--border-light);
 }
 
 .v-source-link {
@@ -649,12 +658,13 @@ function tcy(n: number): string {
   margin: 0 auto; padding-bottom: 80px;
 }
 
-.h-layers-section {
+.h-ann-section {
   margin-bottom: 16px;
-  padding: 16px;
-  background: var(--surface);
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
+}
+
+.h-layers-inline {
+  padding: 12px 0;
+  margin-bottom: 8px;
 }
 
 .h-source-link {
