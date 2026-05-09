@@ -2,9 +2,10 @@ import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, basename } from 'path'
 import { parse } from './parser.js'
 import { parseYaml } from './yaml.js'
+import { RegistryLoader } from './registry.js'
 import type {
   ChamDocument, ValidationIssue, ValidationResult,
-  BookConfig, BookLayer,
+  BookConfig, BookLayer, ChamRegistries,
 } from './types.js'
 
 const KNOWN_KINDS = new Set([
@@ -12,6 +13,21 @@ const KNOWN_KINDS = new Set([
   'date', 'allusion', 'commentary', 'translation',
   'collation', 'fanqie', 'variant',
 ])
+
+const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = {
+  pron: { required: ['type', 'lang'], optional: [] },
+  meaning: { required: [], optional: ['lang'] },
+  person: { required: [], optional: ['ref'] },
+  place: { required: [], optional: ['ref'] },
+  event: { required: [], optional: ['ref'] },
+  date: { required: [], optional: ['format'] },
+  allusion: { required: [], optional: ['ref'] },
+  commentary: { required: [], optional: ['source'] },
+  translation: { required: [], optional: ['lang'] },
+  collation: { required: [], optional: ['source'] },
+  fanqie: { required: [], optional: [] },
+  variant: { required: [], optional: ['skqs'] },
+}
 
 export class ChamValidator {
   private issues: ValidationIssue[] = []
@@ -54,6 +70,18 @@ export class ChamValidator {
     }
   }
 
+  validateBookWithRegistries(bookDir: string, dataDir: string): ValidationResult {
+    const result = this.validateBook(bookDir)
+    if (!result.valid) return result
+
+    const registries = new RegistryLoader().loadAll(dataDir)
+    this.validateRegistryRefs(bookDir, registries)
+
+    result.valid = !this.issues.some(i => i.severity === 'error')
+    result.issues = this.issues
+    return result
+  }
+
   validateFile(filePath: string): ValidationResult {
     this.issues = []
     const src = readFileSync(filePath, 'utf-8')
@@ -62,10 +90,16 @@ export class ChamValidator {
       const doc = parse(src)
       const fileName = basename(filePath)
 
+      this.validateFrontmatter(doc, filePath)
+
       if (doc.meta.type === 'primary') {
+        this.validateMarkerInterleaving(doc, fileName)
         this.validateMarkerIntegrity(doc, fileName)
         this.validateAnnotationRefs(doc, fileName)
       }
+
+      this.validateKindParams(doc, filePath)
+      this.validateBracketBalance(doc, filePath)
 
       for (const section of doc.sections) {
         for (const entry of section.entries) {
@@ -89,6 +123,65 @@ export class ChamValidator {
 
   // ─── Primary File ──────────────────────────────────────────
 
+  private validateFrontmatter(doc: ChamDocument, filePath: string): void {
+    if (doc.meta.type === 'primary') {
+      const pm = doc.meta as import('./types.js').PrimaryMeta
+      if (pm.id === undefined || pm.id === '') {
+        this.error(filePath, undefined, 'Primary file missing required field: id')
+      }
+      if (!pm.title) {
+        this.error(filePath, undefined, 'Primary file missing required field: title')
+      }
+    } else if (doc.meta.type === 'secondary') {
+      const sm = doc.meta as import('./types.js').SecondaryMeta
+      if (!sm.base) {
+        this.error(filePath, undefined, 'Secondary file missing required field: base')
+      }
+      if (!sm.contributor) {
+        this.warning(filePath, undefined, 'Secondary file missing recommended field: contributor')
+      }
+      if (!sm.role) {
+        this.warning(filePath, undefined, 'Secondary file missing recommended field: role')
+      }
+    }
+  }
+
+  // ─── Marker Interleaving ─────────────────────────────────────
+
+  private validateMarkerInterleaving(doc: ChamDocument, context: string): void {
+    const textSource = doc.textBlocks.map(b => b.source).join('\n\n')
+
+    interface MarkerEvent { id: number; offset: number; type: 'open' | 'close' }
+    const events: MarkerEvent[] = []
+
+    for (const m of [...textSource.matchAll(/\{\/?(\d+)\}/g)]) {
+      const isClose = m[0].includes('/')
+      events.push({ id: parseInt(m[1], 10), offset: m.index!, type: isClose ? 'close' : 'open' })
+    }
+
+    events.sort((a, b) => a.offset - b.offset)
+
+    const stack: number[] = []
+    for (const ev of events) {
+      if (ev.type === 'open') {
+        stack.push(ev.id)
+      } else {
+        if (stack.length === 0) {
+          this.error(context, undefined, `Orphan close marker {/${ev.id}}`)
+        } else if (stack[stack.length - 1] !== ev.id) {
+          this.error(context, undefined,
+            `Interleaved markers: {${stack[stack.length - 1]}} not closed before {/${ev.id}}`)
+        } else {
+          stack.pop()
+        }
+      }
+    }
+
+    for (const id of stack) {
+      this.error(context, undefined, `Unclosed marker {${id}}`)
+    }
+  }
+
   private validatePrimaryFile(pieceDir: string): ChamDocument | null {
     const chamPath = join(pieceDir, 'text.cham.md')
     if (!existsSync(chamPath)) {
@@ -103,6 +196,8 @@ export class ChamValidator {
         this.error(chamPath, undefined, 'Expected primary frontmatter type')
         return null
       }
+      this.validateFrontmatter(doc, chamPath)
+      this.validateMarkerInterleaving(doc, chamPath)
       return doc
     } catch (e) {
       this.error(chamPath, undefined, `Parse error: ${(e as Error).message}`)
@@ -119,6 +214,9 @@ export class ChamValidator {
   ): void {
     const files = readdirSync(pieceDir)
     const primaryDoc = primaryDocs.get(dirName)
+    const primarySectionNames = new Set(
+      primaryDoc?.sections.map(s => s.name) || [],
+    )
 
     for (const f of files) {
       if (!f.endsWith('.cham.md') || f === 'text.cham.md') continue
@@ -132,8 +230,22 @@ export class ChamValidator {
           continue
         }
 
+        if (doc.textBlocks.length > 0) {
+          this.error(filePath, undefined, 'Subordinate file must not contain text content')
+        }
+        if (doc.markers.size > 0) {
+          this.error(filePath, undefined, 'Subordinate file must not contain inline markers')
+        }
+
         if (doc.meta.base !== 'text.cham.md') {
           this.warning(filePath, undefined, `Unexpected base reference: "${doc.meta.base}"`)
+        }
+
+        for (const section of doc.sections) {
+          if (primarySectionNames.has(section.name)) {
+            this.error(filePath, undefined,
+              `Duplicate section name "${section.name}" — already defined in primary file`)
+          }
         }
 
         if (primaryDoc) {
@@ -276,6 +388,78 @@ export class ChamValidator {
       for (const c of config.contributors) {
         if (!c.ref) this.error('book.yaml', undefined, 'Contributor missing ref')
         if (!c.role) this.warning('book.yaml', undefined, `Contributor "${c.ref}" missing role`)
+      }
+    }
+  }
+
+  // ─── Kind-Specific Param Validation ────────────────────────
+
+  private validateKindParams(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        const schema = KIND_PARAMS[entry.kind]
+        if (!schema) continue
+        for (const req of schema.required) {
+          if (!(req in entry.params)) {
+            this.error(filePath, undefined,
+              `Annotation kind "${entry.kind}" missing required param: ${req}`)
+          }
+        }
+      }
+    }
+  }
+
+  // ─── Bracket Balance ────────────────────────────────────────
+
+  private validateBracketBalance(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        let depth = 0
+        for (const ch of entry.value) {
+          if (ch === '[') depth++
+          else if (ch === ']') depth--
+          if (depth < 0) {
+            this.warning(filePath, undefined, `Unbalanced brackets in annotation value for ${JSON.stringify(entry.target)}`)
+            break
+          }
+        }
+        if (depth > 0) {
+          this.warning(filePath, undefined, `Unbalanced brackets in annotation value for ${JSON.stringify(entry.target)}`)
+        }
+      }
+    }
+  }
+
+  // ─── Registry Ref Validation ────────────────────────────────
+
+  private validateRegistryRefs(bookDir: string, registries: ChamRegistries): void {
+    const pieceDirs = this.scanPieceDirs(bookDir)
+    for (const dir of pieceDirs) {
+      const files = readdirSync(dir)
+      for (const f of files) {
+        if (!f.endsWith('.cham.md')) continue
+        const filePath = join(dir, f)
+        const src = readFileSync(filePath, 'utf-8')
+        try {
+          const doc = parse(src)
+          for (const section of doc.sections) {
+            for (const entry of section.entries) {
+              const ref = entry.params.ref
+              if (!ref) continue
+              if (entry.kind === 'person' && registries.authors && !(ref in registries.authors)) {
+                this.warning(filePath, undefined, `Author ref "${ref}" not found in authors registry`)
+              }
+              if (entry.kind === 'place' && registries.places && !(ref in registries.places)) {
+                this.warning(filePath, undefined, `Place ref "${ref}" not found in places registry`)
+              }
+              if (entry.kind === 'event' && registries.events && !(ref in registries.events)) {
+                this.warning(filePath, undefined, `Event ref "${ref}" not found in events registry`)
+              }
+            }
+          }
+        } catch {
+          // Already caught in validateBook
+        }
       }
     }
   }
