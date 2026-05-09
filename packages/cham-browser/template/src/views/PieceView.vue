@@ -5,13 +5,13 @@ import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
-import { useAnnotationTooltip } from '../composables/useAnnotationRenderer'
+import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
 import { useData } from '../composables/useData'
 import VerticalScroll from '../components/VerticalScroll.vue'
 import HorizontalDisplay from '../components/HorizontalDisplay.vue'
 import SectionBlock from '../components/SectionBlock.vue'
 import AnnotationTooltip from '../components/AnnotationTooltip.vue'
-import AnnotationLayerSelector from '../components/AnnotationLayerSelector.vue'
+import AnnotationControlBar from '../components/AnnotationControlBar.vue'
 import SideNav from '../components/SideNav.vue'
 import type { Piece, Annotation, AnnotationLayer } from '../types'
 
@@ -26,7 +26,7 @@ const vScroll = useHorizontalScroll(vPageRef)
 
 const authorPaneOpen = ref(false)
 const selectedAuthorId = ref('')
-const tooltip = reactive(useAnnotationTooltip())
+const interaction = useAnnotationInteraction()
 const titleCollapsed = ref(false)
 const vTitleRef = ref<HTMLElement | null>(null)
 
@@ -61,6 +61,7 @@ const isVertical = computed(() => layout.value === 'vertical')
 const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotationLayers || [])
 const hasLayers = computed(() => annotationLayers.value.length > 1)
 const activeLayerIds = ref<string[]>([])
+const annotationsVisible = ref(true)
 
 function initLayers() {
   if (hasLayers.value && activeLayerIds.value.length === 0) {
@@ -94,7 +95,7 @@ const layerLabels = computed(() => {
 })
 
 const layerAnnotationBlocks = computed(() => {
-  if (!hasLayers.value) return []
+  if (!hasLayers.value || !annotationsVisible.value) return []
   const result: { label: string; text: string }[] = []
   const activeLayers = annotationLayers.value.filter(l => activeLayerIds.value.includes(l.id) && l.id !== 'default')
   for (const layer of activeLayers) {
@@ -152,33 +153,7 @@ const proseSections = computed(() => {
   return result
 })
 
-let hideTimer: ReturnType<typeof setTimeout> | null = null
-function cancelHide() {
-  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
-}
-function scheduleHide(delay = 150) {
-  cancelHide()
-  hideTimer = setTimeout(() => { tooltip.hide(); hideTimer = null }, delay)
-}
 
-function handleAnnotationHover(event: MouseEvent, annotations: Annotation[]) {
-  cancelHide()
-  tooltip.show(event, annotations)
-}
-function handleAnnotationLeave() {
-  if (window.innerWidth >= 768) scheduleHide()
-}
-function handleAnnotationTap(event: MouseEvent, annotations: Annotation[]) {
-  cancelHide()
-  tooltip.toggle(event, annotations)
-}
-function handleTooltipEnter() {
-  cancelHide()
-}
-function handleTooltipLeave() {
-  if (window.innerWidth >= 768) scheduleHide()
-}
-function dismissTooltip() { cancelHide(); tooltip.hide() }
 const { getAuthor, loadShared } = useData()
 await loadShared()
 
@@ -269,41 +244,54 @@ function tcy(n: number): string {
             :verses="piece.verses"
             :author-initial="piece.author?.charAt(0) || '詩'"
             :annotations="mergedAnnotations"
-            @annotation-hover="handleAnnotationHover"
-            @annotation-leave="handleAnnotationLeave"
-            @annotation-tap="handleAnnotationTap"
+            @annotation-hover="interaction.onHover"
+            @annotation-leave="interaction.onLeave"
+            @annotation-tap="interaction.onTap"
             @open-author="openAuthorPane"
           />
         </section>
 
-        <div class="v-section">
+        <SectionBlock
+          v-if="annotationsVisible && piece.sections.annotations"
+          num=""
+          label="注釋"
+          :special="false"
+          :text="piece.sections.annotations"
+          :is-annotations="true"
+          :vertical="true"
+          class="v-section"
+        />
+        <template v-if="hasLayers">
+          <div class="v-layers-inline v-section">
+            <AnnotationControlBar
+              :layers="annotationLayers"
+              :has-annotations="piece.annotations.length > 0"
+              v-model:active-ids="activeLayerIds"
+              v-model:annotations-visible="annotationsVisible"
+            />
+          </div>
           <SectionBlock
+            v-for="block in visibleLayerBlocks"
+            :key="block.label"
             num=""
-            label="注釋"
+            :label="block.label"
             :special="false"
-            :text="piece.sections.annotations || ''"
+            :text="block.text"
             :is-annotations="true"
             :vertical="true"
+            class="v-section"
           />
-          <template v-if="hasLayers">
-            <div class="v-layers-inline">
-              <AnnotationLayerSelector
-                :layers="annotationLayers"
-                v-model:activeIds="activeLayerIds"
-              />
-            </div>
-            <SectionBlock
-              v-for="block in layerAnnotationBlocks"
-              :key="block.label"
-              num=""
-              :label="block.label"
-              :special="false"
-              :text="block.text"
-              :is-annotations="true"
-              :vertical="true"
-            />
-          </template>
-        </div>
+        </template>
+        <SectionBlock
+          v-else-if="piece.annotations.length > 0"
+          num=""
+          label="注釋"
+          :special="false"
+          :text="piece.sections.annotations || ''"
+          :is-annotations="true"
+          :vertical="true"
+          class="v-section"
+        />
 
         <SectionBlock
           v-for="(sec, idx) in proseSections"
@@ -333,13 +321,13 @@ function tcy(n: number): string {
       </div>
 
       <AnnotationTooltip
-        :visible="tooltip.visible"
-        :annotations="tooltip.items"
+        :visible="interaction.visible"
+        :annotations="interaction.items"
         :layer-labels="layerLabels"
-        :style="tooltip.style"
-        @close="dismissTooltip"
-        @tooltip-enter="handleTooltipEnter"
-        @tooltip-leave="handleTooltipLeave"
+        :style="interaction.style"
+        @close="interaction.dismiss"
+        @tooltip-enter="interaction.onTooltipEnter"
+        @tooltip-leave="interaction.onTooltipLeave"
       />
 
       <Teleport to="body">
@@ -395,16 +383,23 @@ function tcy(n: number): string {
               :author="piece.author"
               :verses="piece.verses"
               :annotations="mergedAnnotations"
-              @annotation-hover="handleAnnotationHover"
-              @annotation-leave="handleAnnotationLeave"
-              @annotation-tap="handleAnnotationTap"
+              @annotation-hover="interaction.onHover"
+              @annotation-leave="interaction.onLeave"
+              @annotation-tap="interaction.onTap"
             />
           </div>
 
           <div class="h-sections">
-            <div v-if="piece.sections.annotations || hasLayers" class="h-ann-section">
+            <div v-if="(piece.sections.annotations && annotationsVisible) || hasLayers" class="h-ann-section">
+              <AnnotationControlBar
+                :layers="annotationLayers"
+                :has-annotations="piece.annotations.length > 0"
+                v-model:active-ids="activeLayerIds"
+                v-model:annotations-visible="annotationsVisible"
+                style="margin-bottom: 16px"
+              />
               <SectionBlock
-                v-if="piece.sections.annotations"
+                v-if="annotationsVisible && piece.sections.annotations"
                 num=""
                 label="注釋"
                 :special="false"
@@ -412,12 +407,6 @@ function tcy(n: number): string {
                 :is-annotations="true"
               />
               <template v-if="hasLayers">
-                <div class="h-layers-inline">
-                  <AnnotationLayerSelector
-                    :layers="annotationLayers"
-                    v-model:activeIds="activeLayerIds"
-                  />
-                </div>
                 <SectionBlock
                   v-for="block in layerAnnotationBlocks"
                   :key="block.label"
@@ -457,13 +446,13 @@ function tcy(n: number): string {
       </div>
 
       <AnnotationTooltip
-        :visible="tooltip.visible"
-        :annotations="tooltip.items"
+        :visible="interaction.visible"
+        :annotations="interaction.items"
         :layer-labels="layerLabels"
-        :style="tooltip.style"
-        @close="dismissTooltip"
-        @tooltip-enter="handleTooltipEnter"
-        @tooltip-leave="handleTooltipLeave"
+        :style="interaction.style"
+        @close="interaction.dismiss"
+        @tooltip-enter="interaction.onTooltipEnter"
+        @tooltip-leave="interaction.onTooltipLeave"
       />
 
       <Teleport to="body">
