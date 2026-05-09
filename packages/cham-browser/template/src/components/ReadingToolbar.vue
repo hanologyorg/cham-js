@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { useReadingMode, THEMES, THEME_LABELS } from '../composables/useReadingMode'
 import type { LayoutMode } from '../composables/useReadingMode'
+import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
 
 const { theme, layout, setTheme, setLayout } = useReadingMode()
+const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
 const open = ref(false)
 
 function toggle() { open.value = !open.value }
@@ -18,22 +20,22 @@ function close() { open.value = false }
     </button>
     <div v-if="open" class="rt-panel" @click.stop>
       <div class="rt-group">
-        <div class="rt-label">版面</div>
+        <div class="rt-label">{{ t('settings.layout') }}</div>
         <div class="rt-options">
           <button
             class="rt-opt"
             :class="{ active: layout === 'horizontal' }"
             @click="setLayout('horizontal' as LayoutMode)"
-          >橫排</button>
+          >{{ t('settings.horizontal') }}</button>
           <button
             class="rt-opt"
             :class="{ active: layout === 'vertical' }"
             @click="setLayout('vertical' as LayoutMode)"
-          >直排</button>
+          >{{ t('settings.vertical') }}</button>
         </div>
       </div>
       <div class="rt-group">
-        <div class="rt-label">主題</div>
+        <div class="rt-label">{{ t('settings.theme') }}</div>
         <div class="rt-options">
           <button
             v-for="t in THEMES"
@@ -42,6 +44,18 @@ function close() { open.value = false }
             :class="{ active: theme === t, ['theme-' + t]: true }"
             @click="setTheme(t)"
           >{{ THEME_LABELS[t] }}</button>
+        </div>
+      </div>
+      <div class="rt-group">
+        <div class="rt-label">{{ t('settings.language') }}</div>
+        <div class="rt-options">
+          <button
+            v-for="loc in availableLocales"
+            :key="loc"
+            class="rt-opt"
+            :class="{ active: locale === loc }"
+            @click="setLocale(loc as Locale)"
+          >{{ localeLabels[loc] }}</button>
         </div>
       </div>
     </div>
