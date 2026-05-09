@@ -35,6 +35,11 @@
     "typescript": "^6.0.0"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hanologyorg/cham-js",
+    "directory": "packages/cham-browser"
+  },
   "publishConfig": {
     "access": "public"
   }
