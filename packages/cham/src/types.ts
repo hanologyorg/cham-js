@@ -284,6 +284,64 @@ export interface BookData {
   pieces: OutputPiece[]
 }
 
+// ─── Registry Types ────────────────────────────────────────────
+
+export interface AuthorRecord {
+  name: string
+  dynasty?: string
+  bio?: string
+}
+
+export interface DynastyRecord {
+  id: string
+  label: string
+  start?: number
+  end?: number
+}
+
+export interface EraRecord {
+  dynasty: string
+  label: string
+  start?: number
+  end?: number
+}
+
+export interface SexagenaryRecord {
+  stem: string
+  branch: string
+  label: string
+}
+
+export interface PlaceRecord {
+  id: string
+  label: string
+  modern?: string
+  lat?: number
+  lon?: number
+}
+
+export interface EventRecord {
+  id: string
+  label: string
+  dynasty?: string
+  year?: number
+}
+
+export interface LexiconEntry {
+  char: string
+  readings: Array<{ lang: string; value: string }>
+}
+
+export interface ChamRegistries {
+  authors: Record<string, AuthorRecord>
+  dynasties: DynastyRecord[]
+  eras: EraRecord[]
+  sexagenary: SexagenaryRecord[]
+  places: Record<string, PlaceRecord>
+  events: Record<string, EventRecord>
+  lexicon: LexiconEntry[]
+}
+
 // ─── Validator Types ──────────────────────────────────────────
 
 export type ValidationSeverity = 'error' | 'warning' | 'info'
