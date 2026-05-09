@@ -35,6 +35,15 @@ export { EpubConverter } from './epub.js'
 export { ChamJsonConverter } from './cham-json.js'
 export type { BookConvertOptions, LibraryConvertOptions, LibraryConvertResult } from './cham-json.js'
 
+// Pipeline (pure transformation helpers)
+export {
+  buildPieceFromCham, buildBookMeta, buildBookData, buildLibraryIndex,
+  buildCrossRefs, detectScale, buildAuthorsJson, buildDynastiesJson,
+  mapKind, entryToRange, buildAnnotations, buildAnnotationsFromLayer,
+  getHeadword, buildAnnotationsText, buildAnnotationLayers,
+  cleanHardWraps, splitMdFrontmatter, parseProseSections, parseCommentaryLayers,
+} from './pipeline.js'
+
 // Registry
 export { RegistryLoader } from './registry.js'
 export type { RegistryLoadOptions } from './registry.js'
