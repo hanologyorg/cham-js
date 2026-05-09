@@ -12,7 +12,7 @@ packages/
   cham-browser/    → @hanology/cham-browser (site generator: pipeline, Vue 3 template, CLI)
 ```
 
-The CHAM spec lives at https://github.com/hanology/cham-format.
+The CHAM spec lives at https://github.com/hanologyorg/cham-format.
 
 ## Build & test commands
 

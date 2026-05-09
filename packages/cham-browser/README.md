@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@hanology/cham-browser.svg)](https://www.npmjs.com/package/@hanology/cham-browser)
 
-Site generator for [CHAM (Classical Han with Annotations Markup)](https://github.com/hanology/cham-format) — generates a complete static website from CHAM content.
+Site generator for [CHAM (Classical Han with Annotations Markup)](https://github.com/hanologyorg/cham-format) — generates a complete static website from CHAM content.
 
 Includes parser, serializer, transformation pipeline, Vue 3 frontend template, and CLI.
 

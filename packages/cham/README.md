@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@hanology/cham.svg)](https://www.npmjs.com/package/@hanology/cham)
 
-Node.js toolchain for [CHAM (Classical Han with Annotations Markup)](https://github.com/hanology/cham-format) — a structured markup format for classical Chinese texts.
+Node.js toolchain for [CHAM (Classical Han with Annotations Markup)](https://github.com/hanologyorg/cham-format) — a structured markup format for classical Chinese texts.
 
 ## Install
 

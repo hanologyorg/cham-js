@@ -1,10 +1,10 @@
 # CHAM Monorepo
 
-[![CI](https://github.com/hanology/cham-js/actions/workflows/ci.yml/badge.svg)](https://github.com/hanology/cham-js/actions/workflows/ci.yml)
+[![CI](https://github.com/hanologyorg/cham-js/actions/workflows/ci.yml/badge.svg)](https://github.com/hanologyorg/cham-js/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@hanology/cham.svg)](https://www.npmjs.com/package/@hanology/cham)
 [![npm version](https://img.shields.io/npm/v/@hanology/cham-browser.svg)](https://www.npmjs.com/package/@hanology/cham-browser)
 
-TypeScript implementation of [CHAM (Classical Han with Annotations Markup)](https://github.com/hanology/cham-format) — a structured markup format for classical Chinese texts.
+TypeScript implementation of [CHAM (Classical Han with Annotations Markup)](https://github.com/hanologyorg/cham-format) — a structured markup format for classical Chinese texts.
 
 ## Packages
 
