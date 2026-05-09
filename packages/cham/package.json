@@ -28,7 +28,7 @@
     }
   },
   "bin": {
-    "cham-epub": "./dist/cli.js"
+    "cham-epub": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
