@@ -25,6 +25,12 @@ interface YamlContext {
 }
 
 function handleIndented(ctx: YamlContext, trimmed: string): void {
+  // Auto-detect array mode from `- ` prefix when not already in array mode
+  if (!ctx.inArray && ctx.nestingKey && trimmed.startsWith('- ')) {
+    ctx.inArray = true
+    ctx.arrayItems = []
+  }
+
   if (ctx.inArray && trimmed.startsWith('- ')) {
     const val = trimmed.slice(2).trim()
     if (val.includes(':')) {
@@ -70,6 +76,10 @@ function handleTopLevel(ctx: YamlContext, trimmed: string): void {
       ctx.nestingKey = key
       ctx.arrayItems = []
     } else if (OBJECT_KEYS.has(key)) {
+      ctx.result[key] = {}
+      ctx.nestingKey = key
+    } else {
+      // Unknown key with empty value — could be array or object, detect later
       ctx.result[key] = {}
       ctx.nestingKey = key
     }
