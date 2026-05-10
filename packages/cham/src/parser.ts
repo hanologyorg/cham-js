@@ -129,6 +129,7 @@ function buildTextBlocksAndMarkers(body: string): { textBlocks: TextBlock[]; mar
   const textBlocks: TextBlock[] = []
   const sectionParts = body.split(/\n{3,}/)
   let globalBlockIndex = 0
+  const sectionBlockCounts = new Map<number, number>()
 
   for (let si = 0; si < sectionParts.length; si++) {
     const sectionText = sectionParts[si].trim()
@@ -138,12 +139,15 @@ function buildTextBlocksAndMarkers(body: string): { textBlocks: TextBlock[]; mar
       const trimmed = blockSource.trim()
       if (!trimmed) continue
 
+      const blockIdxInSection = sectionBlockCounts.get(si) || 0
+      sectionBlockCounts.set(si, blockIdxInSection + 1)
+
       const { clean, positions } = parseMarkers(trimmed)
       const flatText = clean.replace(/\n/g, '')
 
       textBlocks.push({
         sectionIndex: si,
-        blockIndexInSection: textBlocks.filter(b => b.sectionIndex === si).length,
+        blockIndexInSection: blockIdxInSection,
         text: flatText,
         display: clean,
         source: trimmed,
@@ -256,7 +260,7 @@ function parseAnnotationEntry(line: string): AnnotationEntry | null {
     return null
   }
 
-  const kindMatch = rest.match(/^(\w+)\s*/)
+  const kindMatch = rest.match(/^([\w-]+)\s*/)
   if (!kindMatch) return null
   const kind = kindMatch[1]
   rest = rest.slice(kindMatch[0].length)
