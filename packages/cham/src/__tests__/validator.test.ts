@@ -298,11 +298,10 @@ describe('ChamValidator', () => {
       cleanup()
     })
 
-    it('catches interleaved markers', () => {
+    it('allows overlapping markers', () => {
       setupDir(INTERLEAVED_MARKERS)
       const result = validator.validateBook(TMP)
-      const interleaveError = result.issues.find(i => i.message.includes('Interleaved markers'))
-      expect(interleaveError).toBeDefined()
+      expect(result.issues.some(i => i.severity === 'error')).toBe(false)
       cleanup()
     })
 

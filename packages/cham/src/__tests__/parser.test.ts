@@ -171,7 +171,7 @@ Text block
 
 ## Notes
 
-@verse:0:2:5 commentary [annotation text]`
+@verse:0:2-5 commentary [annotation text]`
     const doc = parse(source)
     expect(doc.sections[0].entries.length).toBe(1)
     const t = doc.sections[0].entries[0].target
