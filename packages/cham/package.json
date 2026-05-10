@@ -1,6 +1,6 @@
 {
   "name": "@hanology/cham",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Classical Han Annotated Markdown — parser, serializer, ePub converter, and validator",
   "type": "module",
   "main": "dist/index.js",
