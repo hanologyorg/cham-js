@@ -272,14 +272,31 @@ export function parseCommentaryLayers(
 
 export function buildPartOutput(partDoc: ChamPart, pieceId: number): OutputPart {
   const verses = partDoc.textBlocks.map(b => ({ text: b.text }))
-  const annotations = buildAnnotations(partDoc, pieceId)
+  const partNum = partDoc.meta.part
+  const annotations: OutputAnnotation[] = []
+  let annId = 1
+  for (const section of partDoc.sections) {
+    for (const entry of section.entries) {
+      const range = entryToRange(entry, partDoc)
+      if (!range) continue
+      annotations.push({
+        id: `${pieceId}.${partNum}-${annId++}`,
+        range,
+        kind: mapKind(entry.kind),
+        lang: entry.params.lang,
+        text: entry.value.trim(),
+        source: 'cham',
+      })
+    }
+  }
   return {
-    num: partDoc.meta.part,
+    num: partNum,
     group: partDoc.meta.group,
     title: partDoc.meta.title,
     source: partDoc.meta.source,
     verses,
     annotations,
+    annotationText: buildAnnotationsText(partDoc, annotations) || undefined,
   }
 }
 
@@ -292,6 +309,7 @@ export function buildPieceFromCham(
   bookId: string,
   proseFiles: Map<string, string>,
   layerFiles: Map<string, string>,
+  partFiles?: Map<string, string>,
 ): OutputPiece | null {
   const doc = parse(chamSource)
   if (doc.meta.type !== 'primary') return null
@@ -302,6 +320,12 @@ export function buildPieceFromCham(
   const { sections, structuredSections } = parseProseSections(proseFiles)
   const annText = buildAnnotationsText(doc, annotations)
   if (annText) sections['annotations'] = annText
+
+  const partDocs = partFiles
+    ? [...partFiles.entries()]
+        .map(([, src]) => { const d = parse(src); return d.meta.type === 'part' ? d as import('./types.js').ChamPart : null })
+        .filter(Boolean) as import('./types.js').ChamPart[]
+    : []
 
   const rawContributors = pmeta.contributors?.length
     ? pmeta.contributors
@@ -322,7 +346,9 @@ export function buildPieceFromCham(
   const layers = parseCommentaryLayers(layerFiles, doc)
   const annotationLayers = buildAnnotationLayers(layers, bookConfig)
 
-  const parts = doc.parts?.map(p => buildPartOutput(p, pmeta.id as number))
+  const parts = partDocs.length > 0
+    ? partDocs.sort((a, b) => a.meta.part - b.meta.part).map(p => buildPartOutput(p, pmeta.id as number))
+    : doc.parts?.map(p => buildPartOutput(p, pmeta.id as number))
 
   return {
     bookId,

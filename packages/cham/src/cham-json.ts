@@ -44,8 +44,9 @@ export class ChamJsonConverter {
       const chamSource = readFileSync(chamPath, 'utf-8')
       const proseFiles = this.readProseFiles(pieceDir)
       const layerFiles = this.readLayerFiles(pieceDir)
+      const partFiles = this.readPartFiles(pieceDir)
 
-      const piece = buildPieceFromCham(chamSource, config, authors, config.id, proseFiles, layerFiles)
+      const piece = buildPieceFromCham(chamSource, config, authors, config.id, proseFiles, layerFiles, partFiles)
       if (piece) pieces.push(piece)
     }
 
@@ -121,6 +122,17 @@ export class ChamJsonConverter {
 
     for (const f of readdirSync(pieceDir)) {
       if (!f.endsWith('.cham.md') || f === 'text.cham.md' || f.startsWith('part-')) continue
+      files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
+    }
+    return files
+  }
+
+  private readPartFiles(pieceDir: string): Map<string, string> {
+    const files = new Map<string, string>()
+    if (!existsSync(pieceDir)) return files
+
+    for (const f of readdirSync(pieceDir).sort()) {
+      if (!f.startsWith('part-') || !f.endsWith('.cham.md')) continue
       files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
     }
     return files
