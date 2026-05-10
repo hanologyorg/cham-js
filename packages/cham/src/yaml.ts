@@ -14,19 +14,30 @@ export function parseYamlValue(val: string): unknown {
 }
 
 const ARRAY_KEYS = new Set(['contributors', 'layers', 'volumes', 'hero'])
-const OBJECT_KEYS = new Set(['date', 'source', 'range'])
 
 interface YamlContext {
   result: Record<string, unknown>
-  nestingKey: string
+  nestingPath: string[]
   inArray: boolean
   arrayItems: unknown[]
   currentObj: Record<string, unknown> | null
 }
 
+function resolveParent(ctx: YamlContext): Record<string, unknown> | null {
+  let obj: Record<string, unknown> = ctx.result
+  for (const key of ctx.nestingPath) {
+    const child = obj[key]
+    if (child && typeof child === 'object' && !Array.isArray(child)) {
+      obj = child as Record<string, unknown>
+    } else {
+      return null
+    }
+  }
+  return obj
+}
+
 function handleIndented(ctx: YamlContext, trimmed: string): void {
-  // Auto-detect array mode from `- ` prefix when not already in array mode
-  if (!ctx.inArray && ctx.nestingKey && trimmed.startsWith('- ')) {
+  if (!ctx.inArray && ctx.nestingPath.length > 0 && trimmed.startsWith('- ')) {
     ctx.inArray = true
     ctx.arrayItems = []
   }
@@ -56,9 +67,13 @@ function handleIndented(ctx: YamlContext, trimmed: string): void {
     const ci = trimmed.indexOf(':')
     const subKey = trimmed.slice(0, ci).trim()
     const subVal = trimmed.slice(ci + 1).trim()
-    const parent = ctx.result[ctx.nestingKey]
-    if (parent && typeof parent === 'object' && !Array.isArray(parent)) {
-      ;(parent as Record<string, unknown>)[subKey] = parseYamlValue(subVal)
+    const parent = resolveParent(ctx)
+    if (!parent) return
+    if (subVal === '') {
+      parent[subKey] = {}
+      ctx.nestingPath.push(subKey)
+    } else {
+      parent[subKey] = parseYamlValue(subVal)
     }
   }
 }
@@ -71,17 +86,12 @@ function handleTopLevel(ctx: YamlContext, trimmed: string): void {
   const val = trimmed.slice(ci + 1).trim()
 
   if (val === '') {
+    ctx.nestingPath = [key]
     if (ARRAY_KEYS.has(key)) {
       ctx.inArray = true
-      ctx.nestingKey = key
       ctx.arrayItems = []
-    } else if (OBJECT_KEYS.has(key)) {
-      ctx.result[key] = {}
-      ctx.nestingKey = key
     } else {
-      // Unknown key with empty value — could be array or object, detect later
       ctx.result[key] = {}
-      ctx.nestingKey = key
     }
     return
   }
@@ -100,18 +110,19 @@ function handleTopLevel(ctx: YamlContext, trimmed: string): void {
 }
 
 function closeNesting(ctx: YamlContext): void {
-  if (!ctx.nestingKey) return
-  if (ctx.inArray) ctx.result[ctx.nestingKey] = ctx.arrayItems
+  if (ctx.nestingPath.length === 0) return
+  const key = ctx.nestingPath[0]
+  if (ctx.inArray) ctx.result[key] = ctx.arrayItems
   ctx.inArray = false
   ctx.arrayItems = []
   ctx.currentObj = null
-  ctx.nestingKey = ''
+  ctx.nestingPath = []
 }
 
 export function parseYaml(text: string): Record<string, unknown> {
   const ctx: YamlContext = {
     result: {},
-    nestingKey: '',
+    nestingPath: [],
     inArray: false,
     arrayItems: [],
     currentObj: null,
@@ -121,7 +132,7 @@ export function parseYaml(text: string): Record<string, unknown> {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith('#')) continue
 
-    if (line.length - line.trimStart().length > 0 && ctx.nestingKey) {
+    if (line.length - line.trimStart().length > 0 && ctx.nestingPath.length > 0) {
       handleIndented(ctx, trimmed)
       continue
     }

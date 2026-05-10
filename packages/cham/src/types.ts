@@ -70,7 +70,7 @@ export interface PieceSource {
   textRef?: string
   pieceRef?: number
   relation: 'section' | 'excerpt' | 'standalone'
-  range?: { start: string; end: string }
+  range?: { start?: string; end?: string; chapter?: string; [key: string]: string | undefined }
 }
 
 // ─── Text Model ──────────────────────────────────────────────
@@ -244,6 +244,7 @@ export interface OutputPart {
   source?: PieceSource
   verses: { text: string }[]
   annotations: OutputAnnotation[]
+  annotationText?: string
 }
 
 export interface OutputRange {
