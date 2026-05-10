@@ -26,7 +26,7 @@ const doc = parse(chamSource)
 const roundTripped = serialize(doc)
 ```
 
-Supports all spec features: overlapping/enclosed markers, multi-line annotation values, section metadata, all annotation kinds (`pron`, `meaning`, `person`, `place`, `event`, `date`, `allusion`, `commentary`, `translation`, `collation`, `variant`, `see-also`), and all target types (`{N}`, `@title`, `@full`, `@verse:L:C`).
+Supports all spec features: overlapping/enclosed markers, multi-line annotation values, section metadata, all annotation kinds (`pron`, `meaning`, `person`, `place`, `event`, `date`, `allusion`, `commentary`, `translation`, `collation`, `variant`, `see-also`), and all target types (`{N}`, `@title`, `@full`, `@verse:L:C[-E]`).
 
 ### Multi-file Merge
 
