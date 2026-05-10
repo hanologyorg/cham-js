@@ -69,7 +69,10 @@ export interface PieceSource {
   text?: string
   textRef?: string
   pieceRef?: number
-  relation: 'section' | 'excerpt' | 'standalone'
+  edition?: string
+  publisher?: string
+  page?: string
+  relation: 'section' | 'excerpt' | 'complete' | 'standalone'
   range?: { start?: string; end?: string; chapter?: string; [key: string]: string | undefined }
 }
 
@@ -226,7 +229,7 @@ export interface CrossRef {
   focusedNum: number
   fullBookId: string
   fullNum?: number
-  relation: 'section' | 'excerpt'
+  relation: 'section' | 'excerpt' | 'complete'
 }
 
 export interface LibraryIndex {
