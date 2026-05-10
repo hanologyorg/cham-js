@@ -113,6 +113,11 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
             >{{ localeLabels[loc] }}</button>
           </div>
         </div>
+        <div class="ss-shortcuts">
+          <span class="ss-sc"><kbd>V</kbd> 直/橫</span>
+          <span class="ss-sc"><kbd>T</kbd> 主題</span>
+          <span class="ss-sc"><kbd>Esc</kbd> 首頁</span>
+        </div>
       </div>
     </Transition>
 
@@ -307,6 +312,37 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 .sn-overlay {
   position: fixed; inset: 0;
   z-index: -1;
+}
+.ss-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  margin-top: 2px;
+}
+.ss-sc {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ss-sc kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 3px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 9px;
+  color: var(--ink-light);
+  background: var(--surface);
 }
 
 @media (max-width: 768px) {

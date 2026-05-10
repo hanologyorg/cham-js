@@ -154,6 +154,7 @@ function scrollToCatalog() {
   background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
+  scroll-snap-type: x proximity;
 }
 .v-page::-webkit-scrollbar { height: 4px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }

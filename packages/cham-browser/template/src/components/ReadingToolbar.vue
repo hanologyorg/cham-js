@@ -74,6 +74,11 @@ function close() { open.value = false }
           >{{ localeLabels[loc] }}</button>
         </div>
       </div>
+      <div class="rt-shortcuts">
+        <div class="rt-sc"><kbd>V</kbd> 直/橫</div>
+        <div class="rt-sc"><kbd>T</kbd> 主題</div>
+        <div class="rt-sc"><kbd>Esc</kbd> 首頁</div>
+      </div>
     </div>
     <div v-if="open" class="rt-backdrop" @click="close" />
   </div>
@@ -181,5 +186,36 @@ function close() { open.value = false }
 .rt-backdrop {
   position: fixed; inset: 0;
   z-index: -1;
+}
+.rt-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+  margin-top: 2px;
+}
+.rt-sc {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.rt-sc kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 3px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 9px;
+  color: var(--ink-light);
+  background: var(--surface);
 }
 </style>

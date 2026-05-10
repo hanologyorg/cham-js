@@ -125,9 +125,10 @@ function openBook(bookId: string) {
         <h2 class="lib-group-title">{{ group.category }}</h2>
         <div class="lib-grid">
           <div
-            v-for="book in group.books"
+            v-for="(book, bi) in group.books"
             :key="book.id"
             class="lib-card"
+            :style="{ animationDelay: bi * 0.06 + 's' }"
             @click="openBook(book.id)"
           >
             <div class="lib-card-accent"></div>
@@ -163,6 +164,7 @@ function openBook(bookId: string) {
   background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
+  scroll-snap-type: x proximity;
 }
 .v-page::-webkit-scrollbar { height: 4px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
@@ -391,9 +393,14 @@ function openBook(bookId: string) {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s var(--ease-out-expo, ease);
   position: relative;
   background: var(--surface);
+  animation: cardEnter 0.5s var(--ease-out-expo, ease) both;
+}
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .lib-card:hover { border-color: var(--gold); box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.1); }
 .lib-card-accent {

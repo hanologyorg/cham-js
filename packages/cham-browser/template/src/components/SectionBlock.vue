@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { parseAnnotationBlock } from '../utils/annotationParser'
 import PronunciationGroup from './PronunciationGroup.vue'
 
@@ -11,6 +11,27 @@ const props = defineProps<{
   isAnnotations: boolean
   vertical?: boolean
 }>()
+
+const rootRef = ref<HTMLElement | null>(null)
+const visible = ref(false)
+
+onMounted(() => {
+  if (props.vertical || !rootRef.value) {
+    visible.value = true
+    return
+  }
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        visible.value = true
+        observer.disconnect()
+      }
+    },
+    { rootMargin: '0px 0px -40px 0px', threshold: 0 }
+  )
+  observer.observe(rootRef.value)
+  onUnmounted(() => observer.disconnect())
+})
 
 function esc(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -40,7 +61,7 @@ const paragraphsHtml = computed(() => {
 </script>
 
 <template>
-  <div v-if="text" class="sb-root" :class="{ 'sb-vertical': vertical }">
+  <div v-if="text" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
     <div class="sb-header">
       <span v-if="displayNum" class="sb-num" :class="{ special }">{{ displayNum }}</span>
       <h3>{{ special ? '【' + label + '】' : label }}</h3>
@@ -64,11 +85,13 @@ const paragraphsHtml = computed(() => {
 <style scoped>
 .sb-root {
   margin-bottom: 40px;
-  animation: sb-fade-up 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
-@keyframes sb-fade-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+.sb-root.sb-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 .sb-header {
   display: flex; align-items: center; gap: 12px;
@@ -107,7 +130,9 @@ const paragraphsHtml = computed(() => {
   border-right: 1px solid var(--border);
   overflow-x: auto;
   overflow-y: hidden;
-  animation: none;
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 .sb-vertical .sb-header {
   flex-direction: column;
