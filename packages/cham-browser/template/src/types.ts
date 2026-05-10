@@ -123,6 +123,15 @@ export interface ProseSection {
   order: number
 }
 
+export interface Part {
+  num: number
+  group?: string
+  title?: string
+  source?: PieceSource
+  verses: VerseLine[]
+  annotations: Annotation[]
+}
+
 export interface Piece {
   bookId: string
   num: number
@@ -139,6 +148,7 @@ export interface Piece {
   annotationLayers?: AnnotationLayer[]
   source?: PieceSource
   contributors?: PieceContributor[]
+  parts?: Part[]
 }
 
 // Backward compatibility alias

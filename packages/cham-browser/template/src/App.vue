@@ -2,7 +2,7 @@
 import { useRouter } from 'vue-router'
 import { useReadingMode } from './composables/useReadingMode'
 import ReadingToolbar from './components/ReadingToolbar.vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
@@ -19,11 +19,28 @@ function onKey(event: KeyboardEvent) {
 <template>
   <div @keydown="onKey">
     <router-view v-slot="{ Component }">
-      <Suspense>
-        <component :is="Component" :key="$route.fullPath" />
-      </Suspense>
+      <Transition name="page" mode="out-in">
+        <Suspense>
+          <component :is="Component" :key="$route.fullPath" />
+        </Suspense>
+      </Transition>
     </router-view>
     <!-- 橫排模式才顯示浮動設定鈕 -->
     <ReadingToolbar v-if="!isVertical" />
   </div>
 </template>
+
+<style>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

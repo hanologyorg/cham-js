@@ -1,9 +1,9 @@
 import type {
-  ChamMeta, PrimaryMeta, SecondaryMeta,
+  ChamMeta, PrimaryMeta, SecondaryMeta, PartMeta,
   TextBlock, Marker, MarkerTable,
   AnnotationSection, AnnotationEntry, AnnotationTarget,
 } from './types.js'
-import { isSecondaryMeta } from './types.js'
+import { isSecondaryMeta, isPartMeta } from './types.js'
 
 // ─── YAML Helpers ─────────────────────────────────────────────
 
@@ -56,10 +56,31 @@ function serializeSecondaryMeta(meta: SecondaryMeta): string[] {
   return lines
 }
 
+function serializePartMeta(meta: PartMeta): string[] {
+  const lines: string[] = [`part: ${meta.part}`]
+  if (meta.group) lines.push(`group: ${serializeValue(meta.group)}`)
+  if (meta.title) lines.push(`title: ${serializeValue(meta.title)}`)
+  if (meta.source) {
+    lines.push('source:')
+    if (meta.source.textRef) lines.push(`  textRef: ${serializeValue(meta.source.textRef)}`)
+    if (meta.source.relation) lines.push(`  relation: ${serializeValue(meta.source.relation)}`)
+    if (meta.source.range) {
+      lines.push('  range:')
+      const r = meta.source.range as Record<string, unknown>
+      for (const [k, v] of Object.entries(r)) {
+        lines.push(`    ${k}: ${serializeValue(v)}`)
+      }
+    }
+  }
+  return lines
+}
+
 function serializeFrontmatter(meta: ChamMeta): string {
   const lines = isSecondaryMeta(meta)
     ? serializeSecondaryMeta(meta)
-    : serializePrimaryMeta(meta as PrimaryMeta)
+    : isPartMeta(meta)
+      ? serializePartMeta(meta as PartMeta)
+      : serializePrimaryMeta(meta as PrimaryMeta)
   return `---\n${lines.join('\n')}\n---`
 }
 

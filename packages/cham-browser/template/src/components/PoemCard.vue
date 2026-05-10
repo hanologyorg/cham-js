@@ -9,7 +9,7 @@ const props = defineProps<{
 defineEmits<{ click: [] }>()
 
 const preview = computed(() => {
-  const max = props.vertical ? 2 : 2
+  const max = 2
   return props.poem.verses.slice(0, max).map(v => v.text).join('\n')
 })
 </script>
@@ -33,7 +33,7 @@ const preview = computed(() => {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 .pc-accent {
@@ -41,12 +41,12 @@ const preview = computed(() => {
   top: 0; left: 0;
   width: 3px; height: 0;
   background: var(--vermillion);
-  transition: height 0.35s ease;
+  transition: height 0.3s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .pc-root:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(var(--shadow-rgb), 0.1);
-  border-color: var(--gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.08);
+  border-color: var(--gold);
 }
 .pc-root:hover .pc-accent { height: 100%; }
 .pc-body { padding: 24px; }

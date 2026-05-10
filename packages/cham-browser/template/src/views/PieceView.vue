@@ -13,7 +13,8 @@ import SectionBlock from '../components/SectionBlock.vue'
 import AnnotationTooltip from '../components/AnnotationTooltip.vue'
 import AnnotationControlBar from '../components/AnnotationControlBar.vue'
 import SideNav from '../components/SideNav.vue'
-import type { Piece, Annotation, AnnotationLayer } from '../types'
+import PartGroup from '../components/PartGroup.vue'
+import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
 const router = useRouter()
@@ -128,6 +129,29 @@ function getHeadword(ann: Annotation): string {
 // Initialize layers when piece loads
 watch(() => piece.value, () => initLayers(), { immediate: true })
 
+// ─── Multi-part ───────────────────────────────────────────────
+const isMultiPart = computed(() => (piece.value?.parts?.length ?? 0) > 0)
+
+const partGroups = computed<{ label: string; parts: Part[] }[]>(() => {
+  if (!piece.value?.parts?.length) return []
+  const groupMap = new Map<string, Part[]>()
+  for (const part of piece.value.parts) {
+    const key = part.group || ''
+    if (!groupMap.has(key)) groupMap.set(key, [])
+    groupMap.get(key)!.push(part)
+  }
+  return [...groupMap.entries()].map(([label, parts]) => ({ label, parts }))
+})
+
+const allPartAnnotations = computed<Annotation[]>(() => {
+  if (!piece.value?.parts) return []
+  return piece.value.parts.flatMap(p => p.annotations)
+})
+
+const totalPartAnnotationCount = computed(() => {
+  return piece.value?.parts?.reduce((sum, p) => sum + p.annotations.length, 0) ?? 0
+})
+
 const SECTION_META: Record<string, { label: string; special: boolean }> = {
   background: { label: '背景資料', special: false },
   analysis: { label: '賞析重點', special: false },
@@ -232,12 +256,31 @@ function tcy(n: number): string {
             ← {{ meta?.title }}
           </div>
           <div class="v-poem-meta">
-            <span class="v-meta-item" v-html="tcy(piece.verses.length) + ' 段'" />
-            <span class="v-meta-item" v-html="piece.annotations.length > 0 ? tcy(piece.annotations.length) + ' 注' : '無注'" />
+            <template v-if="isMultiPart">
+              <span class="v-meta-item" v-html="tcy(piece.parts!.length) + ' 段'" />
+              <span class="v-meta-item" v-html="totalPartAnnotationCount > 0 ? tcy(totalPartAnnotationCount) + ' 注' : '無注'" />
+            </template>
+            <template v-else>
+              <span class="v-meta-item" v-html="tcy(piece.verses.length) + ' 段'" />
+              <span class="v-meta-item" v-html="piece.annotations.length > 0 ? tcy(piece.annotations.length) + ' 注' : '無注'" />
+            </template>
           </div>
         </section>
 
-        <section class="v-poem-col">
+        <section v-if="isMultiPart" class="v-poem-col v-multipart">
+          <PartGroup
+            v-for="group in partGroups"
+            :key="group.label"
+            :label="group.label"
+            :parts="group.parts"
+            :vertical="true"
+            @annotation-hover="interaction.onHover"
+            @annotation-leave="interaction.onLeave"
+            @annotation-tap="interaction.onTap"
+          />
+        </section>
+
+        <section v-else class="v-poem-col">
           <VerticalScroll
             :title="''"
             :author="''"
@@ -252,7 +295,7 @@ function tcy(n: number): string {
         </section>
 
         <SectionBlock
-          v-if="annotationsVisible && piece.sections.annotations"
+          v-if="!isMultiPart && annotationsVisible && piece.sections.annotations"
           num=""
           label="注釋"
           :special="false"
@@ -370,14 +413,32 @@ function tcy(n: number): string {
               <span v-else class="h-author-link" @click="openAuthorPane">{{ piece.author }}</span>
             </div>
             <div class="h-controls">
-              <span class="h-tag">{{ piece.verses.length }} 段</span>
-              <span class="h-tag">{{ piece.annotations.length > 0 ? piece.annotations.length + ' 注' : '無注' }}</span>
+              <template v-if="isMultiPart">
+                <span class="h-tag">{{ piece.parts!.length }} 段</span>
+                <span class="h-tag">{{ totalPartAnnotationCount > 0 ? totalPartAnnotationCount + ' 注' : '無注' }}</span>
+              </template>
+              <template v-else>
+                <span class="h-tag">{{ piece.verses.length }} 段</span>
+                <span class="h-tag">{{ piece.annotations.length > 0 ? piece.annotations.length + ' 注' : '無注' }}</span>
+              </template>
             </div>
           </div>
         </nav>
 
         <div class="h-content">
-          <div class="h-poem-block">
+          <div v-if="isMultiPart" class="h-multipart">
+            <PartGroup
+              v-for="group in partGroups"
+              :key="group.label"
+              :label="group.label"
+              :parts="group.parts"
+              @annotation-hover="interaction.onHover"
+              @annotation-leave="interaction.onLeave"
+              @annotation-tap="interaction.onTap"
+            />
+          </div>
+
+          <div v-else class="h-poem-block">
             <HorizontalDisplay
               :title="piece.title"
               :author="piece.author"
@@ -551,6 +612,22 @@ function tcy(n: number): string {
   padding: 24px;
 }
 
+.v-multipart {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 0;
+  max-height: calc(100vh - 120px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 24px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) var(--paper);
+}
+
+.v-multipart::-webkit-scrollbar { height: 4px; }
+.v-multipart::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
 .v-section {
   flex-shrink: 0;
 }
@@ -564,7 +641,7 @@ function tcy(n: number): string {
 
 .v-source-link {
   font-size: 12px;
-  color: var(--c-brand);
+  color: var(--vermillion);
   cursor: pointer;
   margin-top: 4px;
   opacity: 0.8;
@@ -663,6 +740,16 @@ function tcy(n: number): string {
 .h-poem-block {
   margin-bottom: 60px; display: flex; justify-content: center;
 }
+
+.h-multipart {
+  max-width: min(680px, calc(100vw - 80px));
+  margin: 0 auto 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px 40px;
+  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
+}
 .h-sections {
   max-width: min(680px, calc(100vw - 80px));
   margin: 0 auto; padding-bottom: 80px;
@@ -678,7 +765,7 @@ function tcy(n: number): string {
 }
 
 .h-source-link {
-  color: var(--c-brand);
+  color: var(--vermillion);
   cursor: pointer;
   font-size: 13px;
 }

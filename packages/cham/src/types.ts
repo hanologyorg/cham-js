@@ -45,10 +45,22 @@ export interface SecondaryMeta {
   nature?: string
 }
 
-export type ChamMeta = PrimaryMeta | SecondaryMeta
+export interface PartMeta {
+  type: 'part'
+  part: number
+  group?: string
+  title?: string
+  source?: PieceSource
+}
+
+export type ChamMeta = PrimaryMeta | SecondaryMeta | PartMeta
 
 export function isSecondaryMeta(meta: ChamMeta): meta is SecondaryMeta {
   return meta.type === 'secondary'
+}
+
+export function isPartMeta(meta: ChamMeta): meta is PartMeta {
+  return meta.type === 'part'
 }
 
 // ─── Piece Source ─────────────────────────────────────────────
@@ -132,12 +144,20 @@ export interface SkqsVariant {
 
 // ─── Document Model ──────────────────────────────────────────
 
+export interface ChamPart {
+  meta: PartMeta
+  textBlocks: TextBlock[]
+  markers: MarkerTable
+  sections: AnnotationSection[]
+}
+
 export interface ChamDocument {
   meta: ChamMeta
   textBlocks: TextBlock[]
   markers: MarkerTable
   sections: AnnotationSection[]
   skqsVariants?: SkqsVariant[]
+  parts?: ChamPart[]
 }
 
 export interface ChamProject {
@@ -217,6 +237,15 @@ export interface LibraryIndex {
 
 // ─── Output Types (pipeline → frontend) ───────────────────────
 
+export interface OutputPart {
+  num: number
+  group?: string
+  title?: string
+  source?: PieceSource
+  verses: { text: string }[]
+  annotations: OutputAnnotation[]
+}
+
 export interface OutputRange {
   type: 'range'
   scope: 'title' | 'verse'
@@ -270,6 +299,7 @@ export interface OutputPiece {
   annotationLayers?: OutputAnnotationLayer[]
   source?: PieceSource
   contributors?: PieceContributor[]
+  parts?: OutputPart[]
 }
 
 export interface PieceContributor {
