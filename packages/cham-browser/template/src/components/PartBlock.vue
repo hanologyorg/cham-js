@@ -8,6 +8,7 @@ const props = defineProps<{
   annotations: Annotation[]
   vertical?: boolean
   source?: PieceSource
+  annotationText?: string
 }>()
 
 const emit = defineEmits<{
@@ -55,6 +56,9 @@ const sourceLabel = (() => {
         v-html="verseHtml(i)"
       />
     </div>
+    <div v-if="annotationText" class="part-annotations">
+      <div v-for="line in annotationText.split('\n')" :key="line" class="part-ann-line">{{ line }}</div>
+    </div>
   </div>
 </template>
 
@@ -88,6 +92,20 @@ const sourceLabel = (() => {
 
 .part-text {
   line-height: 1;
+}
+
+.part-annotations {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.part-ann-line {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 2;
+  color: var(--ink-mid);
+  letter-spacing: 0.5px;
 }
 
 .part-line-h {
@@ -134,7 +152,6 @@ const sourceLabel = (() => {
   background: rgba(58, 107, 94, 0.08);
 }
 
-/* Vertical mode overrides */
 .part-block--vertical :deep(.ann-target) {
   border-bottom: none;
   border-left: 2px solid var(--vermillion);
@@ -156,5 +173,14 @@ const sourceLabel = (() => {
 .part-block--vertical .part-source {
   margin-bottom: 0;
   margin-left: 8px;
+}
+
+.part-block--vertical .part-annotations {
+  margin-top: 0;
+  margin-left: 12px;
+  padding-top: 0;
+  padding-left: 12px;
+  border-top: none;
+  border-left: 1px dashed var(--border-light);
 }
 </style>
