@@ -124,7 +124,7 @@ export type AnnotationTarget =
   | { type: 'marker'; markerId: number }
   | { type: 'title' }
   | { type: 'full' }
-  | { type: 'verse'; line: number; char: number }
+  | { type: 'verse'; line: number; char: number; end?: number }
 
 export interface AnnotationEntry {
   target: AnnotationTarget
@@ -321,6 +321,14 @@ export interface AuthorRecord {
   name: string
   dynasty?: string
   bio?: string
+  born?: string
+  died?: string
+  courtesyName?: string
+  artName?: string
+  wikidata?: string
+  ctextId?: string
+  wikipediaZh?: string
+  wikipediaEn?: string
 }
 
 export interface DynastyRecord {
