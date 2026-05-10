@@ -197,36 +197,68 @@ function parseXhtmlLine(line: string, ctx: ParseContext = {}): ParsedLine {
   }
 }
 
+function stripCommentaryNotes(text: string): string {
+  return text.replace(/〈[^〉]*〉/g, '').trim()
+}
+
 function detectImplicitTitle(text: string): string | null {
-  // Detect section headers that are standalone short lines ending with 序, 提要, 跋 etc.
   const t = text.replace(/^[\s　]+/, '')
-  if (t.length > 1 && t.length <= 10 && /^[^\s]+$/.test(t)) {
-    if (/序$|提要$|跋$|後記$|附錄$/.test(t)) return t
-  }
+  const bare = stripCommentaryNotes(t)
+
+  if (bare.length < 2 || bare.length > 20) return null
+  if (!/^[^\s〈〉]+$/.test(bare)) return null
+
+  if (/序$|提要$|跋$|後記$|附錄$/.test(bare)) return bare
+  if (/^.+第[一二三四五六七八九十百千萬]+$/.test(bare)) return bare
+  if (/^.{2,6}[篇章]$/.test(bare) && !/卷/.test(bare)) return bare
+
+  return null
+}
+
+function detectStandaloneTitle(text: string, hasAnnotations: boolean): string | null {
+  const t = text.replace(/^[\s　]+/, '').trim()
+  if (t.length < 2 || t.length > 8) return null
+  if (!/^[^\s]+$/.test(t)) return null
+
+  if (hasAnnotations && t.length <= 3) return t
+  if (/[上下篇經]$/.test(t)) return t
   return null
 }
 
 function extractTrailingTitle(text: string): string | null {
-  const t = text.trim()
+  const t = stripCommentaryNotes(text.trim())
 
-  // Isolate last segment after full-width space separation
   const segments = t.split(/[　\s]{2,}/)
-  const lastSeg = segments[segments.length - 1]
-  if (!lastSeg || lastSeg.length < 4) return null
+  let lastSeg = segments[segments.length - 1]
+  if (!lastSeg || lastSeg.length < 2) return null
 
-  // Match ordinal pattern at end of segment
+  if (lastSeg.length > 8) {
+    const parts = lastSeg.split(/[　]/)
+    for (let i = parts.length - 1; i >= 1; i--) {
+      const candidate = parts.slice(i).join('　')
+      if (candidate.length >= 2 && candidate.length <= 8) {
+        lastSeg = candidate
+        break
+      }
+    }
+  }
+
   const m = lastSeg.match(/^(.+)(第[一二三四五六七八九十百千萬]+)$/)
-  if (!m) return null
+  if (m) {
+    let prefix = m[1]
+    const ordinal = m[2]
 
-  let prefix = m[1]
-  const ordinal = m[2]
+    const authorSplit = prefix.match(/^(.*[撰著編註注校述譯定])(.{1,4})$/)
+    if (authorSplit) return authorSplit[2] + ordinal
+    if (prefix.length <= 4) return prefix + ordinal
 
-  // Split after last author attribution marker (撰, 著, 編 — standard bibliographic conventions)
-  const authorSplit = prefix.match(/^(.*[撰著編註注校述譯])(.{1,4})$/)
-  if (authorSplit) return authorSplit[2] + ordinal
+    return null
+  }
 
-  // No author marker — use as-is if short enough for a section name
-  if (prefix.length <= 4) return prefix + ordinal
+  if (lastSeg.length <= 8 && /[上下篇章經]$/.test(lastSeg)) {
+    const stripped = lastSeg.replace(/^[撰著編註注校述譯定]/, '')
+    if (stripped.length >= 2 && stripped.length <= 6) return stripped
+  }
 
   return null
 }
@@ -259,8 +291,8 @@ function parseXhtmlFile(xhtml: string, volumeLabel: string, ctx: ParseContext = 
       continue
     }
 
-    // Detect trailing section titles on header lines (e.g., "審官第四" at end of "帝範卷二...撰審官第四")
-    if (line.type === 'header') {
+    // Detect trailing section titles (e.g., "審官第四" at end of "帝範卷二...撰審官第四")
+    if (line.type === 'header' || line.type === 'body') {
       const trailingTitle = extractTrailingTitle(line.cleanText)
       if (trailingTitle) {
         sectionNum++
@@ -282,6 +314,22 @@ function parseXhtmlFile(xhtml: string, volumeLabel: string, ctx: ParseContext = 
         sectionNum++
         currentSection = {
           title: implicitTitle,
+          num: sectionNum,
+          volumeLabel,
+          lines: [],
+        }
+        sections.push(currentSection)
+        continue
+      }
+    }
+
+    // Detect standalone short titles on body lines (e.g., "大道下", "持樞")
+    if (line.type === 'body') {
+      const standaloneTitle = detectStandaloneTitle(line.cleanText, line.annotations.length > 0)
+      if (standaloneTitle) {
+        sectionNum++
+        currentSection = {
+          title: standaloneTitle,
           num: sectionNum,
           volumeLabel,
           lines: [],
@@ -594,13 +642,19 @@ export class EpubConverter {
   private discoverXhtmlFiles(dir: string): string[] {
     const files: string[] = []
     const skipPatterns = ['quan_lan', '_index', 'about', 'nav', 'title', 'toc']
-    for (const entry of readdirSync(dir).sort()) {
+    for (const entry of readdirSync(dir)) {
       if (!entry.endsWith('.xhtml')) continue
       if (skipPatterns.some(p => entry.includes(p))) continue
       if (entry.startsWith('c')) {
         files.push(join(dir, entry))
       }
     }
+    // Sort numerically by the number after 'c' prefix
+    files.sort((a, b) => {
+      const numA = parseInt(basename(a).match(/^c(\d+)/)?.[1] || '0', 10)
+      const numB = parseInt(basename(b).match(/^c(\d+)/)?.[1] || '0', 10)
+      return numA - numB
+    })
     // Fallback: if no c-prefixed files found, include all non-metadata xhtml
     if (files.length === 0) {
       for (const entry of readdirSync(dir).sort()) {
@@ -613,19 +667,30 @@ export class EpubConverter {
   }
 
   private detectVolume(filename: string): string | null {
-    if (filename.includes('juan1')) return '卷一'
-    if (filename.includes('juan2')) return '卷二'
-    if (filename.includes('juan3')) return '卷三'
-    if (filename.includes('juan4')) return '卷四'
     if (filename.startsWith('c0_')) return '序'
+    const m = filename.match(/juan(\d+)/)
+    if (m) return '卷' + this.numToChinese(parseInt(m[1], 10))
     return null
+  }
+
+  private numToChinese(n: number): string {
+    const digits = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九']
+    if (n <= 0) return ''
+    if (n < 10) return digits[n]
+    if (n < 20) return '十' + (n % 10 ? digits[n % 10] : '')
+    if (n < 100) return digits[Math.floor(n / 10)] + '十' + (n % 10 ? digits[n % 10] : '')
+    return String(n)
   }
 
   private detectHeaderTitle(pf: ParsedFile): string {
     for (const line of pf.headerLines) {
-      if (line.cleanText.includes('提要')) return '提要'
-      if (line.cleanText.includes('序')) return this.bookTitle ? `${this.bookTitle}序` : '序'
+      const t = line.cleanText.trim()
+      if (t.length <= 10 && t.includes('提要')) return '提要'
+      if (t.length <= 10 && t.includes('序')) return this.bookTitle ? `${this.bookTitle}序` : '序'
+      if (/^提要/.test(t)) return '提要'
+      if (/^序/.test(t)) return this.bookTitle ? `${this.bookTitle}序` : '序'
     }
+    if (pf.volumeLabel) return pf.volumeLabel
     return '外序'
   }
 }
