@@ -193,6 +193,93 @@ describe('ChamValidator', () => {
       expect(paramError).toBeUndefined()
       cleanup()
     })
+
+    it('catches missing pron params', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} pron [ㄅ]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const paramError = result.issues.find(i => i.message.includes('missing required param'))
+      expect(paramError).toBeDefined()
+      cleanup()
+    })
+
+    it('accepts see-also kind', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} see-also [related text]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const kindError = result.issues.find(i => i.message.includes('Unknown annotation kind'))
+      expect(kindError).toBeUndefined()
+      cleanup()
+    })
+
+    it('accepts variant with action param', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} variant action:emend [「水」][據考證當作「冰」]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const paramError = result.issues.find(i => i.message.includes('missing required param'))
+      expect(paramError).toBeUndefined()
+      cleanup()
+    })
+
+    it('accepts allusion with source param', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} allusion source:詩經 [昔我往矣][出自詩經]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.valid).toBe(true)
+      cleanup()
+    })
   })
 
   describe('validateBook', () => {
