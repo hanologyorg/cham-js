@@ -105,7 +105,7 @@ export interface AnnotationSection {
 export type AnnotationKind =
   | 'pron' | 'meaning' | 'person' | 'place' | 'event'
   | 'date' | 'allusion' | 'commentary' | 'translation'
-  | 'collation' | 'fanqie' | 'variant'
+  | 'collation' | 'variant' | 'see-also'
   | (string & {})
 
 export type AnnotationTarget =
@@ -228,7 +228,7 @@ export interface OutputRange {
 export interface OutputAnnotation {
   id: string
   range: OutputRange
-  kind: string
+  kind: AnnotationKind
   lang?: string
   text: string
   source: string

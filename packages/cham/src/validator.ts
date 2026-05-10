@@ -10,17 +10,17 @@ import type {
 
 const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = {
   pron: { required: ['type', 'lang'], optional: [] },
-  meaning: { required: [], optional: ['lang'] },
+  meaning: { required: [], optional: [] },
   person: { required: [], optional: ['ref'] },
   place: { required: [], optional: ['ref'] },
   event: { required: [], optional: ['ref'] },
-  date: { required: [], optional: ['format'] },
-  allusion: { required: [], optional: ['ref'] },
-  commentary: { required: [], optional: ['source'] },
-  translation: { required: [], optional: ['lang'] },
+  date: { required: [], optional: ['dynasty', 'era', 'year', 'iso'] },
+  allusion: { required: [], optional: ['source'] },
+  commentary: { required: [], optional: [] },
+  translation: { required: [], optional: [] },
   collation: { required: [], optional: ['source'] },
-  fanqie: { required: [], optional: [] },
-  variant: { required: [], optional: ['skqs'] },
+  variant: { required: [], optional: ['action'] },
+  'see-also': { required: [], optional: ['ref'] },
 }
 
 const KNOWN_KINDS = new Set(Object.keys(KIND_PARAMS))
