@@ -15,6 +15,11 @@
   --gold: #9a7d3a;
   --gold-light: #c9a84c;
   --jade: #3a6b5e;
+  --ann-person: #3a5a8c;
+  --ann-place: #8b6914;
+  --ann-event: #6b4c8a;
+  --ann-date: #2a7a7a;
+  --ann-allusion: #b5651d;
   --border: #d8cdb8;
   --border-light: #e8e0d0;
   --shadow-rgb: 26,26,26;
@@ -36,6 +41,11 @@
   --gold: #8a6d2a;
   --gold-light: #b89540;
   --jade: #2d5a4e;
+  --ann-person: #3a5a8c;
+  --ann-place: #8b6914;
+  --ann-event: #6b4c8a;
+  --ann-date: #2a7a7a;
+  --ann-allusion: #b5651d;
   --border: #c9b896;
   --border-light: #d8cab0;
   --shadow-rgb: 74,63,46;
@@ -57,6 +67,11 @@
   --gold: #c9a84c;
   --gold-light: #d8b860;
   --jade: #5aaa98;
+  --ann-person: #6a8ab4;
+  --ann-place: #b8943a;
+  --ann-event: #9a7cb4;
+  --ann-date: #5ab4b4;
+  --ann-allusion: #d4843a;
   --border: #48484a;
   --border-light: #555557;
   --shadow-rgb: 0,0,0;
@@ -78,6 +93,11 @@
   --gold: #e8c840;
   --gold-light: #f0d860;
   --jade: #40c8a8;
+  --ann-person: #6a8ab4;
+  --ann-place: #b8943a;
+  --ann-event: #9a7cb4;
+  --ann-date: #5ab4b4;
+  --ann-allusion: #d4843a;
   --border: #333333;
   --border-light: #444444;
   --shadow-rgb: 0,0,0;

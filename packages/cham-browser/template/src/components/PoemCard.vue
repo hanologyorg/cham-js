@@ -49,6 +49,7 @@ const preview = computed(() => {
   border-color: var(--gold);
 }
 .pc-root:hover .pc-accent { height: 100%; }
+.pc-root:active { transform: scale(0.98); }
 .pc-body { padding: 24px; }
 .pc-num {
   font-size: 11px; color: var(--ink-faint);

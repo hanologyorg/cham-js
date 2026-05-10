@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 
 export type Theme = 'light' | 'sepia' | 'dark' | 'oled'
 export type LayoutMode = 'horizontal' | 'vertical'
@@ -21,17 +21,22 @@ const mainFontSize = ref<FontSize>(24)
 const bodyFontSize = ref<FontSize>(16)
 
 if (!import.meta.env.SSR) {
+  // Theme and font sizes only affect CSS, safe to apply before hydration
   const savedTheme = localStorage.getItem('theme') as Theme | null
   if (savedTheme && THEMES.includes(savedTheme)) theme.value = savedTheme
-
-  const savedLayout = localStorage.getItem('layout') as LayoutMode | null
-  if (savedLayout === 'vertical' || savedLayout === 'horizontal') layout.value = savedLayout
 
   const savedMain = parseInt(localStorage.getItem('mainFontSize') || '', 10)
   if (FONT_SIZES.includes(savedMain as any)) mainFontSize.value = savedMain as FontSize
 
   const savedBody = parseInt(localStorage.getItem('bodyFontSize') || '', 10)
   if (FONT_SIZES.includes(savedBody as any)) bodyFontSize.value = savedBody as FontSize
+
+  // Layout controls v-if/v-else DOM structure — must defer to after hydration
+  // to avoid SSR/client mismatch (SSR always renders vertical)
+  nextTick(() => {
+    const savedLayout = localStorage.getItem('layout') as LayoutMode | null
+    if (savedLayout === 'vertical' || savedLayout === 'horizontal') layout.value = savedLayout
+  })
 
   watch(theme, t => {
     document.documentElement.setAttribute('data-theme', t)

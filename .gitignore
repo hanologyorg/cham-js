@@ -3,3 +3,4 @@ dist
 packages/*/dist
 **/__tmp_*
 TODO.*/
+packages/cham-browser/template/public/

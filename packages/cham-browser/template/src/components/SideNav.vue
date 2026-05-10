@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables/useReadingMode'
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
@@ -20,9 +20,10 @@ const emit = defineEmits<{
 
 const { theme, layout, mainFontSize, bodyFontSize, setTheme, setLayout, setMainFontSize, setBodyFontSize } = useReadingMode()
 const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
-const { logoUrl } = useSiteConfig()
+const { logoUrl, aboutHtml } = useSiteConfig()
 const router = useRouter()
 const settingsOpen = ref(false)
+const aboutPane = inject<{ toggleAbout: () => void }>('aboutPane')
 
 function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 </script>
@@ -31,7 +32,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   <nav class="sidenav">
     <button class="sn-brand" @click="emit('home')" title="首頁">
       <img v-if="logoUrl" :src="logoUrl" alt="" class="sn-logo" />
-      <span v-else class="sn-seal">漢流</span>
+      <span v-else class="sn-seal">文</span>
     </button>
 
     <button class="sn-btn" @click="emit('back')" title="返回">
@@ -49,7 +50,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
     <div class="sn-spacer" />
 
-    <button class="sn-btn" @click="router.push('/about')" title="關於">
+    <button v-if="aboutHtml" class="sn-btn" @click="aboutPane?.toggleAbout()" title="關於">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     </button>
 

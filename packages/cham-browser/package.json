@@ -1,6 +1,6 @@
 {
   "name": "@hanology/cham-browser",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "CHAM — browser-compatible parser, serializer, and site generator for Classical Han Annotated Markdown",
   "type": "module",
   "main": "dist/index.js",

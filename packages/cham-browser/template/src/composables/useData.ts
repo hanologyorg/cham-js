@@ -28,7 +28,12 @@ async function loadShared(): Promise<void> {
 
 const authorByName = computed(() => {
   const map = new Map<string, Author>()
-  for (const a of authors.value) map.set(a.name, a)
+  for (const a of authors.value) {
+    const existing = map.get(a.name)
+    if (!existing || (!existing.bio && a.bio)) {
+      map.set(a.name, a)
+    }
+  }
   return map
 })
 

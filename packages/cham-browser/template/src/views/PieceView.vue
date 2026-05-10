@@ -43,6 +43,24 @@ onMounted(() => {
   onUnmounted(() => observer.disconnect())
 })
 
+// Keyboard navigation
+onMounted(() => {
+  function onKey(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+    const adj = adjacent.value
+    if (isVertical.value) {
+      if (e.key === 'ArrowLeft' && adj.next !== null) { e.preventDefault(); navigate(1) }
+      if (e.key === 'ArrowRight' && adj.prev !== null) { e.preventDefault(); navigate(-1) }
+    } else {
+      if (e.key === 'ArrowRight' && adj.next !== null) { e.preventDefault(); navigate(1) }
+      if (e.key === 'ArrowLeft' && adj.prev !== null) { e.preventDefault(); navigate(-1) }
+    }
+    if (e.key === 'Escape') { e.preventDefault(); goBack() }
+  }
+  window.addEventListener('keydown', onKey)
+  onUnmounted(() => window.removeEventListener('keydown', onKey))
+})
+
 const piece = computed<Piece | undefined>(() => {
   const n = typeof props.num === 'string' ? parseInt(props.num, 10) : props.num
   return getPiece(n)
@@ -86,6 +104,7 @@ function initLayers() {
 }
 
 const mergedAnnotations = computed<Annotation[]>(() => {
+  if (!annotationsVisible.value) return []
   if (!hasLayers.value) return piece.value?.annotations || []
   const result: Annotation[] = []
   for (const layer of annotationLayers.value) {
@@ -194,6 +213,8 @@ const proseSections = computed(() => {
 const { getAuthor, loadShared } = useData()
 await loadShared()
 
+const CHAM_LOGO_URL = import.meta.env.CHAM_LOGO_URL || ''
+
 const selectedAuthorName = computed(() => {
   if (!selectedAuthorId.value) return piece.value?.author || ''
   const c = piece.value?.contributors?.find(x => x.id === selectedAuthorId.value)
@@ -203,6 +224,30 @@ const selectedAuthorBio = computed(() => {
   const name = selectedAuthorName.value
   const a = getAuthor(name)
   return a?.bio || piece.value?.sections?.author_bio || ''
+})
+
+const selectedAuthorDynasty = computed(() => {
+  const name = selectedAuthorName.value
+  const a = getAuthor(name)
+  return a?.dynasty || piece.value?.dynasty || ''
+})
+
+const selectedAuthorPoemCount = computed(() => {
+  const name = selectedAuthorName.value
+  const a = getAuthor(name)
+  return a?.poemCount || 0
+})
+
+const selectedAuthorData = computed(() => {
+  const name = selectedAuthorName.value
+  return getAuthor(name)
+})
+
+const authorLifespan = computed(() => {
+  const a = selectedAuthorData.value
+  if (!a?.born && !a?.died) return ''
+  if (a.born && a.died) return `${a.born}–${a.died}`
+  return a.born ? `${a.born}–` : `?–${a.died}`
 })
 
 function openAuthorPane(id?: string) {
@@ -219,12 +264,20 @@ function navigate(delta: number) {
   if (target !== null) router.push(`/${props.bookId}/${target}`)
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  author: '作者',
+  commentator: '註者',
+  editor: '編者',
+  translator: '譯者',
+  annotator: '注者',
+}
+
 const contributorGroups = computed(() => {
   const c = piece.value?.contributors
   if (!c || c.length <= 1) return []
   const groups = new Map<string, string[]>()
   for (const x of c) {
-    const t = x.title || '作者'
+    const t = x.title || ROLE_LABELS[x.role] || '作者'
     if (!groups.has(t)) groups.set(t, [])
     groups.get(t)!.push(x.name)
   }
@@ -322,7 +375,7 @@ function tcy(n: number): string {
           <div class="v-layers-inline v-section">
             <AnnotationControlBar
               :layers="annotationLayers"
-              :has-annotations="piece.annotations.length > 0"
+              :has-annotations="true"
               v-model:active-ids="activeLayerIds"
               v-model:annotations-visible="annotationsVisible"
             />
@@ -339,16 +392,14 @@ function tcy(n: number): string {
             class="v-section"
           />
         </template>
-        <SectionBlock
-          v-else-if="piece.annotations.length > 0"
-          num=""
-          label="注釋"
-          :special="false"
-          :text="piece.sections.annotations || ''"
-          :is-annotations="true"
-          :vertical="true"
-          class="v-section"
-        />
+        <div v-else-if="piece.annotations.length > 0 || piece.sections.annotations" class="v-layers-inline v-section">
+          <AnnotationControlBar
+            :layers="annotationLayers"
+            :has-annotations="true"
+            v-model:active-ids="activeLayerIds"
+            v-model:annotations-visible="annotationsVisible"
+          />
+        </div>
 
         <SectionBlock
           v-for="(sec, idx) in proseSections"
@@ -394,12 +445,28 @@ function tcy(n: number): string {
               <button class="v-pane-close" @click="closeAuthorPane">✕</button>
               <div class="v-pane-header">
                 <div class="v-pane-name">{{ selectedAuthorName }}</div>
+                <div class="v-pane-meta">
+                  <span v-if="selectedAuthorDynasty">{{ selectedAuthorDynasty }}</span>
+                  <span v-if="authorLifespan">{{ authorLifespan }}</span>
+                  <span v-if="selectedAuthorPoemCount" class="v-pane-count">{{ selectedAuthorPoemCount }} 篇</span>
+                </div>
+                <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="v-pane-names">
+                  <span v-if="selectedAuthorData?.courtesyName">字{{ selectedAuthorData.courtesyName }}</span>
+                  <span v-if="selectedAuthorData?.artName">號{{ selectedAuthorData.artName }}</span>
+                </div>
+              </div>
+              <div class="v-pane-links">
+                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="v-pane-link">CTEXT</a>
+                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">維基</a>
+                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="v-pane-link">Wikipedia</a>
+                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="v-pane-link">Wikidata</a>
               </div>
               <div v-if="selectedAuthorBio" class="v-pane-bio">
                 <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="v-pane-p">
                   {{ p.trim() }}
                 </div>
               </div>
+              <div v-if="!selectedAuthorBio" class="v-pane-empty">暫無作者資料</div>
             </div>
           </div>
         </Transition>
@@ -413,13 +480,15 @@ function tcy(n: number): string {
         <nav class="h-nav">
           <div class="h-nav-inner">
             <button class="h-back" @click="goBack">← 返回</button>
-            <div class="h-breadcrumb">
-              <span v-if="piece.source?.textRef" class="h-source-link" @click="router.push(`/${piece.source.textRef}`)">
-                {{ meta?.title }} →
+            <div class="h-nav-title-row">
+              <span v-if="piece.dynasty" class="h-dynasty">{{ piece.dynasty }}</span>
+              <span class="h-breadcrumb">
+                <span v-if="piece.source?.textRef" class="h-source-link" @click="router.push(`/${piece.source.textRef}`)">
+                  {{ meta?.title }} →
+                </span>
+                <span class="h-sep">{{ piece.num }}.</span>
+                {{ piece.title }}
               </span>
-              <span class="h-sep">{{ piece.num }}.</span>
-              {{ piece.title }}
-              <span class="h-sep">·</span>
               <template v-if="piece.contributors && piece.contributors.length > 1">
                 <template v-for="(group, gi) in contributorGroups" :key="group.title">
                   <span v-if="gi > 0" class="h-sep">|</span>
@@ -430,6 +499,7 @@ function tcy(n: number): string {
               <span v-else class="h-author-link" @click="openAuthorPane">{{ piece.author }}</span>
             </div>
             <div class="h-controls">
+              <span class="h-tag h-tag-pager">{{ piece.num }} / {{ pieces.length }}</span>
               <template v-if="isMultiPart">
                 <span class="h-tag">{{ piece.parts!.length }} 段</span>
                 <span class="h-tag">{{ totalPartAnnotationCount > 0 ? totalPartAnnotationCount + ' 注' : '無注' }}</span>
@@ -438,6 +508,8 @@ function tcy(n: number): string {
                 <span class="h-tag">{{ piece.verses.length }} 段</span>
                 <span class="h-tag">{{ totalAnnotationCount > 0 ? totalAnnotationCount + ' 注' : '無注' }}</span>
               </template>
+              <button v-if="adjacent.prev !== null" class="h-nav-arrow" @click="navigate(-1)" title="上一篇">←</button>
+              <button v-if="adjacent.next !== null" class="h-nav-arrow" @click="navigate(1)" title="下一篇">→</button>
             </div>
           </div>
         </nav>
@@ -468,10 +540,10 @@ function tcy(n: number): string {
           </div>
 
           <div class="h-sections">
-            <div v-if="(piece.sections.annotations && annotationsVisible) || hasLayers" class="h-ann-section">
+            <div v-if="piece.annotations.length > 0 || piece.sections.annotations || hasLayers" class="h-ann-section">
               <AnnotationControlBar
                 :layers="annotationLayers"
-                :has-annotations="piece.annotations.length > 0"
+                :has-annotations="true"
                 v-model:active-ids="activeLayerIds"
                 v-model:annotations-visible="annotationsVisible"
                 style="margin-bottom: 16px"
@@ -484,7 +556,7 @@ function tcy(n: number): string {
                 :text="piece.sections.annotations"
                 :is-annotations="true"
               />
-              <template v-if="hasLayers">
+              <template v-if="hasLayers && annotationsVisible">
                 <SectionBlock
                   v-for="block in layerAnnotationBlocks"
                   :key="block.label"
@@ -543,14 +615,37 @@ function tcy(n: number): string {
               <div class="h-pane-header">
                 <div>
                   <div class="h-pane-name">{{ selectedAuthorName }}</div>
-                  <div class="h-pane-meta">{{ piece.title }} 等</div>
+                  <div class="h-pane-meta">
+                    <span v-if="selectedAuthorDynasty" class="h-pane-dynasty">{{ selectedAuthorDynasty }}</span>
+                    <span v-if="authorLifespan" class="h-pane-lifespan">{{ authorLifespan }}</span>
+                    <span v-if="selectedAuthorPoemCount" class="h-pane-count">{{ selectedAuthorPoemCount }} 篇收錄</span>
+                  </div>
+                  <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="h-pane-alt-names">
+                    <span v-if="selectedAuthorData?.courtesyName">字 {{ selectedAuthorData.courtesyName }}</span>
+                    <span v-if="selectedAuthorData?.artName">號 {{ selectedAuthorData.artName }}</span>
+                  </div>
                 </div>
+              </div>
+              <div class="h-pane-links">
+                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="h-pane-link">
+                  <span class="link-icon">文</span> CTEXT
+                </a>
+                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="h-pane-link">
+                  <span class="link-icon">維</span> 維基百科
+                </a>
+                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="h-pane-link">
+                  <span class="link-icon">W</span> Wikipedia
+                </a>
+                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="h-pane-link">
+                  <span class="link-icon">Q</span> Wikidata
+                </a>
               </div>
               <div v-if="selectedAuthorBio" class="h-pane-bio">
                 <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="h-pane-p">
                   {{ p.trim() }}
                 </div>
               </div>
+              <div v-if="!selectedAuthorBio" class="h-pane-empty">暫無作者資料</div>
             </div>
           </div>
         </Transition>
@@ -559,7 +654,8 @@ function tcy(n: number): string {
   </div>
 
   <div v-else class="loading">
-    <div class="loading-seal">詩</div>
+    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" class="loading-logo" />
+    <div v-else class="loading-seal">文</div>
   </div>
 </template>
 
@@ -739,7 +835,39 @@ function tcy(n: number): string {
   transition: all 0.2s; white-space: nowrap;
 }
 .h-back:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.h-breadcrumb { font-size: 15px; font-weight: 600; letter-spacing: 1px; }
+.h-back:active { transform: scale(0.97); }
+
+.h-nav-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  min-width: 0;
+}
+
+.h-dynasty {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: var(--vermillion);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.h-breadcrumb {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 .h-sep { color: var(--ink-faint); font-weight: 300; margin: 0 8px; }
 .h-author-link {
   color: var(--ink-light); font-weight: 400;
@@ -757,6 +885,29 @@ function tcy(n: number): string {
   border-radius: 2px; font-family: var(--sans);
   font-size: 12px; color: var(--ink-light); letter-spacing: 1px;
 }
+.h-tag-pager {
+  background: var(--surface-warm);
+  font-weight: 600;
+  color: var(--ink-mid);
+}
+
+.h-nav-arrow {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--ink-light);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.h-nav-arrow:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+}
+.h-nav-arrow:active { transform: scale(0.95); }
 
 .h-content {
   max-width: 1200px; margin: 0 auto; padding: 60px 40px;
@@ -781,6 +932,10 @@ function tcy(n: number): string {
 
 .h-ann-section {
   margin-bottom: 16px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
 }
 
 .h-layers-inline {
@@ -825,6 +980,7 @@ function tcy(n: number): string {
   transform: translateY(-2px);
 }
 .h-nav-btn:hover::after { transform: scaleX(1); }
+.h-nav-btn:active { transform: scale(0.98); }
 .h-nav-btn.h-nav-next { text-align: right; }
 .h-nav-label { font-size: 11px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; margin-bottom: 4px; }
 .h-nav-title { font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--ink); }
@@ -876,7 +1032,83 @@ function tcy(n: number): string {
   color: var(--vermillion); flex-shrink: 0;
 }
 .h-pane-name { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: var(--ink); }
-.h-pane-meta { font-size: 14px; color: var(--ink-faint); letter-spacing: 2px; margin-top: 4px; }
+.h-pane-meta { font-size: 14px; color: var(--ink-faint); letter-spacing: 2px; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+.h-pane-dynasty {
+  display: inline-flex;
+  padding: 2px 8px;
+  background: var(--vermillion);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 3px;
+}
+.h-pane-count {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
+.h-pane-lifespan {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-light);
+  letter-spacing: 1px;
+}
+.h-pane-alt-names {
+  font-size: 14px;
+  color: var(--ink-light);
+  letter-spacing: 2px;
+  margin-top: 6px;
+  display: flex;
+  gap: 12px;
+}
+.h-pane-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+.h-pane-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-mid);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.h-pane-link:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+}
+.h-pane-link .link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background: var(--surface-warm);
+  font-size: 10px;
+  font-weight: 700;
+}
+.h-pane-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
 .h-pane-bio { border-top: 1px solid var(--border); padding-top: 24px; }
 .h-pane-p {
   font-size: 16px; line-height: 2.2;
@@ -931,6 +1163,60 @@ function tcy(n: number): string {
   font-size: 28px; font-weight: 900;
   letter-spacing: 6px; color: var(--ink);
 }
+.v-pane-meta {
+  font-size: 13px;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  letter-spacing: 2px;
+  display: flex;
+  gap: 8px;
+  margin-left: 4px;
+}
+.v-pane-count {
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
+.v-pane-names {
+  font-size: 14px;
+  color: var(--ink-light);
+  letter-spacing: 2px;
+  display: flex;
+  gap: 8px;
+  margin-left: 4px;
+}
+.v-pane-links {
+  display: flex;
+  gap: 8px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.v-pane-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-mid);
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+.v-pane-link:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+}
+.v-pane-empty {
+  font-size: 14px;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  letter-spacing: 2px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border);
+}
 .v-pane-bio {
   font-size: 16px; line-height: 2.4;
   color: var(--ink-mid);
@@ -956,12 +1242,121 @@ function tcy(n: number): string {
   color: var(--vermillion);
   animation: pulse 1.2s ease-in-out infinite;
 }
+.loading-logo {
+  width: 56px; height: auto;
+  object-fit: contain;
+  animation: pulse 1.2s ease-in-out infinite;
+}
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
 }
 
+/* ─── 觸控回饋 ─── */
+.v-nav-btn:active { transform: scale(0.97); }
+.h-back:active { transform: scale(0.97); }
+.h-source-link:active { opacity: 1; }
+.v-source-link:active { opacity: 1; }
+.v-poem-author:active { color: var(--vermillion); }
+.h-author-link:active { color: var(--vermillion); }
+
+/* ═══════ 行動裝置適配 ═══════ */
+
 @media (max-width: 768px) {
-  .h-content { padding: 30px 20px; }
+  /* ─── 直排模式 ─── */
+  .v-page { margin-right: var(--nav-width, 44px); }
+  .v-title-col { padding: 24px 16px; }
+  .v-poem-title { font-size: 32px; letter-spacing: 8px; }
+  .v-poem-author { font-size: 20px; }
+  .v-poem-col { padding: 16px; }
+
+  /* ─── 橫排模式導航 ─── */
+  .h-nav { padding: 0 16px; }
+  .h-nav-inner {
+    height: auto;
+    min-height: 48px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+    gap: 6px 12px;
+  }
+  .h-back {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .h-nav-title-row {
+    font-size: 14px;
+    order: 3;
+    width: 100%;
+    overflow: hidden;
+  }
+  .h-breadcrumb {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .h-dynasty { font-size: 10px; padding: 1px 6px; }
+  .h-sep { margin: 0 4px; }
+  .h-controls {
+    margin-left: 0;
+    gap: 4px;
+  }
+  .h-tag {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
+  .h-nav-arrow { width: 28px; height: 28px; font-size: 14px; }
+
+  /* ─── 橫排內容 ─── */
+  .h-content { padding: 24px 16px; }
+  .h-poem-block { margin-bottom: 40px; }
+
+  .h-multipart {
+    padding: 20px 16px;
+    border-radius: 6px;
+  }
+
+  .h-sections {
+    padding-bottom: 60px;
+  }
+
+  .h-ann-section {
+    margin-bottom: 12px;
+  }
+
+  /* ─── 上/下篇導航 ─── */
+  .h-nav-bottom {
+    gap: 10px;
+    margin: 0 auto 32px;
+  }
+  .h-nav-btn {
+    padding: 16px;
+    border-radius: 6px;
+  }
+  .h-nav-title { font-size: 14px; }
+  .h-nav-label { font-size: 10px; }
+
+  /* ─── 作者面板 ─── */
+  .h-overlay { justify-content: center; align-items: flex-end; }
+  .h-pane {
+    width: 100%;
+    max-height: 85vh;
+    height: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+  }
+  .overlay-enter-from .h-pane { transform: translateY(100%); }
+  .overlay-leave-to .h-pane { transform: translateY(40px); }
+
+  .h-pane-name { font-size: 24px; }
+  .h-pane-p { font-size: 15px; line-height: 2; }
+}
+
+@media (max-width: 480px) {
+  .h-nav-bottom {
+    grid-template-columns: 1fr;
+  }
+  .h-nav-btn.h-nav-next { text-align: left; }
+  .h-nav-title-row { font-size: 13px; }
+  .h-nav-arrow { display: none; }
 }
 </style>

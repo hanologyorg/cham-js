@@ -97,4 +97,56 @@ function onTap(event: MouseEvent) {
 :deep(.ann-target.pronunciation) {
   border-bottom-color: var(--jade);
 }
+:deep(.ann-target.person) {
+  border-bottom-color: var(--ann-person);
+}
+:deep(.ann-target.place) {
+  border-bottom-color: var(--ann-place);
+}
+:deep(.ann-target.event) {
+  border-bottom-color: var(--ann-event);
+}
+:deep(.ann-target.date) {
+  border-bottom-color: var(--ann-date);
+}
+:deep(.ann-target.allusion) {
+  border-bottom-color: var(--ann-allusion);
+}
+:deep(.ann-target.person:hover) {
+  background: rgba(58, 90, 140, 0.08);
+}
+:deep(.ann-target.place:hover) {
+  background: rgba(139, 105, 20, 0.08);
+}
+:deep(.ann-target.event:hover) {
+  background: rgba(107, 76, 138, 0.08);
+}
+:deep(.ann-target.date:hover) {
+  background: rgba(42, 122, 122, 0.08);
+}
+:deep(.ann-target.allusion:hover) {
+  background: rgba(181, 101, 29, 0.08);
+}
+
+@media (max-width: 768px) {
+  .h-display {
+    padding: 24px 20px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .h-display-title {
+    font-size: 24px;
+    letter-spacing: 4px;
+  }
+  .h-display-author {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .h-display-line {
+    font-size: var(--main-font-size, 20px);
+    line-height: 2.4;
+    letter-spacing: 2px;
+  }
+}
 </style>

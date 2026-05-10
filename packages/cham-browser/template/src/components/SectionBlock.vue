@@ -68,14 +68,17 @@ const paragraphsHtml = computed(() => {
     </div>
     <div v-if="isAnnotations" class="sb-text sb-ann-list">
       <div v-for="entry in entries" :key="entry.num" class="sb-ann-entry">
-        <span class="sb-ann-num">{{ entry.numDisplay }}</span>
-        <span class="sb-ann-term">{{ entry.term }}</span>
-        <PronunciationGroup
-          v-for="seg in entry.pronSegments"
-          :key="seg.lang"
-          :segment="seg"
-        />
-        <span v-if="entry.definition" class="sb-ann-def">{{ entry.definition }}</span>
+        <div class="sb-ann-head">
+          <span class="sb-ann-num">{{ entry.numDisplay }}</span>
+          <span class="sb-ann-term">{{ entry.term }}</span>
+          <PronunciationGroup
+            v-for="seg in entry.pronSegments"
+            :key="seg.lang"
+            :segment="seg"
+            class="sb-ann-pron"
+          />
+        </div>
+        <div v-if="entry.definition" class="sb-ann-def">{{ entry.definition }}</div>
       </div>
     </div>
     <div v-else class="sb-text" v-html="paragraphsHtml" />
@@ -114,11 +117,54 @@ const paragraphsHtml = computed(() => {
 .sb-text :deep(p) { margin-bottom: 16px; text-indent: 2em; }
 .sb-text :deep(p:last-child) { margin-bottom: 0; }
 
+/* ─── Annotation list ─── */
 .sb-ann-list { text-align: start; }
-.sb-ann-entry { margin-bottom: 14px; }
-.sb-ann-num { color: var(--vermillion); font-weight: 600; font-family: var(--sans); }
-.sb-ann-term { font-weight: 600; color: var(--ink); }
-.sb-ann-def { white-space: pre-line; }
+.sb-ann-entry {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.sb-ann-entry:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.sb-ann-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-bottom: 4px;
+}
+.sb-ann-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--vermillion);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sb-ann-term {
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--ink);
+  padding: 2px 8px;
+  background: var(--surface-warm);
+  border-radius: 3px;
+}
+.sb-ann-pron {
+  margin-left: 2px;
+}
+.sb-ann-def {
+  color: var(--ink-mid);
+  line-height: 2;
+  white-space: pre-line;
+  padding-left: 32px;
+}
 
 /* ─── 直排模式 ─── */
 .sb-vertical {
@@ -163,5 +209,38 @@ const paragraphsHtml = computed(() => {
 .sb-vertical .sb-ann-entry {
   margin-bottom: 0;
   margin-left: 16px;
+  padding: 0;
+  border-bottom: none;
+}
+.sb-vertical .sb-ann-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.sb-vertical .sb-ann-num {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--vermillion);
+  font-size: inherit;
+}
+.sb-vertical .sb-ann-term {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
+.sb-vertical .sb-ann-def {
+  padding-left: 0;
+  margin-left: 12px;
+}
+
+@media (max-width: 768px) {
+  .sb-ann-entry {
+    padding: 10px 0;
+  }
+  .sb-ann-def {
+    padding-left: 0;
+  }
 }
 </style>
