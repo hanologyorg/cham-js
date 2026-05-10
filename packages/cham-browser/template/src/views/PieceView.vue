@@ -26,7 +26,7 @@ const vScroll = useHorizontalScroll(vPageRef)
 
 const authorPaneOpen = ref(false)
 const selectedAuthorId = ref('')
-const interaction = useAnnotationInteraction()
+const interaction = reactive(useAnnotationInteraction())
 const titleCollapsed = ref(false)
 const vTitleRef = ref<HTMLElement | null>(null)
 
@@ -271,7 +271,7 @@ function tcy(n: number): string {
             />
           </div>
           <SectionBlock
-            v-for="block in visibleLayerBlocks"
+            v-for="block in layerAnnotationBlocks"
             :key="block.label"
             num=""
             :label="block.label"
