@@ -6,6 +6,7 @@ import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
+import { useI18n } from '../composables/useI18n'
 import BookCard from '../components/BookCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
@@ -44,23 +45,17 @@ const { layout } = useReadingMode()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
-
-const genreLabel: Record<string, string> = {
-  poetry: '詩歌',
-  prose: '散文',
-  mixed: '綜合',
-  drama: '戲曲',
-}
+const { t } = useI18n()
 
 function bookCategory(book: BookMeta): string {
-  if (book.id.startsWith('skqs-')) return '四庫全書'
-  if (book.id === 'primary' || book.id === 'primary-culture' || book.id === 'secondary' || book.id === 'nss') return '教材'
-  return '古典文本'
+  if (book.id.startsWith('skqs-')) return t('genre.fourTreasuries')
+  if (book.id === 'primary' || book.id === 'primary-culture' || book.id === 'secondary' || book.id === 'nss') return t('genre.textbooks')
+  return t('genre.classicalText')
 }
 
 const groupedBooks = computed(() => {
   const groups = new Map<string, BookMeta[]>()
-  const order = ['教材', '古典文本', '四庫全書']
+  const order = [t('genre.textbooks'), t('genre.classicalText'), t('genre.fourTreasuries')]
   for (const book of books.value) {
     const cat = bookCategory(book)
     if (!groups.has(cat)) groups.set(cat, [])
@@ -81,9 +76,9 @@ function openBook(bookId: string) {
 </script>
 
 <template>
-  <div v-if="scale !== 'library'" class="loading">
-    <img v-if="logoUrl" :src="logoUrl" alt="" class="loading-logo" />
-    <div v-else class="loading-seal">文</div>
+  <div v-if="scale !== 'library'" class="page-loading">
+    <img v-if="logoUrl" :src="logoUrl" alt="" class="page-loading-logo" />
+    <div v-else class="page-loading-seal">文</div>
   </div>
   <div v-else>
     <!-- ═══════ 直排模式 ═══════ -->
@@ -91,7 +86,7 @@ function openBook(bookId: string) {
       <SideNav @home="router.push('/')" @back="router.push('/')" />
       <div ref="vPageRef" class="v-page">
         <div v-if="aboutHtml" class="v-about-col">
-          <button class="v-about-link" @click="aboutPane?.toggleAbout()">關 於</button>
+          <button class="v-about-link" @click="aboutPane?.toggleAbout()">{{ t('nav.about') }}</button>
         </div>
         <section class="v-hero">
           <h1 class="v-title">{{ spacedTitle }}</h1>
@@ -110,7 +105,7 @@ function openBook(bookId: string) {
             <h2 class="v-book-title">{{ book.title }}</h2>
             <p v-if="book.subtitle" class="v-book-sub">{{ book.subtitle }}</p>
             <div class="v-book-stats">
-              <span class="v-book-count">{{ book.count }} 篇</span>
+              <span class="v-book-count">{{ t('stat.pieceCount', { count: book.count }) }}</span>
             </div>
           </div>
         </section>
@@ -122,12 +117,12 @@ function openBook(bookId: string) {
       <header class="lib-hero">
         <img v-if="logoUrl" :src="logoUrl" alt="" class="lib-logo" />
         <div v-else class="lib-seal">{{ displayTitle.slice(0, 2) }}</div>
-        <h1>{{ displayTitle }} <button v-if="aboutHtml" class="lib-about-link" @click="aboutPane?.toggleAbout()">關於</button></h1>
+        <h1>{{ displayTitle }} <button v-if="aboutHtml" class="lib-about-link" @click="aboutPane?.toggleAbout()">{{ t('nav.about') }}</button></h1>
         <p v-if="siteSubtitle" class="lib-subtitle">{{ siteSubtitle }}</p>
         <div class="lib-stats-bar">
-          <span class="lib-stat">{{ books.length }} 部</span>
+          <span class="lib-stat">{{ books.length }} {{ t('stat.books') }}</span>
           <span class="lib-stat-sep">·</span>
-          <span class="lib-stat">{{ totalPieces }} 篇</span>
+          <span class="lib-stat">{{ totalPieces }} {{ t('stat.pieces') }}</span>
         </div>
       </header>
       <div v-for="group in groupedBooks" :key="group.category" class="lib-group">
@@ -144,11 +139,11 @@ function openBook(bookId: string) {
             <div class="lib-card-body">
               <div class="lib-card-top">
                 <h3 class="lib-card-title">{{ book.title }}</h3>
-                <span class="lib-card-genre">{{ genreLabel[book.genre] || book.genre }}</span>
+                <span class="lib-card-genre">{{ bookCategory(book) }}</span>
               </div>
               <p v-if="book.subtitle" class="lib-card-sub">{{ book.subtitle }}</p>
               <div class="lib-card-stats">
-                <span class="lib-card-count">{{ book.count }} 篇</span>
+                <span class="lib-card-count">{{ t('stat.pieceCount', { count: book.count }) }}</span>
               </div>
             </div>
           </div>
@@ -164,20 +159,9 @@ function openBook(bookId: string) {
 /* ═══════ 直排模式 ═══════ */
 
 .v-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: row-reverse;
-  overflow-x: auto;
-  overflow-y: hidden;
-  margin-right: var(--nav-width, 56px);
   padding: 0 32px;
   background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
-  scroll-snap-type: x proximity;
 }
-.v-page::-webkit-scrollbar { height: 4px; }
-.v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-hero {
   writing-mode: vertical-rl;
@@ -482,29 +466,5 @@ function openBook(bookId: string) {
 
 @media (max-width: 480px) {
   .lib-grid { grid-template-columns: 1fr; }
-}
-
-.loading {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  height: 100vh;
-}
-.loading-seal {
-  width: 56px; height: 56px;
-  border: 2px solid var(--vermillion);
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 900;
-  color: var(--vermillion);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-.loading-logo {
-  width: 56px; height: auto;
-  object-fit: contain;
-  animation: pulse 1.2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
 }
 </style>

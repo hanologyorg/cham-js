@@ -5,6 +5,7 @@ import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
+import { useI18n } from '../composables/useI18n'
 import PoemCard from '../components/PoemCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
@@ -22,6 +23,7 @@ const { layout } = useReadingMode()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
+const { t } = useI18n()
 
 const filtered = computed(() => {
   const q = searchQuery.value.toLowerCase()
@@ -72,11 +74,11 @@ function scrollToCatalog() {
       </section>
 
       <section class="v-catalog-col">
-        <span class="v-ch-title">篇 章 目 錄</span>
+        <span class="v-ch-title">{{ t('catalog.title') }}</span>
         <span class="v-ch-line"> </span>
-        <span class="v-count">共 {{ filtered.length }} 篇</span>
+        <span class="v-count">{{ t('catalog.total', { count: filtered.length }) }}</span>
         <span class="v-search-wrap">
-          <input v-model="searchQuery" class="v-search" placeholder="搜索詩題、作者…" />
+          <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" />
         </span>
       </section>
 
@@ -104,28 +106,28 @@ function scrollToCatalog() {
         <div class="h-stats">
           <div class="h-stat-block">
             <div class="h-stat-num">{{ pieces.length }}</div>
-            <div class="h-stat-label">篇詩文</div>
+            <div class="h-stat-label">{{ t('stat.piecePoems') }}</div>
           </div>
           <div class="h-stat-block">
             <div class="h-stat-num">{{ authorCount }}</div>
-            <div class="h-stat-label">位作者</div>
+            <div class="h-stat-label">{{ t('stat.authorsLabel') }}</div>
           </div>
         </div>
         <p v-if="meta?.publisher" class="h-publisher">{{ meta.publisher }}</p>
         <button class="h-cta" @click="scrollToCatalog">
-          進 入 文 庫 ↓
+          {{ t('catalog.enterLibrary') }}
         </button>
       </div>
     </section>
 
     <section class="h-catalog">
       <div class="h-catalog-header">
-        <h2>篇 章 目 錄</h2>
+        <h2>{{ t('catalog.title') }}</h2>
         <div class="h-line"></div>
         <p v-if="meta?.publisher">{{ meta.publisher }}</p>
       </div>
       <div class="h-filter">
-        <input v-model="searchQuery" class="h-search" placeholder="搜索詩題、作者…" />
+        <input v-model="searchQuery" class="h-search" :placeholder="t('catalog.search')" />
       </div>
       <div class="h-grid">
         <PoemCard
@@ -139,7 +141,7 @@ function scrollToCatalog() {
       </div>
       <div v-if="searchQuery && filtered.length === 0" class="h-empty">
         <span class="h-empty-icon">🔍</span>
-        <p>未找到符合「{{ searchQuery }}」的篇章</p>
+        <p>{{ t('catalog.noResults', { query: searchQuery }) }}</p>
       </div>
     </section>
 
@@ -152,20 +154,9 @@ function scrollToCatalog() {
 /* ═══════ 直排模式 ═══════ */
 
 .v-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: row-reverse;
-  overflow-x: auto;
-  overflow-y: hidden;
-  margin-right: var(--nav-width, 56px);
   padding: 0 32px;
   background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
-  scroll-snap-type: x proximity;
 }
-.v-page::-webkit-scrollbar { height: 4px; }
-.v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-hero {
   writing-mode: vertical-rl;
