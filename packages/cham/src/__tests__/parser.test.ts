@@ -157,6 +157,29 @@ Text block
     if (t.type === 'verse') {
       expect(t.line).toBe(0)
       expect(t.char).toBe(3)
+      expect(t.end).toBeUndefined()
+    }
+  })
+
+  it('parses @verse range target', () => {
+    const source = `---
+id: 4
+title: Test
+---
+
+Text block
+
+## Notes
+
+@verse:0:2:5 commentary [annotation text]`
+    const doc = parse(source)
+    expect(doc.sections[0].entries.length).toBe(1)
+    const t = doc.sections[0].entries[0].target
+    expect(t.type).toBe('verse')
+    if (t.type === 'verse') {
+      expect(t.line).toBe(0)
+      expect(t.char).toBe(2)
+      expect(t.end).toBe(5)
     }
   })
 
