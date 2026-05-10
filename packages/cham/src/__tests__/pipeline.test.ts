@@ -6,6 +6,7 @@ import {
   cleanHardWraps, splitMdFrontmatter, parseProseSections, parseCommentaryLayers,
   buildPieceFromCham, buildBookMeta, buildBookData, detectScale,
   buildCrossRefs, buildLibraryIndex, buildAuthorsJson, buildDynastiesJson,
+  buildPartOutput,
 } from '../pipeline.js'
 import type { OutputAnnotation, BookConfig, AuthorRecord } from '../types.js'
 
@@ -93,7 +94,19 @@ describe('entryToRange', () => {
       value: 'test',
     }
     const range = entryToRange(verseEntry, doc)
-    expect(range).toEqual({ type: 'range', scope: 'verse', verseIndex: 0, start: 3, end: 3 })
+    expect(range).toEqual({ type: 'range', scope: 'verse', verseIndex: 0, start: 3, end: 4 })
+  })
+
+  it('maps verse target with explicit end to verse range', () => {
+    const doc = parse(CHAM_SOURCE)
+    const verseEntry = {
+      target: { type: 'verse' as const, line: 0, char: 2, end: 5 },
+      kind: 'meaning' as const,
+      params: {},
+      value: 'test',
+    }
+    const range = entryToRange(verseEntry, doc)
+    expect(range).toEqual({ type: 'range', scope: 'verse', verseIndex: 0, start: 2, end: 5 })
   })
 
   it('returns fallback for missing marker', () => {
@@ -497,6 +510,27 @@ describe('buildAuthorsJson', () => {
     expect(json[0].name).toBe('李白')
     expect(json[0].poemCount).toBe(1)
   })
+
+  it('counts pieces for all contributors', () => {
+    const authors: Record<string, AuthorRecord> = {
+      LZ: { name: '老子', dynasty: '周' },
+      WB: { name: '王弼', dynasty: '魏' },
+      HSG: { name: '河上公', dynasty: '漢' },
+    }
+    const pieces = [{
+      authorId: 'LZ',
+      contributors: [
+        { id: 'LZ', name: '老子', role: 'author' },
+        { id: 'WB', name: '王弼', role: 'commentator' },
+        { id: 'HSG', name: '河上公', role: 'commentator' },
+      ],
+    }]
+    const json = buildAuthorsJson(authors, pieces as any)
+    const byName = Object.fromEntries(json.map(a => [a.name, a]))
+    expect(byName['老子'].poemCount).toBe(1)
+    expect(byName['王弼'].poemCount).toBe(1)
+    expect(byName['河上公'].poemCount).toBe(1)
+  })
 })
 
 describe('buildDynastiesJson', () => {
@@ -509,5 +543,32 @@ describe('buildDynastiesJson', () => {
     expect(json['唐']).toBeDefined()
     expect(json['唐'].poemCount).toBe(2)
     expect(json['唐'].authors).toEqual(['李白', '杜甫'])
+  })
+})
+
+describe('buildPartOutput', () => {
+  it('builds output part with scoped annotation IDs and annotationText', () => {
+    const partSource = `---
+part: 2
+group: 論孝
+title: 為政第二（節選）
+---
+
+{1}孝{/1}弟也者，其為仁之本與！
+
+## 注釋
+
+{1} meaning [孝][孝順父母]`
+    const doc = parse(partSource)
+    const part = buildPartOutput(doc as any, 1)
+    expect(part.num).toBe(2)
+    expect(part.group).toBe('論孝')
+    expect(part.title).toBe('為政第二（節選）')
+    expect(part.verses).toHaveLength(1)
+    expect(part.annotations).toHaveLength(1)
+    expect(part.annotations[0].id).toBe('1.2-1')
+    expect(part.annotations[0].text).toBe('孝順父母')
+    expect(part.annotationText).toContain('孝：')
+    expect(part.annotationText).toContain('孝順父母')
   })
 })
