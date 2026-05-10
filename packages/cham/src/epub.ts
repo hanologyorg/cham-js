@@ -73,6 +73,17 @@ function extractAnnotationText(smallHtml: string): string {
   return text.trim()
 }
 
+// ─── Parse Context ─────────────────────────────────────────────
+
+interface ParseContext {
+  bookTitle?: string
+  contributorNames?: string[]
+}
+
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 // ─── XHTML Parser ─────────────────────────────────────────────
 
 function extractPoemContent(xhtml: string): string {
@@ -93,7 +104,24 @@ function isSectionTitleLine(line: string): string | null {
   return m[1]
 }
 
-function parseXhtmlLine(line: string): ParsedLine {
+function buildHeaderRegex(ctx: ParseContext): RegExp {
+  const patterns = [
+    '^[\\s　]*欽定四庫全書',
+    '^[\\s　]*提要',
+    '^[\\s　]*卷[一二三四五六七八九十百千萬]+',
+    '^[\\s　]*子部',
+    '^[\\s　]*儒家',
+  ]
+  if (ctx.bookTitle) patterns.push(`^[\\s　]*${escapeRegex(ctx.bookTitle)}`)
+  if (ctx.contributorNames) {
+    for (const name of ctx.contributorNames) {
+      if (name) patterns.push(`^[\\s　]*${escapeRegex(name)}`)
+    }
+  }
+  return new RegExp(patterns.join('|'))
+}
+
+function parseXhtmlLine(line: string, ctx: ParseContext = {}): ParsedLine {
   const sectionTitle = isSectionTitleLine(line)
   if (sectionTitle) {
     return {
@@ -159,8 +187,7 @@ function parseXhtmlLine(line: string): ParsedLine {
     }
   }
 
-  const isHeader = /^[\s　]*欽定四庫全書|^[\s　]*帝範|^[\s　]*提要|^[\s　]*卷[一二三四]/.test(stripped)
-    || /^[\s　]*子部|^[\s　]*儒家|^[\s　]*唐太宗/.test(stripped)
+  const isHeader = buildHeaderRegex(ctx).test(stripped)
 
   return {
     type: isHeader ? 'header' : 'body',
@@ -204,14 +231,14 @@ function extractTrailingTitle(text: string): string | null {
   return null
 }
 
-function parseXhtmlFile(xhtml: string, volumeLabel: string): ParsedFile {
+function parseXhtmlFile(xhtml: string, volumeLabel: string, ctx: ParseContext = {}): ParsedFile {
   const content = extractPoemContent(xhtml)
   if (!content) {
     return { filename: '', volumeLabel, sections: [], headerLines: [] }
   }
 
   const rawLines = content.split(/<br\/?>/)
-  const parsedLines = rawLines.map(l => parseXhtmlLine(l))
+  const parsedLines = rawLines.map(l => parseXhtmlLine(l, ctx))
 
   const headerLines: ParsedLine[] = []
   const sections: ParsedSection[] = []
@@ -301,10 +328,18 @@ export interface EpubConvertOptions {
 
 export class EpubConverter {
   private serializer = new ChamSerializer()
+  private bookTitle = ''
 
   convert(opts: EpubConvertOptions): void {
     const workDir = opts.extractedDir || this.extractEpub(opts.epubPath!)
     if (!workDir) throw new Error('No epub path or extracted directory provided')
+
+    this.bookTitle = opts.bookConfig.title || ''
+
+    const ctx: ParseContext = {
+      bookTitle: this.bookTitle,
+      contributorNames: opts.bookConfig.contributors?.map(c => c.ref),
+    }
 
     const opfDir = this.findOpsDir(workDir)
     const xhtmlFiles = this.discoverXhtmlFiles(opfDir)
@@ -321,7 +356,7 @@ export class EpubConverter {
     for (const xhtmlPath of xhtmlFiles) {
       const xhtml = readFileSync(xhtmlPath, 'utf-8')
       const volLabel = volumeMap.get(xhtmlPath) || ''
-      const parsed = parseXhtmlFile(xhtml, volLabel)
+      const parsed = parseXhtmlFile(xhtml, volLabel, ctx)
       parsed.filename = basename(xhtmlPath)
       allParsed.push(parsed)
     }
@@ -558,10 +593,19 @@ export class EpubConverter {
 
   private discoverXhtmlFiles(dir: string): string[] {
     const files: string[] = []
+    const skipPatterns = ['quan_lan', '_index', 'about', 'nav', 'title', 'toc']
     for (const entry of readdirSync(dir).sort()) {
-      if (entry.endsWith('.xhtml') && entry.startsWith('c')) {
-        // Skip index pages (c2 is 全覽, etc.)
-        if (entry.includes('quan_lan') || entry.includes('_index')) continue
+      if (!entry.endsWith('.xhtml')) continue
+      if (skipPatterns.some(p => entry.includes(p))) continue
+      if (entry.startsWith('c')) {
+        files.push(join(dir, entry))
+      }
+    }
+    // Fallback: if no c-prefixed files found, include all non-metadata xhtml
+    if (files.length === 0) {
+      for (const entry of readdirSync(dir).sort()) {
+        if (!entry.endsWith('.xhtml')) continue
+        if (skipPatterns.some(p => entry.includes(p))) continue
         files.push(join(dir, entry))
       }
     }
@@ -580,7 +624,7 @@ export class EpubConverter {
   private detectHeaderTitle(pf: ParsedFile): string {
     for (const line of pf.headerLines) {
       if (line.cleanText.includes('提要')) return '提要'
-      if (line.cleanText.includes('序')) return '帝範序'
+      if (line.cleanText.includes('序')) return this.bookTitle ? `${this.bookTitle}序` : '序'
     }
     return '外序'
   }
