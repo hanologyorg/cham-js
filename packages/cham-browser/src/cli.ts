@@ -18,6 +18,7 @@ interface SiteConfig {
   subtitle?: string
   subtitleEn?: string
   logo?: string
+  logoDark?: string
   libraryDir: string
   authorsFile?: string
   outputDir?: string
@@ -33,6 +34,7 @@ function loadConfig(configPath: string): SiteConfig {
     subtitle: raw.subtitle as string | undefined,
     subtitleEn: raw.subtitleEn as string | undefined,
     logo: raw.logo as string | undefined,
+    logoDark: raw.logoDark as string | undefined,
     libraryDir: raw.libraryDir as string || 'library/content',
     authorsFile: raw.authorsFile as string | undefined,
     outputDir: raw.outputDir as string || 'dist',
@@ -197,28 +199,29 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   const templateDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
   const outputDir = resolve(configDir, config.outputDir || 'dist')
 
-  // Copy logo to dist if configured
-  let logoUrl: string | undefined
-  if (config.logo) {
-    const logoSrc = resolve(configDir, config.logo)
-    if (existsSync(logoSrc)) {
-      const assetsDir = join(outputDir, 'assets')
-      mkdirSync(assetsDir, { recursive: true })
-      const ext = logoSrc.endsWith('.svg') ? 'svg' : logoSrc.endsWith('.png') ? 'png' : 'bin'
-      const logoName = `logo.${ext}`
-      writeFileSync(join(assetsDir, logoName), readFileSync(logoSrc))
-      logoUrl = `/assets/${logoName}`
-      console.log(`Logo: ${config.logo} → ${logoUrl}`)
-    } else {
-      console.warn(`Logo not found: ${logoSrc}`)
-    }
+  // Copy logos to dist if configured
+  function copyLogo(key: string, rawPath: string | undefined): string | undefined {
+    if (!rawPath) return undefined
+    const src = resolve(configDir, rawPath)
+    if (!existsSync(src)) { console.warn(`Logo not found: ${src}`); return undefined }
+    const assetsDir = join(outputDir, 'assets')
+    mkdirSync(assetsDir, { recursive: true })
+    const ext = src.endsWith('.svg') ? 'svg' : src.endsWith('.png') ? 'png' : 'bin'
+    const name = `logo-${key}.${ext}`
+    writeFileSync(join(assetsDir, name), readFileSync(src))
+    const url = `/assets/${name}`
+    console.log(`Logo (${key}): ${rawPath} → ${url}`)
+    return url
   }
+  const logoUrl = copyLogo('light', config.logo)
+  const logoDarkUrl = copyLogo('dark', config.logoDark)
 
   const { build: ssgBuild } = await import('vite-ssg/node')
   const vue = (await import('@vitejs/plugin-vue')).default
 
   process.env.CHAM_DATA_DIR = join(outputDir, 'data')
   process.env.CHAM_LOGO_URL = logoUrl || ''
+  process.env.CHAM_LOGO_DARK_URL = logoDarkUrl || ''
 
   await ssgBuild(
     {
@@ -261,6 +264,7 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
       },
       define: {
         'import.meta.env.CHAM_LOGO_URL': JSON.stringify(logoUrl || ''),
+        'import.meta.env.CHAM_LOGO_DARK_URL': JSON.stringify(logoDarkUrl || ''),
       },
       build: {
         outDir: outputDir,
