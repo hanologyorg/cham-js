@@ -120,7 +120,7 @@ export class ChamJsonConverter {
     if (!existsSync(pieceDir)) return files
 
     for (const f of readdirSync(pieceDir)) {
-      if (!f.endsWith('.cham.md') || f === 'text.cham.md') continue
+      if (!f.endsWith('.cham.md') || f === 'text.cham.md' || f.startsWith('part-')) continue
       files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
     }
     return files

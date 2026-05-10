@@ -17,6 +17,10 @@ export async function createApp() {
 if (!import.meta.env.SSR) {
   createApp().then(({ app, router }) => {
     app.mount('#app')
-    document.getElementById('app-loading')?.remove()
+    const loader = document.getElementById('app-loading')
+    if (loader) {
+      loader.classList.add('fade-out')
+      loader.addEventListener('transitionend', () => loader.remove())
+    }
   })
 }

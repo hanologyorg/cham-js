@@ -3,8 +3,8 @@ import { parseYaml } from './yaml.js'
 import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale, CrossRef,
   OutputPiece, OutputAnnotation, OutputRange, OutputAnnotationLayer, OutputProseSection,
-  ChamDocument, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
-  AuthorRecord,
+  ChamDocument, ChamPart, PrimaryMeta, AnnotationEntry, PieceContributor, PieceSource,
+  OutputPart, AuthorRecord,
 } from './types.js'
 
 // ─── Kind Mapping ─────────────────────────────────────────────
@@ -268,6 +268,21 @@ export function parseCommentaryLayers(
   return layers
 }
 
+// ─── Part Building ──────────────────────────────────────────────
+
+export function buildPartOutput(partDoc: ChamPart, pieceId: number): OutputPart {
+  const verses = partDoc.textBlocks.map(b => ({ text: b.text }))
+  const annotations = buildAnnotations(partDoc, pieceId)
+  return {
+    num: partDoc.meta.part,
+    group: partDoc.meta.group,
+    title: partDoc.meta.title,
+    source: partDoc.meta.source,
+    verses,
+    annotations,
+  }
+}
+
 // ─── Piece Building (fs-free) ─────────────────────────────────
 
 export function buildPieceFromCham(
@@ -307,6 +322,8 @@ export function buildPieceFromCham(
   const layers = parseCommentaryLayers(layerFiles, doc)
   const annotationLayers = buildAnnotationLayers(layers, bookConfig)
 
+  const parts = doc.parts?.map(p => buildPartOutput(p, pmeta.id as number))
+
   return {
     bookId,
     num: pmeta.id as number,
@@ -323,6 +340,7 @@ export function buildPieceFromCham(
     ...(annotationLayers.length > 0 ? { annotationLayers } : {}),
     ...(pmeta.source ? { source: pmeta.source } : {}),
     ...(structuredSections.length > 0 ? { structuredSections } : {}),
+    ...(parts?.length ? { parts } : {}),
   }
 }
 

@@ -1,8 +1,8 @@
 import type {
-  ChamMeta, PrimaryMeta, SecondaryMeta, ChamContributor, ChamDate, PieceSource,
+  ChamMeta, PrimaryMeta, SecondaryMeta, PartMeta, ChamContributor, ChamDate, PieceSource,
   TextBlock, Marker, MarkerTable,
   AnnotationSection, SectionMeta, AnnotationEntry, AnnotationTarget,
-  ChamDocument, BookConfig,
+  ChamDocument, ChamPart, BookConfig,
 } from './types.js'
 import { parseYaml as parseYamlSimple } from './yaml.js'
 import { readFileSync, readdirSync, existsSync } from 'fs'
@@ -41,6 +41,27 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
       era_year: raw.era_year as number | undefined,
       iso: raw.iso as number | undefined,
       nature: raw.nature as string | undefined,
+    }
+  }
+
+  if (raw.part != null && typeof raw.part === 'number') {
+    const source = raw.source as Record<string, unknown> | undefined
+    let partSource: PieceSource | undefined
+    if (source) {
+      partSource = {
+        text: source.text as string | undefined,
+        textRef: source.textRef as string | undefined,
+        pieceRef: source.pieceRef as number | undefined,
+        relation: (source.relation as PieceSource['relation']) || 'standalone',
+        range: source.range as PieceSource['range'] | undefined,
+      }
+    }
+    return {
+      type: 'part',
+      part: raw.part,
+      group: raw.group as string | undefined,
+      title: raw.title as string | undefined,
+      source: partSource,
     }
   }
 
@@ -417,7 +438,17 @@ export class ChamParser {
       }
     }
 
-    return { ...primary, sections: mergedSections }
+    // Discover and parse part files
+    const parts: ChamPart[] = []
+    for (const f of readdirSync(pieceDir).sort()) {
+      if (!f.startsWith('part-') || !f.endsWith('.cham.md')) continue
+      const partDoc = this.parse(readFileSync(join(pieceDir, f), 'utf-8'))
+      if (partDoc.meta.type !== 'part') continue
+      parts.push(partDoc as ChamPart)
+    }
+    parts.sort((a, b) => a.meta.part - b.meta.part)
+
+    return { ...primary, sections: mergedSections, ...(parts.length ? { parts } : {}) }
   }
 }
 

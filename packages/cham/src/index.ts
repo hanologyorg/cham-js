@@ -3,23 +3,23 @@
 // Types
 export type {
   Genre, Role, ChamContributor, ChamDate,
-  PrimaryMeta, SecondaryMeta, ChamMeta,
+  PrimaryMeta, SecondaryMeta, PartMeta, ChamMeta,
   PieceSource, TextBlock, Marker, MarkerTable,
   SectionMeta, AnnotationSection, AnnotationKind,
   AnnotationTarget, AnnotationEntry,
-  SkqsVariant, ChamDocument, ChamProject,
+  SkqsVariant, ChamDocument, ChamPart, ChamProject,
   BookLayer, BookAnnotationDefaults, VolumeConfig,
   BookConfig, BookMeta, BookData, LibraryScale, BookGenre,
   CrossRef, LibraryIndex,
   OutputRange, OutputAnnotation, OutputAnnotationLayer,
-  OutputProseSection, OutputPiece, PieceContributor,
+  OutputProseSection, OutputPiece, OutputPart, PieceContributor,
   ValidationSeverity, ValidationIssue, ValidationResult,
   EpubConversionOptions, EpubAnnotation, EpubSection, EpubVolume,
   AuthorRecord, DynastyRecord, EraRecord, SexagenaryRecord,
   PlaceRecord, EventRecord, LexiconEntry, ChamRegistries,
 } from './types.js'
 
-export { isSecondaryMeta } from './types.js'
+export { isSecondaryMeta, isPartMeta } from './types.js'
 
 // Parser & Serializer
 export { ChamParser, parse, ChamParseError } from './parser.js'
@@ -37,7 +37,7 @@ export type { BookConvertOptions, LibraryConvertOptions, LibraryConvertResult } 
 
 // Pipeline (pure transformation helpers)
 export {
-  buildPieceFromCham, buildBookMeta, buildBookData, buildLibraryIndex,
+  buildPieceFromCham, buildPartOutput, buildBookMeta, buildBookData, buildLibraryIndex,
   buildCrossRefs, detectScale, buildAuthorsJson, buildDynastiesJson,
   mapKind, entryToRange, buildAnnotations, buildAnnotationsFromLayer,
   getHeadword, buildAnnotationsText, buildAnnotationLayers,

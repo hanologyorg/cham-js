@@ -80,6 +80,9 @@ function openBook(bookId: string) {
     <div v-if="isVertical" class="v-root">
       <SideNav @home="router.push('/')" @back="router.push('/')" />
       <div ref="vPageRef" class="v-page">
+        <div class="v-about-col">
+          <router-link to="/about" class="v-about-link">關 於</router-link>
+        </div>
         <section class="v-hero">
           <h1 class="v-title">古 典 詩 文 圖 書 館</h1>
           <p class="v-subtitle">Classical Chinese Text Library</p>
@@ -174,6 +177,31 @@ function openBook(bookId: string) {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
+}
+.v-about-col {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  flex-shrink: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border-right: 1px solid var(--border-light);
+}
+.v-about-link {
+  font-size: 14px;
+  color: var(--ink-faint);
+  letter-spacing: 6px;
+  font-family: var(--sans);
+  padding: 12px 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+.v-about-link:hover {
+  color: var(--ink);
+  border-color: var(--ink);
 }
 .v-title {
   font-size: 48px; font-weight: 900;
