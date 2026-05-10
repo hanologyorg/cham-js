@@ -274,8 +274,11 @@ function parseAnnotationEntry(line: string): AnnotationEntry | null {
     rest = line.slice(5).trimStart()
   } else if (line.startsWith('@verse:')) {
     const spec = line.slice(7).split(/\s/)[0]
-    const [l, c] = spec.split(':').map(Number)
-    target = { type: 'verse', line: l, char: c || 0 }
+    const parts = spec.split(':').map(Number)
+    const l = parts[0]
+    const c = parts[1] || 0
+    const e = parts[2]
+    target = { type: 'verse', line: l, char: c, ...(e !== undefined ? { end: e } : {}) }
     rest = line.slice(7 + spec.length).trimStart()
   } else {
     return null
