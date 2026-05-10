@@ -96,14 +96,22 @@ function deriveFromFilename(filename: string): Partial<CliArgs> {
   return { title: stem, genre: 'prose' }
 }
 
-// Minimal pinyin-ish slug for Chinese titles
+// Known title-to-slug mapping. Pass --id to override for unlisted titles.
+const TITLE_SLUGS: Record<string, string> = {
+  '帝學': 'dixue', '文子': 'wenzi', '孟子注疏': 'mengzi-zhushu',
+  '尹文子': 'yinwenzi', '鹽鐵論': 'yantielun', '鬼谷子': 'guiguzi',
+  '帝範': 'difan', '臣軌': 'shengui', '孟子': 'mengzi', '荀子': 'xunzi',
+  '老子': 'laozi', '老子（帛書校勘版）': 'laozi-boshu',
+  '道德經（王弼本）': 'daodejing-wangbi', '老子河上公章句': 'laozi-heshanggong',
+  '唐玄宗御註道德真經': 'daodejing-xuanzong',
+}
+
 function pinyin(title: string): string {
-  const map: Record<string, string> = {
-    '帝學': 'dixue', '文子': 'wenzi', '孟子注疏': 'mengzi-zhushu',
-    '尹文子': 'yinwenzi', '鹽鐵論': 'yantielun', '鬼谷子': 'guiguzi',
-    '帝範': 'difan', '臣軌': 'shengui', '孟子': 'mengzi', '荀子': 'xunzi',
-  }
-  return map[title] || title.toLowerCase().replace(/[^\w-]/g, '-')
+  const slug = TITLE_SLUGS[title]
+  if (slug) return slug
+  const fallback = title.toLowerCase().replace(/[^\w-]/g, '-')
+  console.warn(`Warning: no slug mapping for "${title}", using "${fallback}". Pass --id to override.`)
+  return fallback
 }
 
 // ─── Main ───────────────────────────────────────────────────────
