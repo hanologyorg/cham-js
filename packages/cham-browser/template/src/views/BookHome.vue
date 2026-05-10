@@ -8,6 +8,7 @@ import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import PoemCard from '../components/PoemCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
+import BackToTop from '../components/BackToTop.vue'
 
 const props = defineProps<{ bookId: string }>()
 const router = useRouter()
@@ -128,14 +129,17 @@ function scrollToCatalog() {
       </div>
       <div class="h-grid">
         <PoemCard
-          v-for="piece in filtered"
+          v-for="(piece, idx) in filtered"
           :key="piece.num"
           :poem="piece"
+          :style="{ animationDelay: Math.min(idx * 0.04, 0.8) + 's' }"
+          class="h-card-anim"
           @click="openPiece(piece.num)"
         />
       </div>
     </section>
 
+    <BackToTop />
     <ReadingToolbar />
   </div>
 </template>
@@ -358,6 +362,9 @@ function scrollToCatalog() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
+}
+.h-card-anim {
+  animation: cardEnter 0.4s var(--ease-out-expo) both;
 }
 
 @media (max-width: 768px) {

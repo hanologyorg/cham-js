@@ -54,6 +54,13 @@ const preview = computed(() => {
   font-size: 11px; color: var(--ink-faint);
   font-family: var(--sans); letter-spacing: 2px;
   margin-bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  background: var(--surface-warm);
 }
 .pc-title {
   font-size: 20px; font-weight: 700;

@@ -15,6 +15,7 @@ import AnnotationControlBar from '../components/AnnotationControlBar.vue'
 import SideNav from '../components/SideNav.vue'
 import PartGroup from '../components/PartGroup.vue'
 import ReadingProgress from '../components/ReadingProgress.vue'
+import BackToTop from '../components/BackToTop.vue'
 import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
@@ -387,19 +388,21 @@ function tcy(n: number): string {
       />
 
       <Teleport to="body">
-        <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
-          <div class="v-author-pane" @click.stop>
-            <button class="v-pane-close" @click="closeAuthorPane">✕</button>
-            <div class="v-pane-header">
-              <div class="v-pane-name">{{ selectedAuthorName }}</div>
-            </div>
-            <div v-if="selectedAuthorBio" class="v-pane-bio">
-              <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="v-pane-p">
-                {{ p.trim() }}
+        <Transition name="overlay">
+          <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
+            <div class="v-author-pane" @click.stop>
+              <button class="v-pane-close" @click="closeAuthorPane">✕</button>
+              <div class="v-pane-header">
+                <div class="v-pane-name">{{ selectedAuthorName }}</div>
+              </div>
+              <div v-if="selectedAuthorBio" class="v-pane-bio">
+                <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="v-pane-p">
+                  {{ p.trim() }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Transition>
       </Teleport>
     </div>
 
@@ -530,8 +533,11 @@ function tcy(n: number): string {
         @tooltip-leave="interaction.onTooltipLeave"
       />
 
+      <BackToTop />
+
       <Teleport to="body">
-        <div v-if="authorPaneOpen" class="h-overlay" @click="closeAuthorPane">
+        <Transition name="overlay">
+          <div v-if="authorPaneOpen" class="h-overlay" @click="closeAuthorPane">
           <div class="h-pane" @click.stop>
             <button class="h-pane-close" @click="closeAuthorPane">✕</button>
             <div class="h-pane-header">
@@ -546,7 +552,7 @@ function tcy(n: number): string {
               </div>
             </div>
           </div>
-        </div>
+        </Transition>
       </Teleport>
     </div>
   </div>
@@ -791,40 +797,63 @@ function tcy(n: number): string {
 .h-nav-bottom {
   max-width: min(680px, calc(100vw - 80px));
   margin: 0 auto 60px;
-  display: flex; justify-content: space-between; gap: 16px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
 }
 .h-nav-btn {
-  flex: 1; padding: 16px 24px;
+  padding: 20px 24px;
   background: var(--surface); border: 1px solid var(--border-light);
   border-radius: 8px; cursor: pointer;
-  transition: all 0.2s ease; font-family: var(--serif);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: var(--serif);
   text-align: left;
+  position: relative;
+  overflow: hidden;
 }
-.h-nav-btn:hover { border-color: var(--gold); box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08); }
+.h-nav-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--vermillion);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+.h-nav-btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.1);
+  transform: translateY(-2px);
+}
+.h-nav-btn:hover::after { transform: scaleX(1); }
 .h-nav-btn.h-nav-next { text-align: right; }
 .h-nav-label { font-size: 11px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; margin-bottom: 4px; }
 .h-nav-title { font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--ink); }
 
 .h-overlay {
   position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(var(--shadow-rgb), 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 200;
   display: flex; justify-content: flex-end;
-  animation: fadeIn 0.2s ease;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .h-pane {
   width: min(420px, 90vw);
   height: 100vh;
   background: var(--paper);
   padding: 32px;
   overflow-y: auto;
-  animation: slideIn 0.25s ease;
   box-shadow: -8px 0 32px rgba(var(--shadow-rgb), 0.1);
 }
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* Overlay transition */
+.overlay-enter-active { transition: opacity var(--dur-mid, 0.25s) ease; }
+.overlay-enter-active .h-pane { transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
+.overlay-leave-active { transition: opacity var(--dur-fast, 0.15s) ease; }
+.overlay-leave-active .h-pane { transition: transform var(--dur-fast, 0.15s) ease; }
+.overlay-enter-from { opacity: 0; }
+.overlay-enter-from .h-pane { transform: translateX(100%); }
+.overlay-leave-to { opacity: 0; }
+.overlay-leave-to .h-pane { transform: translateX(40px); }
 .h-pane-close {
   display: block; margin-left: auto;
   width: 36px; height: 36px;
@@ -856,12 +885,11 @@ function tcy(n: number): string {
 
 .v-overlay {
   position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(var(--shadow-rgb), 0.24);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   z-index: 200;
   display: flex; justify-content: flex-start;
-  animation: fadeIn 0.2s ease;
 }
 .v-author-pane {
   writing-mode: vertical-rl;
@@ -871,9 +899,7 @@ function tcy(n: number): string {
   padding: 32px 24px;
   overflow-x: auto;
   box-shadow: 8px 0 32px rgba(var(--shadow-rgb), 0.1);
-  animation: slideInV 0.25s ease;
 }
-@keyframes slideInV { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 .v-pane-close {
   display: block;
   width: 32px; height: 32px;

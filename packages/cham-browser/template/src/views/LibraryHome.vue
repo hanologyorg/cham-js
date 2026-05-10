@@ -9,6 +9,7 @@ import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import BookCard from '../components/BookCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
+import BackToTop from '../components/BackToTop.vue'
 import { useSiteConfig } from '../composables/useSiteConfig'
 import type { BookMeta } from '../types'
 
@@ -127,7 +128,7 @@ function openBook(bookId: string) {
           <div
             v-for="(book, bi) in group.books"
             :key="book.id"
-            class="lib-card"
+            class="lib-card lib-card-anim"
             :style="{ animationDelay: bi * 0.06 + 's' }"
             @click="openBook(book.id)"
           >
@@ -146,6 +147,7 @@ function openBook(bookId: string) {
         </div>
       </div>
       <ReadingToolbar />
+      <BackToTop />
     </div>
   </div>
 </template>
@@ -383,6 +385,10 @@ function openBook(bookId: string) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 12px;
+}
+
+.lib-card-anim {
+  animation: cardEnter 0.4s var(--ease-out-expo) both;
 }
 
 .lib-card {

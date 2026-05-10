@@ -155,6 +155,25 @@ function close() { open.value = false }
   transition: all 0.15s;
 }
 .rt-opt:hover { border-color: var(--ink); color: var(--ink); }
+.rt-opt.rt-theme {
+  position: relative;
+  padding-left: 22px;
+}
+.rt-opt.rt-theme::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+.rt-opt.theme-light::before { background: #faf6ee; }
+.rt-opt.theme-sepia::before { background: #f0e4c8; }
+.rt-opt.theme-dark::before { background: #1c1c1e; border-color: #48484a; }
+.rt-opt.theme-oled::before { background: #000; border-color: #333; }
 .rt-opt.active {
   background: var(--ink);
   color: var(--paper);
