@@ -40,7 +40,7 @@ export function entryToRange(entry: AnnotationEntry, doc: ChamDocument): OutputR
         scope: 'verse',
         verseIndex: entry.target.line,
         start: entry.target.char,
-        end: entry.target.char,
+        end: entry.target.end ?? entry.target.char + 1,
       }
   }
 }
@@ -430,6 +430,13 @@ export function buildAuthorsJson(
   const pieceCounts = new Map<string, number>()
   for (const p of allPieces) {
     pieceCounts.set(p.authorId, (pieceCounts.get(p.authorId) || 0) + 1)
+    if (p.contributors) {
+      for (const c of p.contributors) {
+        if (c.id !== p.authorId) {
+          pieceCounts.set(c.id, (pieceCounts.get(c.id) || 0) + 1)
+        }
+      }
+    }
   }
 
   return Object.entries(authors).map(([id, data]) => ({
