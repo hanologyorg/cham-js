@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync, copyFileSync, cpSync } from 'fs'
 import { join, resolve, dirname, basename } from 'path'
 import { fileURLToPath } from 'url'
 import { parse as parseYaml } from 'yaml'
@@ -21,6 +21,7 @@ interface SiteConfig {
   libraryDir: string
   authorsFile?: string
   outputDir?: string
+  publicDir?: string
   pretty?: boolean
 }
 
@@ -35,6 +36,7 @@ function loadConfig(configPath: string): SiteConfig {
     libraryDir: raw.libraryDir as string || 'library/content',
     authorsFile: raw.authorsFile as string | undefined,
     outputDir: raw.outputDir as string || 'dist',
+    publicDir: raw.publicDir as string | undefined,
     pretty: raw.pretty as boolean | undefined ?? true,
   }
 }
@@ -73,17 +75,21 @@ function readPieceFiles(pieceDir: string): {
   chamSource: string | null
   proseFiles: Map<string, string>
   layerFiles: Map<string, string>
+  partFiles: Map<string, string>
 } {
   let chamSource: string | null = null
   const proseFiles = new Map<string, string>()
   const layerFiles = new Map<string, string>()
+  const partFiles = new Map<string, string>()
 
-  if (!existsSync(pieceDir)) return { chamSource, proseFiles, layerFiles }
+  if (!existsSync(pieceDir)) return { chamSource, proseFiles, layerFiles, partFiles }
 
-  for (const f of readdirSync(pieceDir)) {
+  for (const f of readdirSync(pieceDir).sort()) {
     const filePath = join(pieceDir, f)
     if (f === 'text.cham.md') {
       chamSource = readFileSync(filePath, 'utf-8')
+    } else if (f.startsWith('part-') && f.endsWith('.cham.md')) {
+      partFiles.set(f, readFileSync(filePath, 'utf-8'))
     } else if (f.endsWith('.cham.md')) {
       layerFiles.set(f, readFileSync(filePath, 'utf-8'))
     } else if (f.endsWith('.md') && !f.startsWith('_')) {
@@ -91,7 +97,7 @@ function readPieceFiles(pieceDir: string): {
     }
   }
 
-  return { chamSource, proseFiles, layerFiles }
+  return { chamSource, proseFiles, layerFiles, partFiles }
 }
 
 function scanBooks(libraryDir: string): { config: BookConfig; dir: string }[] {
@@ -127,12 +133,12 @@ function generateData(config: SiteConfig, configDir: string): {
     for (const entry of readdirSync(dir).sort()) {
       const pieceDir = join(dir, entry)
       if (!statSync(pieceDir, { throwIfNoEntry: false })?.isDirectory()) continue
-      const { chamSource, proseFiles, layerFiles } = readPieceFiles(pieceDir)
+      const { chamSource, proseFiles, layerFiles, partFiles } = readPieceFiles(pieceDir)
       if (!chamSource) continue
 
       const piece = buildPieceFromCham(
         chamSource, bookConfig, authors, bookConfig.id,
-        proseFiles, layerFiles,
+        proseFiles, layerFiles, partFiles,
       )
       if (piece) pieces.push(piece)
     }
@@ -264,6 +270,15 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   )
 
   console.log(`Site built to ${outputDir}`)
+
+  // Copy public dir assets (favicons, manifest, etc.) to output
+  const publicDir = config.publicDir
+    ? resolve(configDir, config.publicDir)
+    : resolve(configDir, 'site', 'public')
+  if (existsSync(publicDir)) {
+    cpSync(publicDir, outputDir, { recursive: true, filter: (src) => !src.endsWith('.html') })
+    console.log(`Public: ${publicDir} → ${outputDir}`)
+  }
 }
 
 // ─── Main ─────────────────────────────────────────────────────
