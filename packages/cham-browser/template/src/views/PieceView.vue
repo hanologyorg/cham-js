@@ -7,6 +7,7 @@ import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
 import { useData } from '../composables/useData'
+import { useI18n } from '../composables/useI18n'
 import VerticalScroll from '../components/VerticalScroll.vue'
 import HorizontalDisplay from '../components/HorizontalDisplay.vue'
 import SectionBlock from '../components/SectionBlock.vue'
@@ -26,6 +27,7 @@ await load(props.bookId)
 const { layout } = useReadingMode()
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
+const { t } = useI18n()
 
 const authorPaneOpen = ref(false)
 const selectedAuthorId = ref('')
@@ -265,11 +267,11 @@ function navigate(delta: number) {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  author: '作者',
-  commentator: '註者',
-  editor: '編者',
-  translator: '譯者',
-  annotator: '注者',
+  author: t('role.author'),
+  commentator: t('role.commentator'),
+  editor: t('role.editor'),
+  translator: t('role.translator'),
+  annotator: t('role.annotator'),
 }
 
 const contributorGroups = computed(() => {
@@ -324,12 +326,12 @@ function tcy(n: number): string {
           </div>
           <div class="v-poem-meta">
             <template v-if="isMultiPart">
-              <span class="v-meta-item" v-html="tcy(piece.parts!.length) + ' 段'" />
-              <span class="v-meta-item" v-html="totalPartAnnotationCount > 0 ? tcy(totalPartAnnotationCount) + ' 注' : '無注'" />
+              <span class="v-meta-item" v-html="tcy(piece.parts!.length) + ' ' + t('piece.stanzas')" />
+              <span class="v-meta-item" v-html="totalPartAnnotationCount > 0 ? tcy(totalPartAnnotationCount) + ' ' + t('piece.notes') : t('piece.noNotes')" />
             </template>
             <template v-else>
-              <span class="v-meta-item" v-html="tcy(piece.verses.length) + ' 段'" />
-              <span class="v-meta-item" v-html="totalAnnotationCount > 0 ? tcy(totalAnnotationCount) + ' 注' : '無注'" />
+              <span class="v-meta-item" v-html="tcy(piece.verses.length) + ' ' + t('piece.stanzas')" />
+              <span class="v-meta-item" v-html="totalAnnotationCount > 0 ? tcy(totalAnnotationCount) + ' ' + t('piece.notes') : t('piece.noNotes')" />
             </template>
           </div>
         </section>
@@ -364,7 +366,7 @@ function tcy(n: number): string {
         <SectionBlock
           v-if="!isMultiPart && annotationsVisible && piece.sections.annotations"
           num=""
-          label="注釋"
+          :label="t('annotation.notes')"
           :special="false"
           :text="piece.sections.annotations"
           :is-annotations="true"
@@ -416,13 +418,13 @@ function tcy(n: number): string {
         <nav class="v-nav">
           <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)">
             <span class="v-nav-dir">▲</span>
-            <span class="v-nav-label">上一篇</span>
+            <span class="v-nav-label">{{ t('piece.previous') }}</span>
             <span class="v-nav-title">{{ getPiece(adjacent.prev)?.title }}</span>
           </button>
           <div v-else class="v-nav-spacer" />
           <button v-if="adjacent.next !== null" class="v-nav-btn" @click="navigate(1)">
             <span class="v-nav-dir">▼</span>
-            <span class="v-nav-label">下一篇</span>
+            <span class="v-nav-label">{{ t('piece.next') }}</span>
             <span class="v-nav-title">{{ getPiece(adjacent.next)?.title }}</span>
           </button>
         </nav>
@@ -448,7 +450,7 @@ function tcy(n: number): string {
                 <div class="v-pane-meta">
                   <span v-if="selectedAuthorDynasty">{{ selectedAuthorDynasty }}</span>
                   <span v-if="authorLifespan">{{ authorLifespan }}</span>
-                  <span v-if="selectedAuthorPoemCount" class="v-pane-count">{{ selectedAuthorPoemCount }} 篇</span>
+                  <span v-if="selectedAuthorPoemCount" class="v-pane-count">{{ t('stat.pieceCount', { count: selectedAuthorPoemCount }) }}</span>
                 </div>
                 <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="v-pane-names">
                   <span v-if="selectedAuthorData?.courtesyName">字{{ selectedAuthorData.courtesyName }}</span>
@@ -466,7 +468,7 @@ function tcy(n: number): string {
                   {{ p.trim() }}
                 </div>
               </div>
-              <div v-if="!selectedAuthorBio" class="v-pane-empty">暫無作者資料</div>
+              <div v-if="!selectedAuthorBio" class="v-pane-empty">{{ t('piece.noAuthorData') }}</div>
             </div>
           </div>
         </Transition>
@@ -479,7 +481,7 @@ function tcy(n: number): string {
       <div class="h-page">
         <nav class="h-nav">
           <div class="h-nav-inner">
-            <button class="h-back" @click="goBack">← 返回</button>
+            <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-nav-title-row">
               <span v-if="piece.dynasty" class="h-dynasty">{{ piece.dynasty }}</span>
               <span class="h-breadcrumb">
@@ -501,15 +503,15 @@ function tcy(n: number): string {
             <div class="h-controls">
               <span class="h-tag h-tag-pager">{{ piece.num }} / {{ pieces.length }}</span>
               <template v-if="isMultiPart">
-                <span class="h-tag">{{ piece.parts!.length }} 段</span>
-                <span class="h-tag">{{ totalPartAnnotationCount > 0 ? totalPartAnnotationCount + ' 注' : '無注' }}</span>
+                <span class="h-tag">{{ piece.parts!.length }} {{ t('piece.stanzas') }}</span>
+                <span class="h-tag">{{ totalPartAnnotationCount > 0 ? totalPartAnnotationCount + ' ' + t('piece.notes') : t('piece.noNotes') }}</span>
               </template>
               <template v-else>
-                <span class="h-tag">{{ piece.verses.length }} 段</span>
-                <span class="h-tag">{{ totalAnnotationCount > 0 ? totalAnnotationCount + ' 注' : '無注' }}</span>
+                <span class="h-tag">{{ piece.verses.length }} {{ t('piece.stanzas') }}</span>
+                <span class="h-tag">{{ totalAnnotationCount > 0 ? totalAnnotationCount + ' ' + t('piece.notes') : t('piece.noNotes') }}</span>
               </template>
-              <button v-if="adjacent.prev !== null" class="h-nav-arrow" @click="navigate(-1)" title="上一篇">←</button>
-              <button v-if="adjacent.next !== null" class="h-nav-arrow" @click="navigate(1)" title="下一篇">→</button>
+              <button v-if="adjacent.prev !== null" class="h-nav-arrow" @click="navigate(-1)" :title="t('piece.previous')">←</button>
+              <button v-if="adjacent.next !== null" class="h-nav-arrow" @click="navigate(1)" :title="t('piece.next')">→</button>
             </div>
           </div>
         </nav>
@@ -551,7 +553,7 @@ function tcy(n: number): string {
               <SectionBlock
                 v-if="annotationsVisible && piece.sections.annotations"
                 num=""
-                label="注釋"
+                :label="t('annotation.notes')"
                 :special="false"
                 :text="piece.sections.annotations"
                 :is-annotations="true"
@@ -583,12 +585,12 @@ function tcy(n: number): string {
 
           <div class="h-nav-bottom">
             <button v-if="adjacent.prev !== null" class="h-nav-btn" @click="navigate(-1)">
-              <div class="h-nav-label">← 上一篇</div>
+              <div class="h-nav-label">← {{ t('piece.previous') }}</div>
               <div class="h-nav-title">{{ getPiece(adjacent.prev)?.title }}</div>
             </button>
             <div v-else />
             <button v-if="adjacent.next !== null" class="h-nav-btn h-nav-next" @click="navigate(1)">
-              <div class="h-nav-label">下一篇 →</div>
+              <div class="h-nav-label">{{ t('piece.next') }} →</div>
               <div class="h-nav-title">{{ getPiece(adjacent.next)?.title }}</div>
             </button>
           </div>
@@ -618,7 +620,7 @@ function tcy(n: number): string {
                   <div class="h-pane-meta">
                     <span v-if="selectedAuthorDynasty" class="h-pane-dynasty">{{ selectedAuthorDynasty }}</span>
                     <span v-if="authorLifespan" class="h-pane-lifespan">{{ authorLifespan }}</span>
-                    <span v-if="selectedAuthorPoemCount" class="h-pane-count">{{ selectedAuthorPoemCount }} 篇收錄</span>
+                    <span v-if="selectedAuthorPoemCount" class="h-pane-count">{{ t('piece.collected', { count: selectedAuthorPoemCount }) }}</span>
                   </div>
                   <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="h-pane-alt-names">
                     <span v-if="selectedAuthorData?.courtesyName">字 {{ selectedAuthorData.courtesyName }}</span>
@@ -653,9 +655,9 @@ function tcy(n: number): string {
     </div>
   </div>
 
-  <div v-else class="loading">
-    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" class="loading-logo" />
-    <div v-else class="loading-seal">文</div>
+  <div v-else class="page-loading">
+    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" class="page-loading-logo" />
+    <div v-else class="page-loading-seal">文</div>
   </div>
 </template>
 
@@ -663,20 +665,9 @@ function tcy(n: number): string {
 /* ═══════ 直排模式 ═══════ */
 
 .v-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: row-reverse;
-  overflow-x: auto;
-  overflow-y: hidden;
-  margin-right: var(--nav-width, 56px);
   padding: 0;
   background: var(--paper);
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
-  scroll-snap-type: x proximity;
 }
-.v-page::-webkit-scrollbar { height: 4px; }
-.v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-title-col {
   writing-mode: vertical-rl;
@@ -1228,29 +1219,6 @@ function tcy(n: number): string {
   margin-left: 12px;
 }
 
-.loading {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  height: 100vh;
-}
-.loading-seal {
-  width: 56px; height: 56px;
-  border: 2px solid var(--vermillion);
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 900;
-  color: var(--vermillion);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-.loading-logo {
-  width: 56px; height: auto;
-  object-fit: contain;
-  animation: pulse 1.2s ease-in-out infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
 
 /* ─── 觸控回饋 ─── */
 .v-nav-btn:active { transform: scale(0.97); }

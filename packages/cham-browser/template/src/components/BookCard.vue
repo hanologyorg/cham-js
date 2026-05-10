@@ -1,27 +1,26 @@
 <script setup lang="ts">
 import type { BookMeta } from '../types'
 import { useRouter } from 'vue-router'
+import { useI18n } from '../composables/useI18n'
 
-defineProps<{ book: BookMeta }>()
+const props = defineProps<{ book: BookMeta }>()
 const router = useRouter()
+const { t } = useI18n()
 
-const genreLabel: Record<string, string> = {
-  poetry: '詩歌',
-  prose: '散文',
-  mixed: '綜合',
-  drama: '戲曲',
+function genreLabel(genre: string): string {
+  return t(`genre.${genre}` as 'genre.poetry') || genre
 }
 </script>
 
 <template>
-  <div class="bc-root" @click="router.push(`/${book.id}`)">
+  <div class="bc-root" @click="router.push(`/${props.book.id}`)">
     <div class="bc-accent"></div>
     <div class="bc-body">
-      <h2 class="bc-title">{{ book.title }}</h2>
-      <p v-if="book.subtitle" class="bc-subtitle">{{ book.subtitle }}</p>
+      <h2 class="bc-title">{{ props.book.title }}</h2>
+      <p v-if="props.book.subtitle" class="bc-subtitle">{{ props.book.subtitle }}</p>
       <div class="bc-stats">
-        <span class="bc-count">{{ book.count }} 篇</span>
-        <span class="bc-genre">{{ genreLabel[book.genre] || book.genre }}</span>
+        <span class="bc-count">{{ t('stat.pieceCount', { count: props.book.count }) }}</span>
+        <span class="bc-genre">{{ genreLabel(props.book.genre) }}</span>
       </div>
     </div>
   </div>
