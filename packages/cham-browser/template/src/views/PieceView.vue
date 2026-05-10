@@ -14,6 +14,7 @@ import AnnotationTooltip from '../components/AnnotationTooltip.vue'
 import AnnotationControlBar from '../components/AnnotationControlBar.vue'
 import SideNav from '../components/SideNav.vue'
 import PartGroup from '../components/PartGroup.vue'
+import ReadingProgress from '../components/ReadingProgress.vue'
 import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
@@ -58,6 +59,17 @@ const pageTitle = computed(() => piece.value
 useTitle(pageTitle.value)
 
 const isVertical = computed(() => layout.value === 'vertical')
+
+const totalAnnotationCount = computed(() => {
+  if (!piece.value) return 0
+  let count = piece.value.annotations.length
+  if (piece.value.annotationLayers) {
+    for (const layer of piece.value.annotationLayers) {
+      count += layer.annotations.length
+    }
+  }
+  return count
+})
 
 const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotationLayers || [])
 const hasLayers = computed(() => annotationLayers.value.length > 1)
@@ -242,6 +254,7 @@ function tcy(n: number): string {
         @back="goBack"
         @home="goHome"
       />
+      <ReadingProgress vertical :scroll-container="vPageRef" />
       <div ref="vPageRef" class="v-page">
         <section ref="vTitleRef" class="v-title-col">
           <h1 class="v-poem-title">{{ piece.title }}</h1>
@@ -262,7 +275,7 @@ function tcy(n: number): string {
             </template>
             <template v-else>
               <span class="v-meta-item" v-html="tcy(piece.verses.length) + ' 段'" />
-              <span class="v-meta-item" v-html="piece.annotations.length > 0 ? tcy(piece.annotations.length) + ' 注' : '無注'" />
+              <span class="v-meta-item" v-html="totalAnnotationCount > 0 ? tcy(totalAnnotationCount) + ' 注' : '無注'" />
             </template>
           </div>
         </section>
@@ -392,6 +405,7 @@ function tcy(n: number): string {
 
     <!-- ═══════ 橫排模式 ═══════ -->
     <div v-else class="h-root">
+      <ReadingProgress />
       <div class="h-page">
         <nav class="h-nav">
           <div class="h-nav-inner">
@@ -419,7 +433,7 @@ function tcy(n: number): string {
               </template>
               <template v-else>
                 <span class="h-tag">{{ piece.verses.length }} 段</span>
-                <span class="h-tag">{{ piece.annotations.length > 0 ? piece.annotations.length + ' 注' : '無注' }}</span>
+                <span class="h-tag">{{ totalAnnotationCount > 0 ? totalAnnotationCount + ' 注' : '無注' }}</span>
               </template>
             </div>
           </div>
@@ -537,8 +551,8 @@ function tcy(n: number): string {
     </div>
   </div>
 
-  <div v-else style="text-align:center;padding-top:120px">
-    <p style="font-size:18px;color:var(--ink-faint)">載入中…</p>
+  <div v-else class="loading">
+    <div class="loading-seal">詩</div>
   </div>
 </template>
 
@@ -556,6 +570,7 @@ function tcy(n: number): string {
   background: var(--paper);
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
+  scroll-snap-type: x proximity;
 }
 .v-page::-webkit-scrollbar { height: 4px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
@@ -571,6 +586,7 @@ function tcy(n: number): string {
   gap: 16px;
   padding: 40px 24px;
   border-right: 1px solid var(--border);
+  scroll-snap-align: start;
 }
 .v-poem-title {
   font-size: 40px; font-weight: 900;
@@ -659,6 +675,7 @@ function tcy(n: number): string {
   justify-content: center;
   padding: 24px 12px;
   gap: 32px;
+  scroll-snap-align: start;
 }
 .v-nav-spacer { flex: 1; }
 .v-nav-btn {
@@ -790,7 +807,9 @@ function tcy(n: number): string {
 
 .h-overlay {
   position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.3);
+  background: rgba(var(--shadow-rgb), 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 200;
   display: flex; justify-content: flex-end;
   animation: fadeIn 0.2s ease;
@@ -837,7 +856,9 @@ function tcy(n: number): string {
 
 .v-overlay {
   position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.3);
+  background: rgba(var(--shadow-rgb), 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 200;
   display: flex; justify-content: flex-start;
   animation: fadeIn 0.2s ease;
@@ -892,6 +913,25 @@ function tcy(n: number): string {
 .v-pane-p {
   margin-bottom: 0;
   margin-left: 12px;
+}
+
+.loading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100vh;
+}
+.loading-seal {
+  width: 56px; height: 56px;
+  border: 2px solid var(--vermillion);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900;
+  color: var(--vermillion);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 @media (max-width: 768px) {

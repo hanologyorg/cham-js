@@ -80,6 +80,7 @@ function goHome() { router.push('/') }
   background: var(--paper);
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
+  scroll-snap-type: x proximity;
 }
 .v-page::-webkit-scrollbar { height: 4px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
@@ -161,6 +162,11 @@ function goHome() { router.push('/') }
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: 8px;
+  animation: cardEnter 0.5s var(--ease-out-expo, ease) both;
+}
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .h-about-block:last-child { margin-bottom: 0; }
 .h-about-block h2 {
