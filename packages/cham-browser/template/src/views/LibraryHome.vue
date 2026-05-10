@@ -9,6 +9,7 @@ import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import BookCard from '../components/BookCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
+import logoSvg from '../assets/hanology-logo.svg'
 import type { BookMeta } from '../types'
 
 const { scale, books, singleBook, loadLibrary } = useLibrary()
@@ -105,7 +106,7 @@ function openBook(bookId: string) {
     <!-- ═══════ 橫排模式 ═══════ -->
     <div v-else class="lib-root">
       <header class="lib-hero">
-        <div class="lib-seal">漢流</div>
+        <img :src="logoSvg" alt="漢流" class="lib-logo" />
         <h1>古典詩文圖書館</h1>
         <p class="lib-subtitle">Classical Chinese Text Library</p>
         <div class="lib-stats-bar">
@@ -170,22 +171,6 @@ function openBook(bookId: string) {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
-}
-.v-seal {
-  writing-mode: horizontal-tb;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px; height: 48px;
-  border: 2px solid var(--vermillion);
-  color: var(--vermillion);
-  font-size: 14px;
-  font-family: var(--serif);
-  font-weight: 900;
-  margin-bottom: 0;
-  margin-left: 16px;
-  border-radius: 4px;
-  letter-spacing: 0;
 }
 .v-title {
   font-size: 48px; font-weight: 900;
@@ -283,21 +268,11 @@ function openBook(bookId: string) {
   text-align: center;
   margin-bottom: 48px;
 }
-.lib-seal {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px; height: 56px;
-  border: 2px solid var(--vermillion);
-  color: var(--vermillion);
-  font-size: 20px;
-  font-family: var(--serif);
-  letter-spacing: 2px;
+.lib-logo {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
   margin-bottom: 24px;
-  border-radius: 4px;
-  line-height: 1;
 }
 .lib-hero h1 {
   font-size: 36px;

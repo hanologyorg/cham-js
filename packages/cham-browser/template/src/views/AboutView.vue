@@ -5,6 +5,7 @@ import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
+import logoSvg from '../assets/hanology-logo.svg'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -44,7 +45,7 @@ function goHome() { router.push('/') }
       <h1 class="h-page-title">關於漢流 / About Hanology</h1>
     </header>
     <div class="h-content">
-      <div class="h-seal">漢流</div>
+      <img :src="logoSvg" alt="漢流" class="h-logo" />
       <div class="h-about-block">
         <h2>漢流 · Hanology</h2>
         <p><strong>漢流</strong>，粵音 Han-Lou，普音 Han-Liu，意為「漢學之流」。</p>
@@ -133,18 +134,12 @@ function goHome() { router.push('/') }
 .h-page-title { font-size: 20px; font-weight: 700; letter-spacing: 2px; }
 
 .h-content { max-width: 680px; margin: 0 auto; }
-.h-seal {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  width: 56px; height: 72px;
-  border: 2px solid var(--vermillion);
-  color: var(--vermillion);
-  font-size: 24px; font-family: var(--serif);
-  font-weight: 900; letter-spacing: 2px;
-  margin: 0 auto 40px; border-radius: 4px;
-  line-height: 1;
+.h-logo {
+  height: 80px;
+  width: auto;
+  object-fit: contain;
+  margin: 0 auto 40px;
+  display: block;
 }
 .h-about-block {
   margin-bottom: 40px; padding: 32px;

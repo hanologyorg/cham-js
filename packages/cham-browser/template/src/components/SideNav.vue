@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables/useReadingMode'
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
 import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
+import logoSvg from '../assets/hanology-logo.svg'
 
 defineProps<{
   context?: string
@@ -26,7 +27,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 <template>
   <nav class="sidenav">
     <button class="sn-brand" @click="emit('home')" title="首頁">
-      <span class="sn-seal">漢流</span>
+      <img :src="logoSvg" alt="漢流" class="sn-logo" />
     </button>
 
     <button class="sn-btn" @click="emit('back')" title="返回">
@@ -127,27 +128,20 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
 .sn-brand {
   width: 40px; height: 48px;
-  border: 2px solid var(--vermillion);
+  border: none;
   border-radius: 3px;
   background: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 4px;
+  padding: 2px;
 }
-.sn-brand:hover { background: var(--vermillion); }
-.sn-brand:hover .sn-seal { color: var(--paper); }
-.sn-seal {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  font-family: var(--serif);
-  font-size: 14px; font-weight: 900;
-  color: var(--vermillion);
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  letter-spacing: 2px;
-  line-height: 1;
+.sn-brand:hover { opacity: 0.8; }
+.sn-logo {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
 }
 
 .sn-btn {
@@ -297,8 +291,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
 @media (max-width: 768px) {
   .sidenav { width: 44px; padding: 8px 0; gap: 6px; }
-  .sn-brand { width: 32px; height: 32px; }
-  .sn-seal { font-size: 15px; }
+  .sn-brand { width: 32px; height: 38px; }
   .sn-btn { width: 30px; height: 30px; }
   .sn-context { font-size: 10px; max-height: 80px; }
 }
