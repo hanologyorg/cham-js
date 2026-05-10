@@ -538,17 +538,18 @@ function tcy(n: number): string {
       <Teleport to="body">
         <Transition name="overlay">
           <div v-if="authorPaneOpen" class="h-overlay" @click="closeAuthorPane">
-          <div class="h-pane" @click.stop>
-            <button class="h-pane-close" @click="closeAuthorPane">✕</button>
-            <div class="h-pane-header">
-              <div>
-                <div class="h-pane-name">{{ selectedAuthorName }}</div>
-                <div class="h-pane-meta">{{ piece.title }} 等</div>
+            <div class="h-pane" @click.stop>
+              <button class="h-pane-close" @click="closeAuthorPane">✕</button>
+              <div class="h-pane-header">
+                <div>
+                  <div class="h-pane-name">{{ selectedAuthorName }}</div>
+                  <div class="h-pane-meta">{{ piece.title }} 等</div>
+                </div>
               </div>
-            </div>
-            <div v-if="selectedAuthorBio" class="h-pane-bio">
-              <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="h-pane-p">
-                {{ p.trim() }}
+              <div v-if="selectedAuthorBio" class="h-pane-bio">
+                <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="h-pane-p">
+                  {{ p.trim() }}
+                </div>
               </div>
             </div>
           </div>
