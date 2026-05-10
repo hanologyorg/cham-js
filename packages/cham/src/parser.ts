@@ -52,6 +52,9 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
         text: source.text as string | undefined,
         textRef: source.textRef as string | undefined,
         pieceRef: source.pieceRef as number | undefined,
+        edition: source.edition as string | undefined,
+        publisher: source.publisher as string | undefined,
+        page: source.page as string | undefined,
         relation: (source.relation as PieceSource['relation']) || 'standalone',
         range: source.range as PieceSource['range'] | undefined,
       }
@@ -75,6 +78,9 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
       text: source.text as string | undefined,
       textRef: source.textRef as string | undefined,
       pieceRef: source.pieceRef as number | undefined,
+      edition: source.edition as string | undefined,
+      publisher: source.publisher as string | undefined,
+      page: source.page as string | undefined,
       relation: (source.relation as PieceSource['relation']) || 'standalone',
       range: source.range as PieceSource['range'] | undefined,
     }

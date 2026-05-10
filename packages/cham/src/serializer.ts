@@ -146,7 +146,10 @@ function serializeTarget(target: AnnotationTarget): string {
     case 'marker': return `{${target.markerId}}`
     case 'title': return '@title'
     case 'full': return '@full'
-    case 'verse': return `@verse:${target.line}:${target.char}`
+    case 'verse': {
+      const end = target.end !== undefined ? `-${target.end}` : ''
+      return `@verse:${target.line}:${target.char}${end}`
+    }
   }
 }
 

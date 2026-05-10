@@ -338,9 +338,9 @@ export function buildPieceFromCham(
   }))
   const authorId = contributors[0]?.id || ''
   const authorName = contributors[0]?.name || ''
+  const date = pmeta.date || bookConfig.date
   const dynastyName = authors[authorId]?.dynasty
-    || pmeta.date?.dynasty
-    || bookConfig.date?.dynasty
+    || date?.dynasty
     || ''
 
   const layers = parseCommentaryLayers(layerFiles, doc)
