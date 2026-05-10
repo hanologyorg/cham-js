@@ -55,6 +55,7 @@ export class ChamValidator {
         allPrimaryDocs.set(dirName, primaryDoc)
         this.validateMarkerIntegrity(primaryDoc, dirName)
         this.validateAnnotationRefs(primaryDoc, dirName)
+        this.validateKindParams(primaryDoc, join(dir, 'text.cham.md'))
       }
 
       this.validateSecondaryFiles(dir, dirName, allPrimaryDocs)
@@ -159,24 +160,28 @@ export class ChamValidator {
 
     events.sort((a, b) => a.offset - b.offset)
 
-    const stack: number[] = []
+    const openIds = new Map<number, number>()
     for (const ev of events) {
       if (ev.type === 'open') {
-        stack.push(ev.id)
+        const count = openIds.get(ev.id) || 0
+        if (count > 0) {
+          this.error(context, undefined, `Duplicate open marker {${ev.id}} without close`)
+        }
+        openIds.set(ev.id, count + 1)
       } else {
-        if (stack.length === 0) {
+        const count = openIds.get(ev.id) || 0
+        if (count === 0) {
           this.error(context, undefined, `Orphan close marker {/${ev.id}}`)
-        } else if (stack[stack.length - 1] !== ev.id) {
-          this.error(context, undefined,
-            `Interleaved markers: {${stack[stack.length - 1]}} not closed before {/${ev.id}}`)
         } else {
-          stack.pop()
+          openIds.set(ev.id, count - 1)
         }
       }
     }
 
-    for (const id of stack) {
-      this.error(context, undefined, `Unclosed marker {${id}}`)
+    for (const [id, count] of openIds) {
+      if (count > 0) {
+        this.error(context, undefined, `Unclosed marker {${id}}`)
+      }
     }
   }
 
