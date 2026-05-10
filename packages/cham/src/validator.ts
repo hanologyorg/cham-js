@@ -56,6 +56,7 @@ export class ChamValidator {
         this.validateMarkerIntegrity(primaryDoc, dirName)
         this.validateAnnotationRefs(primaryDoc, dirName)
         this.validateKindParams(primaryDoc, join(dir, 'text.cham.md'))
+        this.validateSequentialMarkers(primaryDoc, dirName)
       }
 
       this.validateSecondaryFiles(dir, dirName, allPrimaryDocs)
@@ -95,10 +96,14 @@ export class ChamValidator {
         this.validateMarkerInterleaving(doc, fileName)
         this.validateMarkerIntegrity(doc, fileName)
         this.validateAnnotationRefs(doc, fileName)
+        this.validateSequentialMarkers(doc, fileName)
       }
 
       this.validateKindParams(doc, filePath)
       this.validateBracketBalance(doc, filePath)
+      this.validateNestedBrackets(doc, filePath)
+      this.validateAnnotationQuality(doc, filePath)
+      this.validatePinyinIpa(filePath)
 
       for (const section of doc.sections) {
         for (const entry of section.entries) {
@@ -427,6 +432,55 @@ export class ChamValidator {
           if (entry.kind === 'event' && registries.events && !(ref in registries.events)) {
             this.warning(filePath, undefined, `Event ref "${ref}" not found in events registry`)
           }
+        }
+      }
+    }
+  }
+
+  // ─── Quality Rules (spec §17) ────────────────────────────────
+
+  private validateSequentialMarkers(doc: ChamDocument, context: string): void {
+    if (doc.markers.size === 0) return
+    const ids = [...doc.markers.keys()].sort((a, b) => a - b)
+    for (let i = 1; i < ids.length; i++) {
+      if (ids[i] !== ids[i - 1] + 1) {
+        this.warning(context, undefined,
+          `Non-sequential marker numbering: ${ids[i - 1]} → ${ids[i]} (gap detected)`)
+      }
+    }
+  }
+
+  private validateNestedBrackets(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        if (entry.value.includes('[') || entry.value.includes(']')) {
+          this.warning(filePath, undefined,
+            `Nested brackets in annotation value for ${JSON.stringify(entry.target)} — use full-width （ ） instead`)
+        }
+      }
+    }
+  }
+
+  private validatePinyinIpa(filePath: string): void {
+    const src = readFileSync(filePath, 'utf-8')
+    const ipaChars: [string, string, string][] = [
+      ['ɑ', 'a', 'U+0251'],
+      ['ɡ', 'g', 'U+0261'],
+    ]
+    for (const [bad, good, code] of ipaChars) {
+      if (src.includes(bad)) {
+        this.warning(filePath, undefined,
+          `IPA character ${code} (${bad}) found — use standard Latin ${good} instead`)
+      }
+    }
+  }
+
+  private validateAnnotationQuality(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        if (!entry.value && entry.kind !== 'variant') {
+          this.warning(filePath, undefined,
+            `Empty annotation value for ${JSON.stringify(entry.target)}`)
         }
       }
     }

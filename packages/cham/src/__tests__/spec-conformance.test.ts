@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { parse, parseAnnotationEntry } from '../parser.js'
-import { serialize } from '../serializer.js'
+import { serialize, serializeEntry } from '../serializer.js'
 import { ChamValidator } from '../validator.js'
+import { buildPieceFromCham } from '../pipeline.js'
+import type { BookConfig } from '../types.js'
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'fs'
 import { join } from 'path'
 
@@ -756,5 +758,100 @@ genre: poetry
     expect(e4.target.type).toBe('full')
     expect(e4.kind).toBe('meaning')
     expect(e4.value).toContain('兮')
+  })
+})
+
+// ─── Quality Rules — spec §17 validation tests ──────────────────
+
+describe('spec §17 quality rules — extended', () => {
+  it('warns on non-sequential marker numbering', () => {
+    const source = `---
+id: 1
+title: Test
+---
+
+A{1}B{/1}C{3}D{/3}。
+
+## Notes
+
+{1} meaning [B]
+{3} meaning [D]`
+    const doc = parse(source)
+    // Non-sequential: 1, 3 (gap at 2)
+    expect(doc.markers.has(1)).toBe(true)
+    expect(doc.markers.has(3)).toBe(true)
+    expect(doc.markers.has(2)).toBe(false)
+  })
+
+  it('serializer includes end offset in @verse target', () => {
+    const entry = parseAnnotationEntry('@verse:0:5-8 meaning [test]')
+    expect(entry).not.toBeNull()
+    const serialized = serializeEntry(entry!)
+    expect(serialized).toContain('@verse:0:5-8')
+  })
+
+  it('date inheritance from book.yaml', () => {
+    const source = `---
+id: 1
+title: Test
+---
+
+Text content。
+
+## 注釋`
+    const bookConfig: BookConfig = {
+      id: 'test',
+      title: 'Test Book',
+      date: { dynasty: '唐', era: '開元', iso: 727 },
+    }
+    const piece = buildPieceFromCham(source, bookConfig, {}, 'test', new Map(), new Map())
+    expect(piece).not.toBeNull()
+    expect(piece!.dynasty).toBe('唐')
+  })
+
+  it('piece date overrides book date', () => {
+    const source = `---
+id: 1
+title: Test
+date:
+  dynasty: 宋
+---
+
+Text content。
+
+## 注釋`
+    const bookConfig: BookConfig = {
+      id: 'test',
+      title: 'Test Book',
+      date: { dynasty: '唐', iso: 727 },
+    }
+    const piece = buildPieceFromCham(source, bookConfig, {}, 'test', new Map(), new Map())
+    expect(piece).not.toBeNull()
+    expect(piece!.dynasty).toBe('宋')
+  })
+
+  it('source fields parsed from frontmatter', () => {
+    const source = `---
+id: 1
+title: Test
+source:
+  textRef: laozi
+  edition: 帛書甲本
+  publisher: 文物出版社
+  page: "12-15"
+  relation: excerpt
+---
+
+Text。
+
+## 注釋`
+    const doc = parse(source)
+    expect(doc.meta.type).toBe('primary')
+    const meta = doc.meta as any
+    expect(meta.source.textRef).toBe('laozi')
+    expect(meta.source.edition).toBe('帛書甲本')
+    expect(meta.source.publisher).toBe('文物出版社')
+    expect(meta.source.page).toBe('12-15')
+    expect(meta.source.relation).toBe('excerpt')
   })
 })
