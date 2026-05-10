@@ -8,9 +8,11 @@ import LibraryHome from './views/LibraryHome.vue'
 import BookHome from './views/BookHome.vue'
 import PieceView from './views/PieceView.vue'
 import AuthorView from './views/AuthorView.vue'
+import AboutView from './views/AboutView.vue'
 
 export const routes: RouteRecordRaw[] = [
   { path: '/', component: LibraryHome },
+  { path: '/about', component: AboutView },
   { path: '/author/:name', component: AuthorView, props: true },
   { path: '/:bookId', component: BookHome, props: true },
   { path: '/:bookId/:num', component: PieceView, props: true },

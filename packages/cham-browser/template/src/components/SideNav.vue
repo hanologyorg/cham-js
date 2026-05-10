@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables/useReadingMode'
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
 import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
-import logoSvg from '../assets/hanology-logo.svg'
+import { useSiteConfig } from '../composables/useSiteConfig'
 
 defineProps<{
   context?: string
@@ -19,6 +20,8 @@ const emit = defineEmits<{
 
 const { theme, layout, mainFontSize, bodyFontSize, setTheme, setLayout, setMainFontSize, setBodyFontSize } = useReadingMode()
 const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
+const { logoUrl } = useSiteConfig()
+const router = useRouter()
 const settingsOpen = ref(false)
 
 function toggleSettings() { settingsOpen.value = !settingsOpen.value }
@@ -27,7 +30,8 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 <template>
   <nav class="sidenav">
     <button class="sn-brand" @click="emit('home')" title="首頁">
-      <img :src="logoSvg" alt="漢流" class="sn-logo" />
+      <img v-if="logoUrl" :src="logoUrl" alt="" class="sn-logo" />
+      <span v-else class="sn-seal">漢流</span>
     </button>
 
     <button class="sn-btn" @click="emit('back')" title="返回">
@@ -44,6 +48,10 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
     </Transition>
 
     <div class="sn-spacer" />
+
+    <button class="sn-btn" @click="router.push('/about')" title="關於">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </button>
 
     <button
       class="sn-btn"
@@ -128,7 +136,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
 .sn-brand {
   width: 40px; height: 48px;
-  border: none;
+  border: 2px solid var(--vermillion);
   border-radius: 3px;
   background: none;
   display: flex; align-items: center; justify-content: center;
@@ -142,6 +150,18 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   height: 100%;
   width: auto;
   object-fit: contain;
+}
+.sn-brand:has(.sn-logo) { border: none; }
+.sn-seal {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--serif);
+  font-size: 14px; font-weight: 900;
+  color: var(--vermillion);
+  display: flex;
+  align-items: center;
+  letter-spacing: 2px;
+  line-height: 1;
 }
 
 .sn-btn {
@@ -292,6 +312,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 @media (max-width: 768px) {
   .sidenav { width: 44px; padding: 8px 0; gap: 6px; }
   .sn-brand { width: 32px; height: 38px; }
+  .sn-seal { font-size: 15px; }
   .sn-btn { width: 30px; height: 30px; }
   .sn-context { font-size: 10px; max-height: 80px; }
 }

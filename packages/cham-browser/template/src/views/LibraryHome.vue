@@ -9,7 +9,7 @@ import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import BookCard from '../components/BookCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
-import logoSvg from '../assets/hanology-logo.svg'
+import { useSiteConfig } from '../composables/useSiteConfig'
 import type { BookMeta } from '../types'
 
 const { scale, books, singleBook, loadLibrary } = useLibrary()
@@ -36,6 +36,7 @@ if (scale.value === 'single-piece' && singleBook.value) {
 
 const router = useRouter()
 const { layout } = useReadingMode()
+const { logoUrl } = useSiteConfig()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
@@ -106,7 +107,8 @@ function openBook(bookId: string) {
     <!-- ═══════ 橫排模式 ═══════ -->
     <div v-else class="lib-root">
       <header class="lib-hero">
-        <img :src="logoSvg" alt="漢流" class="lib-logo" />
+        <img v-if="logoUrl" :src="logoUrl" alt="" class="lib-logo" />
+        <div v-else class="lib-seal">漢流</div>
         <h1>古典詩文圖書館</h1>
         <p class="lib-subtitle">Classical Chinese Text Library</p>
         <div class="lib-stats-bar">
@@ -114,6 +116,7 @@ function openBook(bookId: string) {
           <span class="lib-stat-sep">·</span>
           <span class="lib-stat">{{ totalPieces }} 篇</span>
         </div>
+        <router-link to="/about" class="lib-about-link">關於</router-link>
       </header>
       <div v-for="group in groupedBooks" :key="group.category" class="lib-group">
         <h2 class="lib-group-title">{{ group.category }}</h2>
@@ -274,6 +277,22 @@ function openBook(bookId: string) {
   object-fit: contain;
   margin-bottom: 24px;
 }
+.lib-seal {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 56px;
+  border: 2px solid var(--vermillion);
+  color: var(--vermillion);
+  font-size: 20px;
+  font-family: var(--serif);
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  border-radius: 4px;
+  line-height: 1;
+}
 .lib-hero h1 {
   font-size: 36px;
   font-weight: 700;
@@ -299,6 +318,24 @@ function openBook(bookId: string) {
   letter-spacing: 2px;
 }
 .lib-stat-sep { color: var(--border); }
+
+.lib-about-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.lib-about-link:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
 
 .lib-group { margin-bottom: 40px; }
 .lib-group-title {

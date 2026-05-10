@@ -17,6 +17,7 @@ interface SiteConfig {
   nameEn?: string
   subtitle?: string
   subtitleEn?: string
+  logo?: string
   libraryDir: string
   authorsFile?: string
   outputDir?: string
@@ -30,6 +31,7 @@ function loadConfig(configPath: string): SiteConfig {
     nameEn: raw.nameEn as string | undefined,
     subtitle: raw.subtitle as string | undefined,
     subtitleEn: raw.subtitleEn as string | undefined,
+    logo: raw.logo as string | undefined,
     libraryDir: raw.libraryDir as string || 'library/content',
     authorsFile: raw.authorsFile as string | undefined,
     outputDir: raw.outputDir as string || 'dist',
@@ -189,17 +191,35 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   const templateDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
   const outputDir = resolve(configDir, config.outputDir || 'dist')
 
+  // Copy logo to dist if configured
+  let logoUrl: string | undefined
+  if (config.logo) {
+    const logoSrc = resolve(configDir, config.logo)
+    if (existsSync(logoSrc)) {
+      const assetsDir = join(outputDir, 'assets')
+      mkdirSync(assetsDir, { recursive: true })
+      const ext = logoSrc.endsWith('.svg') ? 'svg' : logoSrc.endsWith('.png') ? 'png' : 'bin'
+      const logoName = `logo.${ext}`
+      writeFileSync(join(assetsDir, logoName), readFileSync(logoSrc))
+      logoUrl = `/assets/${logoName}`
+      console.log(`Logo: ${config.logo} → ${logoUrl}`)
+    } else {
+      console.warn(`Logo not found: ${logoSrc}`)
+    }
+  }
+
   const { build: ssgBuild } = await import('vite-ssg/node')
   const vue = (await import('@vitejs/plugin-vue')).default
 
   process.env.CHAM_DATA_DIR = join(outputDir, 'data')
+  process.env.CHAM_LOGO_URL = logoUrl || ''
 
   await ssgBuild(
     {
       script: 'async',
       formatting: 'minify',
       includedRoutes(paths, routes) {
-        const result = ['/']
+        const result = ['/', '/about']
 
         const library = JSON.parse(
           readFileSync(join(outputDir, 'data', 'library.json'), 'utf-8')
@@ -232,6 +252,9 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
         alias: {
           '@': resolve(templateDir, 'src'),
         },
+      },
+      define: {
+        'import.meta.env.CHAM_LOGO_URL': JSON.stringify(logoUrl || ''),
       },
       build: {
         outDir: outputDir,
