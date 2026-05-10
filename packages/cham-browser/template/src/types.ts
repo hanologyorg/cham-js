@@ -108,11 +108,12 @@ export interface PieceContributor {
   title?: string
 }
 
-export interface PieceSource {  text?: string
+export interface PieceSource {
+  text?: string
   textRef?: string
   pieceRef?: number
   relation: 'section' | 'excerpt' | 'standalone'
-  range?: { start: string; end: string }
+  range?: { start?: string; end?: string; chapter?: string; [key: string]: string | undefined }
 }
 
 export interface ProseSection {
@@ -130,6 +131,7 @@ export interface Part {
   source?: PieceSource
   verses: VerseLine[]
   annotations: Annotation[]
+  annotationText?: string
 }
 
 export interface Piece {

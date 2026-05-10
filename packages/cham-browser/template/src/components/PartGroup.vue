@@ -24,6 +24,7 @@ const emit = defineEmits<{
       :num="part.num"
       :verses="part.verses"
       :annotations="part.annotations"
+      :annotation-text="part.annotationText"
       :vertical="vertical"
       :source="part.source"
       @annotation-hover="(e, a) => emit('annotationHover', e, a)"
