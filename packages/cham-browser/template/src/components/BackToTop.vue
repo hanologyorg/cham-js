@@ -50,6 +50,10 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.1);
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+@media (max-width: 768px) {
+  .btt { bottom: 88px; right: 16px; width: 36px; height: 36px; }
+}
 .btt:hover {
   background: var(--ink);
   color: var(--paper);

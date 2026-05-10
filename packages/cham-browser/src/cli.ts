@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync, copyFileSync, cpSync } from 'fs'
-import { join, resolve, dirname, basename } from 'path'
+import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync, cpSync, symlinkSync, rmSync } from 'fs'
+import { join, resolve, dirname, basename, sep } from 'path'
 import { fileURLToPath } from 'url'
 import { parse as parseYaml } from 'yaml'
 import {
@@ -19,6 +19,7 @@ interface SiteConfig {
   subtitleEn?: string
   logo?: string
   logoDark?: string
+  aboutFile?: string
   libraryDir: string
   authorsFile?: string
   outputDir?: string
@@ -35,6 +36,7 @@ function loadConfig(configPath: string): SiteConfig {
     subtitleEn: raw.subtitleEn as string | undefined,
     logo: raw.logo as string | undefined,
     logoDark: raw.logoDark as string | undefined,
+    aboutFile: raw.aboutFile as string | undefined,
     libraryDir: raw.libraryDir as string || 'library/content',
     authorsFile: raw.authorsFile as string | undefined,
     outputDir: raw.outputDir as string || 'dist',
@@ -71,6 +73,23 @@ function loadAuthors(config: SiteConfig, configDir: string): Record<string, Auth
     : defaultPath
   if (!existsSync(authorsPath)) return {}
   return parseYaml(readFileSync(authorsPath, 'utf-8')) as Record<string, AuthorRecord>
+}
+
+function loadAboutHtml(config: SiteConfig, configDir: string): string {
+  const candidates = [
+    config.aboutFile ? resolve(configDir, config.aboutFile) : null,
+    join(configDir, 'about.html'),
+    join(configDir, 'about.md'),
+  ].filter(Boolean) as string[]
+
+  for (const p of candidates) {
+    if (existsSync(p)) {
+      const content = readFileSync(p, 'utf-8')
+      if (p.endsWith('.html')) return content
+      return content
+    }
+  }
+  return ''
 }
 
 function readPieceFiles(pieceDir: string): {
@@ -193,13 +212,13 @@ function generateData(config: SiteConfig, configDir: string): {
   return { bookMetas, allPieces }
 }
 
-// ─── SSG Build ────────────────────────────────────────────────
+// ─── Shared Vite Config ───────────────────────────────────────
 
-async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
-  const templateDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
-  const outputDir = resolve(configDir, config.outputDir || 'dist')
+function getTemplateDir(): string {
+  return resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
+}
 
-  // Copy logos to dist if configured
+function copyLogos(config: SiteConfig, configDir: string, outputDir: string): { logoUrl: string | undefined; logoDarkUrl: string | undefined } {
   function copyLogo(key: string, rawPath: string | undefined): string | undefined {
     if (!rawPath) return undefined
     const src = resolve(configDir, rawPath)
@@ -215,20 +234,131 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   }
   const logoUrl = copyLogo('light', config.logo)
   const logoDarkUrl = copyLogo('dark', config.logoDark)
+  return { logoUrl, logoDarkUrl }
+}
+
+function getSiteMeta(config: SiteConfig, configDir: string) {
+  return {
+    siteTitle: config.subtitle || config.name,
+    siteSubtitle: config.subtitleEn || config.nameEn || '',
+    aboutHtml: loadAboutHtml(config, configDir),
+  }
+}
+
+function chamHtmlPlugin(siteTitle: string, logoUrl?: string) {
+  return {
+    name: 'cham-html-transform',
+    transformIndexHtml(html: string) {
+      let result = html.replace(/<title>CHAM<\/title>/, `<title>${siteTitle}</title>`)
+      if (logoUrl) {
+        result = result.replace(
+          'id="loading-logo"></div>',
+          `id="loading-logo"><img src="${logoUrl}" alt="" /></div>`
+        )
+      }
+      return result
+    },
+  }
+}
+
+// ─── Dev Server ───────────────────────────────────────────────
+
+async function devServer(config: SiteConfig, configDir: string): Promise<void> {
+  const templateDir = getTemplateDir()
+  const outputDir = resolve(configDir, config.outputDir || 'dist')
+
+  // Step 1: Generate data
+  generateData(config, configDir)
+
+  const { logoUrl, logoDarkUrl } = copyLogos(config, configDir, outputDir)
+  const { siteTitle, siteSubtitle, aboutHtml } = getSiteMeta(config, configDir)
+
+  // Symlink data dir into template's public so vite dev serves it
+  const templatePublicData = join(templateDir, 'public', 'data')
+  const dataDir = join(outputDir, 'data')
+  rmSync(templatePublicData, { recursive: true, force: true })
+  mkdirSync(dirname(templatePublicData), { recursive: true })
+  symlinkSync(dataDir, templatePublicData)
+  console.log(`Data: ${dataDir} → ${templatePublicData}`)
+
+  // Symlink public assets (favicons etc.) into template's public
+  const publicDir = config.publicDir
+    ? resolve(configDir, config.publicDir)
+    : resolve(configDir, 'public')
+  if (existsSync(publicDir)) {
+    for (const f of readdirSync(publicDir).sort()) {
+      if (f === 'data') continue
+      const src = join(publicDir, f)
+      const dest = join(templateDir, 'public', f)
+      rmSync(dest, { recursive: true, force: true })
+      symlinkSync(src, dest)
+    }
+    console.log(`Public assets linked from ${publicDir}`)
+  }
+
+  // Symlink logo assets into template's public/assets
+  const templatePublicAssets = join(templateDir, 'public', 'assets')
+  const distAssets = join(outputDir, 'assets')
+  if (existsSync(distAssets)) {
+    mkdirSync(templatePublicAssets, { recursive: true })
+    for (const f of readdirSync(distAssets)) {
+      const src = join(distAssets, f)
+      const dest = join(templatePublicAssets, f)
+      rmSync(dest, { force: true })
+      symlinkSync(src, dest)
+    }
+  }
+
+  process.env.CHAM_DATA_DIR = dataDir
+
+  const vite = await import('vite')
+  const vue = (await import('@vitejs/plugin-vue')).default
+
+  const server = await vite.createServer({
+    root: templateDir,
+    plugins: [vue(), chamHtmlPlugin(siteTitle, logoUrl)],
+    resolve: {
+      alias: {
+        '@': resolve(templateDir, 'src'),
+      },
+    },
+    define: {
+      'import.meta.env.CHAM_LOGO_URL': JSON.stringify(logoUrl || ''),
+      'import.meta.env.CHAM_LOGO_DARK_URL': JSON.stringify(logoDarkUrl || ''),
+      'import.meta.env.CHAM_SITE_TITLE': JSON.stringify(siteTitle),
+      'import.meta.env.CHAM_SITE_SUBTITLE': JSON.stringify(siteSubtitle),
+      'import.meta.env.CHAM_ABOUT_HTML': JSON.stringify(aboutHtml),
+    },
+    server: {
+      port: 3000,
+      open: true,
+    },
+  })
+
+  await server.listen()
+  server.printUrls()
+}
+
+// ─── SSG Build ────────────────────────────────────────────────
+
+async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
+  const templateDir = getTemplateDir()
+  const outputDir = resolve(configDir, config.outputDir || 'dist')
+
+  const { logoUrl, logoDarkUrl } = copyLogos(config, configDir, outputDir)
+  const { siteTitle, siteSubtitle, aboutHtml } = getSiteMeta(config, configDir)
 
   const { build: ssgBuild } = await import('vite-ssg/node')
   const vue = (await import('@vitejs/plugin-vue')).default
 
   process.env.CHAM_DATA_DIR = join(outputDir, 'data')
-  process.env.CHAM_LOGO_URL = logoUrl || ''
-  process.env.CHAM_LOGO_DARK_URL = logoDarkUrl || ''
 
   await ssgBuild(
     {
       script: 'async',
       formatting: 'minify',
       includedRoutes(paths, routes) {
-        const result = ['/', '/about']
+        const result = ['/']
 
         const library = JSON.parse(
           readFileSync(join(outputDir, 'data', 'library.json'), 'utf-8')
@@ -256,7 +386,7 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
     },
     {
       root: templateDir,
-      plugins: [vue()],
+      plugins: [vue(), chamHtmlPlugin(siteTitle, logoUrl)],
       resolve: {
         alias: {
           '@': resolve(templateDir, 'src'),
@@ -265,6 +395,9 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
       define: {
         'import.meta.env.CHAM_LOGO_URL': JSON.stringify(logoUrl || ''),
         'import.meta.env.CHAM_LOGO_DARK_URL': JSON.stringify(logoDarkUrl || ''),
+        'import.meta.env.CHAM_SITE_TITLE': JSON.stringify(siteTitle),
+        'import.meta.env.CHAM_SITE_SUBTITLE': JSON.stringify(siteSubtitle),
+        'import.meta.env.CHAM_ABOUT_HTML': JSON.stringify(aboutHtml),
       },
       build: {
         outDir: outputDir,
@@ -278,9 +411,9 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   // Copy public dir assets (favicons, manifest, etc.) to output
   const publicDir = config.publicDir
     ? resolve(configDir, config.publicDir)
-    : resolve(configDir, 'site', 'public')
+    : resolve(configDir, 'public')
   if (existsSync(publicDir)) {
-    cpSync(publicDir, outputDir, { recursive: true, filter: (src) => !src.endsWith('.html') })
+    cpSync(publicDir, outputDir, { recursive: true, filter: (src) => !src.endsWith('.html') && !src.includes(`${sep}data`) })
     console.log(`Public: ${publicDir} → ${outputDir}`)
   }
 }
@@ -290,6 +423,11 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
 async function main() {
   const args = process.argv.slice(2)
   let configPath = 'config.yaml'
+  let command = 'build'
+
+  if (args[0] === 'dev' || args[0] === 'build') {
+    command = args.shift()!
+  }
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--config' && args[i + 1]) {
@@ -306,13 +444,17 @@ async function main() {
   const configDir = dirname(resolve(configPath))
   const config = loadConfig(configPath)
 
-  console.log(`Building site: ${config.name} (${config.nameEn || ''})`)
+  console.log(`Site: ${config.name} (${config.nameEn || ''})`)
 
-  // Step 1: Generate JSON data
-  generateData(config, configDir)
-
-  // Step 2: Build static site
-  await buildSite(config, configDir)
+  if (command === 'dev') {
+    await devServer(config, configDir)
+  } else {
+    console.log(`Building site: ${config.name} (${config.nameEn || ''})`)
+    // Step 1: Generate JSON data
+    generateData(config, configDir)
+    // Step 2: Build static site
+    await buildSite(config, configDir)
+  }
 }
 
 main().catch(err => {

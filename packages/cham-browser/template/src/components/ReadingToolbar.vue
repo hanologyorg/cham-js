@@ -91,6 +91,26 @@ function close() { open.value = false }
   right: 24px;
   z-index: 500;
 }
+
+@media (max-width: 768px) {
+  .rt { bottom: 16px; right: 16px; }
+  .rt-panel {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: auto;
+    border-radius: 16px 16px 0 0;
+    max-height: 60vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: slideUpMobile 0.3s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  @keyframes slideUpMobile {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
 .rt-fab {
   width: 44px; height: 44px;
   border-radius: 50%;

@@ -137,6 +137,10 @@ function scrollToCatalog() {
           @click="openPiece(piece.num)"
         />
       </div>
+      <div v-if="searchQuery && filtered.length === 0" class="h-empty">
+        <span class="h-empty-icon">🔍</span>
+        <p>未找到符合「{{ searchQuery }}」的篇章</p>
+      </div>
     </section>
 
     <BackToTop />
@@ -367,10 +371,31 @@ function scrollToCatalog() {
   animation: cardEnter 0.4s var(--ease-out-expo) both;
 }
 
+.h-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+.h-empty-icon {
+  display: block;
+  font-size: 40px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
 @media (max-width: 768px) {
-  .h-stats { gap: 24px; }
+  .h-hero { min-height: 80vh; height: auto; padding: 60px 16px; }
+  .h-ornament { font-size: 32px; letter-spacing: 12px; margin-bottom: 20px; }
+  .h-subtitle { margin-bottom: 32px; }
+  .h-divider { margin-bottom: 32px; }
+  .h-stats { gap: 24px; margin-bottom: 32px; }
   .h-stat-num { font-size: 28px; }
-  .h-catalog { padding: 40px 20px; }
+  .h-publisher { margin-bottom: 32px; }
+  .h-cta { padding: 12px 32px; font-size: 14px; letter-spacing: 2px; }
+  .h-catalog { padding: 40px 16px; }
   .h-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .h-search { width: 100%; }
   .v-page { padding: 0 16px; }
@@ -379,5 +404,13 @@ function scrollToCatalog() {
     gap: 10px;
   }
   .v-search { height: 160px; }
+}
+
+@media (max-width: 480px) {
+  .h-hero { min-height: 70vh; }
+  .h-title { letter-spacing: 6px; }
+  .h-cta { width: 80%; justify-content: center; }
+  .h-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .h-catalog-header h2 { font-size: 22px; }
 }
 </style>

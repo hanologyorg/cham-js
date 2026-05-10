@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLibrary } from '../composables/useLibrary'
 import { useBook } from '../composables/useBook'
@@ -13,10 +13,14 @@ import BackToTop from '../components/BackToTop.vue'
 import { useSiteConfig } from '../composables/useSiteConfig'
 import type { BookMeta } from '../types'
 
+const aboutPane = inject<{ toggleAbout: () => void; closeAbout: () => void }>('aboutPane')
+
 const { scale, books, singleBook, loadLibrary } = useLibrary()
 await loadLibrary()
 
-useTitle('古典詩文圖書館')
+const { siteTitle, siteSubtitle, aboutHtml, logoUrl } = useSiteConfig()
+const displayTitle = siteTitle || 'CHAM'
+useTitle(displayTitle)
 
 // Single-book: redirect to book home
 if (scale.value === 'single-book' && singleBook.value) {
@@ -37,7 +41,6 @@ if (scale.value === 'single-piece' && singleBook.value) {
 
 const router = useRouter()
 const { layout } = useReadingMode()
-const { logoUrl } = useSiteConfig()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
@@ -70,23 +73,29 @@ const groupedBooks = computed(() => {
 
 const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count, 0))
 
+const spacedTitle = computed(() => displayTitle.split('').join(' '))
+
 function openBook(bookId: string) {
   router.push(`/${bookId}`)
 }
 </script>
 
 <template>
-  <div v-if="scale === 'library'">
+  <div v-if="scale !== 'library'" class="loading">
+    <img v-if="logoUrl" :src="logoUrl" alt="" class="loading-logo" />
+    <div v-else class="loading-seal">文</div>
+  </div>
+  <div v-else>
     <!-- ═══════ 直排模式 ═══════ -->
     <div v-if="isVertical" class="v-root">
       <SideNav @home="router.push('/')" @back="router.push('/')" />
       <div ref="vPageRef" class="v-page">
-        <div class="v-about-col">
-          <router-link to="/about" class="v-about-link">關 於</router-link>
+        <div v-if="aboutHtml" class="v-about-col">
+          <button class="v-about-link" @click="aboutPane?.toggleAbout()">關 於</button>
         </div>
         <section class="v-hero">
-          <h1 class="v-title">古 典 詩 文 圖 書 館</h1>
-          <p class="v-subtitle">Classical Chinese Text Library</p>
+          <h1 class="v-title">{{ spacedTitle }}</h1>
+          <p v-if="siteSubtitle" class="v-subtitle">{{ siteSubtitle }}</p>
           <div class="v-divider"></div>
         </section>
 
@@ -112,15 +121,14 @@ function openBook(bookId: string) {
     <div v-else class="lib-root">
       <header class="lib-hero">
         <img v-if="logoUrl" :src="logoUrl" alt="" class="lib-logo" />
-        <div v-else class="lib-seal">漢流</div>
-        <h1>古典詩文圖書館</h1>
-        <p class="lib-subtitle">Classical Chinese Text Library</p>
+        <div v-else class="lib-seal">{{ displayTitle.slice(0, 2) }}</div>
+        <h1>{{ displayTitle }} <button v-if="aboutHtml" class="lib-about-link" @click="aboutPane?.toggleAbout()">關於</button></h1>
+        <p v-if="siteSubtitle" class="lib-subtitle">{{ siteSubtitle }}</p>
         <div class="lib-stats-bar">
           <span class="lib-stat">{{ books.length }} 部</span>
           <span class="lib-stat-sep">·</span>
           <span class="lib-stat">{{ totalPieces }} 篇</span>
         </div>
-        <router-link to="/about" class="lib-about-link">關於</router-link>
       </header>
       <div v-for="group in groupedBooks" :key="group.category" class="lib-group">
         <h2 class="lib-group-title">{{ group.category }}</h2>
@@ -201,6 +209,8 @@ function openBook(bookId: string) {
   padding: 12px 8px;
   border: 1px solid var(--border-light);
   border-radius: 2px;
+  background: none;
+  cursor: pointer;
   transition: all 0.2s;
 }
 .v-about-link:hover {
@@ -353,16 +363,17 @@ function openBook(bookId: string) {
 
 .lib-about-link {
   display: inline-block;
-  margin-top: 16px;
   font-family: var(--sans);
   font-size: 13px;
   color: var(--ink-faint);
   letter-spacing: 2px;
-  text-decoration: none;
   padding: 4px 12px;
   border: 1px solid var(--border-light);
   border-radius: 4px;
+  background: none;
+  cursor: pointer;
   transition: all 0.2s;
+  vertical-align: middle;
 }
 .lib-about-link:hover {
   color: var(--ink);
@@ -455,12 +466,15 @@ function openBook(bookId: string) {
   .v-page { padding: 0 16px; }
   .v-title { font-size: 36px; letter-spacing: 10px; }
   .lib-root { padding: 40px 16px 80px; }
+  .lib-hero { margin-bottom: 32px; }
   .lib-hero h1 { font-size: 28px; letter-spacing: 4px; }
+  .lib-logo { height: 48px; margin-bottom: 16px; }
   .lib-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
   .lib-card { padding: 14px; }
+  .lib-card:active { transform: scale(0.98); }
   .lib-card-title { font-size: 18px; letter-spacing: 2px; }
   .lib-card-genre { display: none; }
   .lib-card-sub { font-size: 12px; margin-bottom: 8px; }
@@ -468,5 +482,29 @@ function openBook(bookId: string) {
 
 @media (max-width: 480px) {
   .lib-grid { grid-template-columns: 1fr; }
+}
+
+.loading {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  height: 100vh;
+}
+.loading-seal {
+  width: 56px; height: 56px;
+  border: 2px solid var(--vermillion);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900;
+  color: var(--vermillion);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.loading-logo {
+  width: 56px; height: auto;
+  object-fit: contain;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 </style>

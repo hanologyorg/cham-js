@@ -165,6 +165,14 @@ export interface Author {
   dynasty: string
   poemCount: number
   bio?: string
+  born?: string
+  died?: string
+  courtesyName?: string
+  artName?: string
+  wikidata?: string
+  ctextId?: string
+  wikipediaZh?: string
+  wikipediaEn?: string
 }
 
 export interface Dynasty {

@@ -121,4 +121,34 @@ function onTap(event: MouseEvent) {
 :deep(.ann-target.pronunciation.semantic) {
   border-left-color: var(--gold);
 }
+:deep(.ann-target.person) {
+  border-left-color: var(--ann-person);
+}
+:deep(.ann-target.place) {
+  border-left-color: var(--ann-place);
+}
+:deep(.ann-target.event) {
+  border-left-color: var(--ann-event);
+}
+:deep(.ann-target.date) {
+  border-left-color: var(--ann-date);
+}
+:deep(.ann-target.allusion) {
+  border-left-color: var(--ann-allusion);
+}
+:deep(.ann-target.person:hover) {
+  background: rgba(58, 90, 140, 0.08);
+}
+:deep(.ann-target.place:hover) {
+  background: rgba(139, 105, 20, 0.08);
+}
+:deep(.ann-target.event:hover) {
+  background: rgba(107, 76, 138, 0.08);
+}
+:deep(.ann-target.date:hover) {
+  background: rgba(42, 122, 122, 0.08);
+}
+:deep(.ann-target.allusion:hover) {
+  background: rgba(181, 101, 29, 0.08);
+}
 </style>
