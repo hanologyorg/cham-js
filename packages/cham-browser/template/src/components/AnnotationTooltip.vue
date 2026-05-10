@@ -198,10 +198,18 @@ onBeforeUnmount(() => {
 }
 
 /* ─── Transition ─── */
-.ann-fade-enter-active, .ann-fade-leave-active {
-  transition: opacity 0.15s ease;
+.ann-fade-enter-active {
+  transition: opacity var(--dur-fast, 0.15s) ease, transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.ann-fade-enter-from, .ann-fade-leave-to {
+.ann-fade-leave-active {
+  transition: opacity var(--dur-fast, 0.15s) ease, transform var(--dur-fast, 0.15s) ease;
+}
+.ann-fade-enter-from {
   opacity: 0;
+  transform: scale(0.92) translateY(4px);
+}
+.ann-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 </style>

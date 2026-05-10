@@ -5,6 +5,7 @@ import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
+import BackToTop from '../components/BackToTop.vue'
 import { useSiteConfig } from '../composables/useSiteConfig'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -63,6 +64,7 @@ function goHome() { router.push('/') }
         <p>Hanology is a digital library for classical Chinese texts. We believe that the wisdom of antiquity should not be locked behind impenetrable editions or forgotten in dusty shelves. By combining rigorous scholarship with thoughtful design, we make the classics accessible, beautiful, and alive for every reader.</p>
       </div>
     </div>
+    <BackToTop />
     <ReadingToolbar />
   </div>
 </template>
