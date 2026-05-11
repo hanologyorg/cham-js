@@ -85,9 +85,6 @@ function openBook(bookId: string) {
     <div v-if="isVertical" class="v-root">
       <SideNav @home="router.push('/')" @back="router.push('/')" />
       <div ref="vPageRef" class="v-page">
-        <div v-if="aboutHtml" class="v-about-col">
-          <button class="v-about-link" @click="aboutPane?.toggleAbout()">{{ t('nav.about') }}</button>
-        </div>
         <section class="v-hero">
           <h1 class="v-title">{{ spacedTitle }}</h1>
           <p v-if="siteSubtitle" class="v-subtitle">{{ siteSubtitle }}</p>
@@ -117,7 +114,7 @@ function openBook(bookId: string) {
       <header class="lib-hero">
         <img v-if="logoUrl" :src="logoUrl" alt="" class="lib-logo" />
         <div v-else class="lib-seal">{{ displayTitle.slice(0, 2) }}</div>
-        <h1>{{ displayTitle }} <button v-if="aboutHtml" class="lib-about-link" @click="aboutPane?.toggleAbout()">{{ t('nav.about') }}</button></h1>
+        <h1>{{ displayTitle }}</h1>
         <p v-if="siteSubtitle" class="lib-subtitle">{{ siteSubtitle }}</p>
         <div class="lib-stats-bar">
           <span class="lib-stat">{{ books.length }} {{ t('stat.books') }}</span>
@@ -173,33 +170,6 @@ function openBook(bookId: string) {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
-}
-.v-about-col {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-shrink: 0;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  border-right: 1px solid var(--border-light);
-}
-.v-about-link {
-  font-size: 14px;
-  color: var(--ink-faint);
-  letter-spacing: 6px;
-  font-family: var(--sans);
-  padding: 12px 8px;
-  border: 1px solid var(--border-light);
-  border-radius: 2px;
-  background: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.v-about-link:hover {
-  color: var(--ink);
-  border-color: var(--ink);
 }
 .v-title {
   font-size: 48px; font-weight: 900;
@@ -344,25 +314,6 @@ function openBook(bookId: string) {
   letter-spacing: 2px;
 }
 .lib-stat-sep { color: var(--border); }
-
-.lib-about-link {
-  display: inline-block;
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink-faint);
-  letter-spacing: 2px;
-  padding: 4px 12px;
-  border: 1px solid var(--border-light);
-  border-radius: 4px;
-  background: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  vertical-align: middle;
-}
-.lib-about-link:hover {
-  color: var(--ink);
-  border-color: var(--ink);
-}
 
 .lib-group { margin-bottom: 40px; }
 .lib-group-title {
