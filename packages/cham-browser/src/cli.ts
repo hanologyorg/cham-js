@@ -363,12 +363,14 @@ function generateData(config: SiteConfig, configDir: string): {
 
 function getPackageVersions(): { cham: string; chamBrowser: string } {
   const thisDir = dirname(fileURLToPath(import.meta.url))
-  // cham-browser: dist/cli.js → package.json (one level up)
   const browserPkg = JSON.parse(readFileSync(join(thisDir, '..', 'package.json'), 'utf-8'))
-  // cham: try workspace layout, then installed node_modules
   let chamVersion = ''
   const candidates = [
+    // workspace layout: dist/ → cham-browser/ → packages/ → root/packages/cham/
     join(thisDir, '..', '..', '..', 'packages', 'cham', 'package.json'),
+    // npm hoisted: @hanology/cham-browser/dist → @hanology/cham-browser/ → node_modules/@hanology/cham/
+    join(thisDir, '..', '..', 'cham', 'package.json'),
+    // npm nested
     join(thisDir, '..', 'node_modules', '@hanology', 'cham', 'package.json'),
   ]
   for (const p of candidates) {
