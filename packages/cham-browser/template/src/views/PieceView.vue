@@ -495,6 +495,7 @@ function tcy(n: number): string {
         :headwords="annotationHeadwords"
         :layer-labels="layerLabels"
         :active-id="paneActiveId"
+        :vertical="isVertical"
         @close="paneVisible = false"
         @select="onPaneSelect"
       />
@@ -711,6 +712,7 @@ function tcy(n: number): string {
     :headword="interaction.headword"
     :layer-labels="layerLabels"
     :style="interaction.style"
+    :vertical="isVertical"
     @close="interaction.dismiss"
     @tooltip-enter="interaction.onTooltipEnter"
     @tooltip-leave="interaction.onTooltipLeave"

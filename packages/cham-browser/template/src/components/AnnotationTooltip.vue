@@ -118,6 +118,7 @@ onBeforeUnmount(() => {
       <div
         v-if="!isMobile && stickyVisible && annotations.length"
         class="ann-card"
+        :class="{ vertical }"
         :style="style"
         @mouseenter="emit('tooltipEnter')"
         @mouseleave="emit('tooltipLeave')"
@@ -136,7 +137,7 @@ onBeforeUnmount(() => {
               <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             </div>
             <div class="ann-entry-body">
-              <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
+              <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
               <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
             </div>
           </div>
@@ -149,6 +150,7 @@ onBeforeUnmount(() => {
       <div
         v-if="isMobile && stickyVisible && annotations.length"
         class="ann-sheet"
+        :class="{ vertical }"
       >
         <button class="ann-sheet-handle" @click="dismiss">
           <span class="ann-handle-bar" />
@@ -164,7 +166,7 @@ onBeforeUnmount(() => {
               <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             </div>
             <div class="ann-entry-body">
-              <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
+              <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
               <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
             </div>
           </div>
@@ -406,5 +408,81 @@ onBeforeUnmount(() => {
 
 @media (min-width: 768px) {
   .ann-sheet { display: none; }
+}
+
+/* ─── Vertical mode ─── */
+.ann-card.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.ann-card.vertical .ann-card-scroll {
+  display: flex;
+  flex-direction: row;
+  padding: 10px 8px;
+}
+
+.ann-card.vertical .ann-entry {
+  border-bottom: none;
+  padding: 8px 4px;
+}
+
+.ann-card.vertical .ann-entry + .ann-entry {
+  border-top: 1px solid var(--border-light);
+  margin-top: 4px;
+}
+
+.ann-card.vertical .ann-card-close {
+  writing-mode: horizontal-tb;
+}
+
+.ann-card.vertical .ann-pron-h {
+  writing-mode: horizontal-tb;
+}
+
+.ann-card.vertical .ann-entry-body {
+  padding-left: 0;
+  padding-top: 4px;
+}
+
+.ann-card.vertical .ann-text {
+  white-space: pre-line;
+  line-height: 2;
+}
+
+.ann-sheet.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.ann-sheet.vertical .ann-sheet-scroll {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 16px 24px;
+}
+
+.ann-sheet.vertical .ann-entry {
+  border-bottom: none;
+  border-left: 1px solid var(--border-light);
+  padding: 0 12px;
+}
+
+.ann-sheet.vertical .ann-entry:first-child {
+  border-left: none;
+}
+
+.ann-sheet.vertical .ann-pron-h {
+  writing-mode: horizontal-tb;
+}
+
+.ann-sheet.vertical .ann-text {
+  white-space: pre-line;
+  line-height: 2;
+}
+
+.ann-sheet.vertical .ann-sheet-handle {
+  writing-mode: horizontal-tb;
 }
 </style>

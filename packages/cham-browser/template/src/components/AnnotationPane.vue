@@ -11,6 +11,7 @@ const props = defineProps<{
   headwords: Record<string, string>
   layerLabels?: Record<string, string>
   activeId: string
+  vertical?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,7 +76,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 <template>
   <Teleport to="body">
     <Transition name="ann-pane">
-      <div v-if="visible && annotations.length" class="ann-pane">
+      <div v-if="visible && annotations.length" class="ann-pane" :class="{ vertical }">
         <div class="ann-pane-header">
           <span class="ann-pane-title">注釋</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
@@ -304,5 +305,42 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   .ann-pane-leave-to {
     transform: translateY(100%);
   }
+}
+
+/* ─── Vertical mode ─── */
+.ann-pane.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  width: 240px;
+}
+
+.ann-pane.vertical .ann-pane-body {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.ann-pane.vertical .ann-pane-entry {
+  padding: 12px 8px;
+  border-bottom: none;
+  border-left: 1px solid var(--border-light);
+  border-right: 3px solid transparent;
+}
+
+.ann-pane.vertical .ann-pane-entry.active {
+  border-right-color: var(--vermillion);
+}
+
+.ann-pane.vertical .ann-pane-entry.active.pronunciation {
+  border-right-color: var(--jade);
+}
+
+.ann-pane.vertical .ann-pane-entry-head {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ann-pane.vertical .ann-pane-text {
+  line-height: 2;
+  letter-spacing: 1px;
 }
 </style>

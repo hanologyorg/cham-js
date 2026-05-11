@@ -160,11 +160,12 @@ export function useAnnotationTooltip() {
         bottom: '0',
       }
     } else if (layout.value === 'vertical') {
-      // Vertical mode: card to the left of the annotation
-      const cardW = 340
+      // Vertical mode: tall narrow card to the left of the annotation
+      const cardW = 180
+      const cardH = Math.min(vh - 16, 480)
       const gap = 12
       let left = Math.max(8, rect.left - cardW - gap)
-      let top = Math.max(8, Math.min(rect.top, vh - 300))
+      let top = Math.max(8, Math.min(rect.top, vh - cardH))
 
       // If not enough room on left, go right
       if (rect.left - cardW - gap < 8) {
@@ -175,7 +176,7 @@ export function useAnnotationTooltip() {
         left: left + 'px',
         top: top + 'px',
         width: cardW + 'px',
-        maxHeight: Math.min(vh - 16, 500) + 'px',
+        maxHeight: cardH + 'px',
       }
     } else {
       // Horizontal mode: card below/above the annotation
