@@ -362,10 +362,22 @@ function generateData(config: SiteConfig, configDir: string): {
 // ─── Shared Vite Config ───────────────────────────────────────
 
 function getPackageVersions(): { cham: string; chamBrowser: string } {
-  const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
-  const chamPkg = JSON.parse(readFileSync(join(rootDir, 'packages', 'cham', 'package.json'), 'utf-8'))
-  const browserPkg = JSON.parse(readFileSync(join(rootDir, 'packages', 'cham-browser', 'package.json'), 'utf-8'))
-  return { cham: chamPkg.version, chamBrowser: browserPkg.version }
+  const thisDir = dirname(fileURLToPath(import.meta.url))
+  // cham-browser: dist/cli.js → package.json (one level up)
+  const browserPkg = JSON.parse(readFileSync(join(thisDir, '..', 'package.json'), 'utf-8'))
+  // cham: try workspace layout, then installed node_modules
+  let chamVersion = ''
+  const candidates = [
+    join(thisDir, '..', '..', '..', 'packages', 'cham', 'package.json'),
+    join(thisDir, '..', 'node_modules', '@hanology', 'cham', 'package.json'),
+  ]
+  for (const p of candidates) {
+    try {
+      chamVersion = JSON.parse(readFileSync(p, 'utf-8')).version
+      break
+    } catch { /* next */ }
+  }
+  return { cham: chamVersion, chamBrowser: browserPkg.version }
 }
 
 function getTemplateDir(): string {
