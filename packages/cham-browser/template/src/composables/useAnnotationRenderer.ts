@@ -7,6 +7,7 @@ export interface AnnSpan {
   start: number
   end: number
   annotations: Annotation[]
+  overlapping: boolean
 }
 
 export function esc(s: string): string {
@@ -17,27 +18,41 @@ export function buildVerseAnnotations(annotations: Annotation[], verseIndex: num
   const anns = annotations.filter(a =>
     a.range.scope === 'verse' && a.range.verseIndex === verseIndex
   )
-  const spanMap = new Map<string, Annotation[]>()
+  if (!anns.length) return []
+
+  const points = new Set<number>()
   for (const a of anns) {
-    const key = `${a.range.start ?? 0}:${a.range.end ?? 0}`
-    if (!spanMap.has(key)) spanMap.set(key, [])
-    spanMap.get(key)!.push(a)
+    points.add(a.range.start ?? 0)
+    points.add(a.range.end ?? 0)
   }
-  return Array.from(spanMap.entries()).map(([k, matched]) => {
-    const [start, end] = k.split(':').map(Number)
-    return { start, end, annotations: matched }
-  }).sort((a, b) => a.start - b.start)
+  const sorted = [...points].sort((a, b) => a - b)
+
+  const segments: AnnSpan[] = []
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const start = sorted[i]
+    const end = sorted[i + 1]
+    const covering = anns.filter(a =>
+      (a.range.start ?? 0) <= start && (a.range.end ?? 0) >= end
+    )
+    if (covering.length === 0) continue
+
+    const rangeKeys = new Set(
+      covering.map(a => `${a.range.start ?? 0}:${a.range.end ?? 0}`)
+    )
+
+    segments.push({
+      start,
+      end,
+      annotations: covering,
+      overlapping: rangeKeys.size > 1,
+    })
+  }
+
+  return segments
 }
 
 export function countVerseSpans(annotations: Annotation[], verseIndex: number): number {
-  const anns = annotations.filter(a =>
-    a.range.scope === 'verse' && a.range.verseIndex === verseIndex
-  )
-  const keys = new Set<string>()
-  for (const a of anns) {
-    keys.add(`${a.range.start ?? 0}:${a.range.end ?? 0}`)
-  }
-  return keys.size
+  return buildVerseAnnotations(annotations, verseIndex).length
 }
 
 export function renderAnnotatedText(text: string, spans: AnnSpan[], useRuby = false, startNum = 0): string {
@@ -53,13 +68,14 @@ export function renderAnnotatedText(text: string, spans: AnnSpan[], useRuby = fa
     annCounter++
     const ids = span.annotations.map(a => a.id).join(',')
     const kinds = [...new Set(span.annotations.map(a => a.kind))].join(' ')
+    const overlapCls = span.overlapping ? ' ann-overlap' : ''
     const numText = toChineseNumber(annCounter)
     const body = esc(text.slice(span.start, span.end))
     if (useRuby) {
       const rtCls = numText.length > 1 ? 'ann-num ann-num-long' : 'ann-num'
-      html += `<ruby class="ann-target ${kinds}" data-ann-ids="${ids}">${body}<rp></rp><rt class="${rtCls}">${numText}</rt><rp></rp></ruby>`
+      html += `<ruby class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${body}<rp></rp><rt class="${rtCls}">${numText}</rt><rp></rp></ruby>`
     } else {
-      html += `<span class="ann-target ${kinds}" data-ann-ids="${ids}">${body}<sup class="ann-num">${numText}</sup></span>`
+      html += `<span class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${body}<sup class="ann-num">${numText}</sup></span>`
     }
     cursor = span.end
   }
@@ -89,7 +105,8 @@ export function renderVerseGutter(text: string, spans: AnnSpan[], startNum = 0):
     annCounter++
     const ids = span.annotations.map(a => a.id).join(',')
     const kinds = [...new Set(span.annotations.map(a => a.kind))].join(' ')
-    textHtml += `<span class="ann-target ${kinds}" data-ann-ids="${ids}">${esc(text.slice(span.start, span.end))}</span>`
+    const overlapCls = span.overlapping ? ' ann-overlap' : ''
+    textHtml += `<span class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${esc(text.slice(span.start, span.end))}</span>`
     gutter[span.start] = `<span class="ann-gutter-num ${kinds}" data-ann-ids="${ids}">${toChineseNumber(annCounter)}</span>`
     cursor = span.end
   }
@@ -123,11 +140,27 @@ export function useAnnotationTooltip() {
     const rect = (el ?? event.target as HTMLElement).getBoundingClientRect()
 
     if (layout.value === 'vertical') {
-      const left = rect.left - 12
-      style.value = {
-        right: Math.max(8, window.innerWidth - left) + 'px',
-        top: '50%',
-        transform: 'translateY(-50%)',
+      const isMobile = window.innerWidth < 768
+      if (isMobile) {
+        style.value = {
+          left: '4vw',
+          right: '4vw',
+          bottom: '0',
+          maxWidth: 'none',
+        }
+      } else if (window.innerWidth >= 1024) {
+        style.value = {
+          right: '20px',
+          top: '72px',
+          maxHeight: 'calc(100vh - 100px)',
+        }
+      } else {
+        const right = window.innerWidth - rect.left + 8
+        style.value = {
+          right: Math.min(right, window.innerWidth - 40) + 'px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }
       }
     } else {
       const isMobile = window.innerWidth < 768
@@ -156,7 +189,6 @@ export function useAnnotationTooltip() {
       const currentIds = items.value.map(a => a.id).sort().join(',')
       const newIds = annotations.map(a => a.id).sort().join(',')
       if (currentIds === newIds) {
-        // Same annotation: dismiss on mobile only (desktop uses hover to manage)
         if (window.innerWidth < 768) hide()
       } else {
         show(event, annotations)

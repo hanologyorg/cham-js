@@ -27,6 +27,8 @@ function loadAuthors(dataDir: string): Record<string, AuthorRecord> {
     result[id] = {
       name: item.name as string || id,
       dynasty: item.dynasty as string | undefined,
+      era: item.era as string | undefined,
+      eraCode: item.eraCode as string | undefined,
       bio: item.bio as string | undefined,
     }
   }
@@ -41,6 +43,7 @@ function loadDynasties(dataDir: string): DynastyRecord[] {
     label: d.label as string,
     start: d.start as number | undefined,
     end: d.end as number | undefined,
+    gbCode: d.gb_code as string | undefined,
   }))
 }
 
@@ -49,6 +52,8 @@ function loadEras(dataDir: string): EraRecord[] {
   if (!raw.eras || !Array.isArray(raw.eras)) return []
   return (raw.eras as Array<Record<string, unknown>>).map(e => ({
     dynasty: e.dynasty as string,
+    era: (e.era as string) || '',
+    eraCode: e.eraCode as string | undefined,
     label: e.label as string,
     start: e.start as number | undefined,
     end: e.end as number | undefined,
@@ -94,6 +99,8 @@ function loadEvents(dataDir: string): Record<string, EventRecord> {
       id,
       label: item.label as string,
       dynasty: item.dynasty as string | undefined,
+      era: item.era as string | undefined,
+      eraCode: item.eraCode as string | undefined,
       year: item.year as number | undefined,
     }
   }

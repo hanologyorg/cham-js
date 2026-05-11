@@ -14,6 +14,7 @@ export interface ChamContributor {
 export interface ChamDate {
   dynasty?: string
   era?: string
+  eraCode?: string
   era_year?: number
   sexagenary?: string
   iso?: number
@@ -40,6 +41,7 @@ export interface SecondaryMeta {
   role?: string
   dynasty?: string
   era?: string
+  eraCode?: string
   era_year?: number
   iso?: number
   nature?: string
@@ -106,6 +108,7 @@ export interface SectionMeta {
   role?: string
   dynasty?: string
   era?: string
+  eraCode?: string
   era_year?: number
   iso?: number
   nature?: string
@@ -294,6 +297,8 @@ export interface OutputPiece {
   author: string
   authorId: string
   dynasty: string
+  era: string
+  eraCode?: string
   genre: BookGenre
   verses: { text: string }[]
   sections: Record<string, string>
@@ -323,6 +328,8 @@ export interface BookData {
 export interface AuthorRecord {
   name: string
   dynasty?: string
+  era?: string
+  eraCode?: string
   bio?: string
   born?: string
   died?: string
@@ -339,10 +346,13 @@ export interface DynastyRecord {
   label: string
   start?: number
   end?: number
+  gbCode?: string
 }
 
 export interface EraRecord {
   dynasty: string
+  era: string
+  eraCode?: string
   label: string
   start?: number
   end?: number
@@ -366,6 +376,8 @@ export interface EventRecord {
   id: string
   label: string
   dynasty?: string
+  era?: string
+  eraCode?: string
   year?: number
 }
 

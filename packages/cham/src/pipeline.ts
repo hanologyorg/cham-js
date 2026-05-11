@@ -358,6 +358,8 @@ export function buildPieceFromCham(
     authorId,
     ...(contributors.length > 1 ? { contributors } : {}),
     dynasty: dynastyName,
+    era: dynastyName,
+    eraCode: authors[authorId]?.eraCode,
     genre: pmeta.genre || bookConfig.genre || 'poetry',
     verses,
     sections,
@@ -426,7 +428,7 @@ export function buildLibraryIndex(bookMetas: BookMeta[], allPieces: OutputPiece[
 export function buildAuthorsJson(
   authors: Record<string, AuthorRecord>,
   allPieces: OutputPiece[],
-): { '@id': string; '@type': string; name: string; dynasty: string; bio: string; poemCount: number }[] {
+): { '@id': string; '@type': string; name: string; era: string; bio: string; workCount: number }[] {
   const pieceCounts = new Map<string, number>()
   for (const p of allPieces) {
     pieceCounts.set(p.authorId, (pieceCounts.get(p.authorId) || 0) + 1)
@@ -443,17 +445,17 @@ export function buildAuthorsJson(
     '@id': `author:${encodeURIComponent(data.name)}`,
     '@type': 'Person',
     name: data.name,
-    dynasty: data.dynasty || '',
+    era: data.era || data.dynasty || '',
     bio: data.bio || '',
-    poemCount: pieceCounts.get(id) || 0,
+    workCount: pieceCounts.get(id) || 0,
   }))
 }
 
-export function buildDynastiesJson(allPieces: OutputPiece[]): Record<string, { '@id': string; '@type': string; name: string; authors: string[]; poemCount: number }> {
+export function buildDynastiesJson(allPieces: OutputPiece[]): Record<string, { '@id': string; '@type': string; name: string; authors: string[]; workCount: number }> {
   const map = new Map<string, { authors: Set<string>; count: number }>()
 
   for (const piece of allPieces) {
-    const d = piece.dynasty
+    const d = piece.era
     if (!d) continue
     if (!map.has(d)) map.set(d, { authors: new Set(), count: 0 })
     const entry = map.get(d)!
@@ -461,14 +463,14 @@ export function buildDynastiesJson(allPieces: OutputPiece[]): Record<string, { '
     entry.count++
   }
 
-  const result: Record<string, { '@id': string; '@type': string; name: string; authors: string[]; poemCount: number }> = {}
+  const result: Record<string, { '@id': string; '@type': string; name: string; authors: string[]; workCount: number }> = {}
   for (const [name, data] of map) {
     result[name] = {
       '@id': `dynasty:${encodeURIComponent(name)}`,
       '@type': 'HistoricalPeriod',
       name,
       authors: [...data.authors],
-      poemCount: data.count,
+      workCount: data.count,
     }
   }
   return result

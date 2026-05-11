@@ -129,6 +129,10 @@ const sourceLabel = (() => {
   cursor: help;
   transition: background 0.15s;
 }
+:deep(.ann-target.ann-overlap) {
+  border-bottom-width: 3px;
+  border-bottom-style: double;
+}
 
 :deep(.ann-target:hover) {
   background: rgba(194, 58, 43, 0.08);
@@ -156,6 +160,11 @@ const sourceLabel = (() => {
   border-bottom: none;
   border-left: 2px solid var(--vermillion);
   padding-left: 2px;
+}
+.part-block--vertical :deep(.ann-target.ann-overlap) {
+  border-left-width: 3px;
+  border-left-style: double;
+  padding-left: 3px;
 }
 
 .part-block--vertical :deep(.ann-target.pronunciation) {

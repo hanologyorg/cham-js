@@ -50,7 +50,7 @@ function goHome() { router.push('/') }
         <section class="v-author-info">
           <div class="v-seal">{{ authorName.charAt(0) }}</div>
           <h1 class="v-name">{{ authorName }}</h1>
-          <span v-if="author.dynasty" class="v-dynasty">{{ author.dynasty }}</span>
+          <span v-if="author.era" class="v-era">{{ author.era }}</span>
           <span class="v-count">{{ authorPieces.length }} 篇收錄作品</span>
         </section>
 
@@ -83,7 +83,7 @@ function goHome() { router.push('/') }
               <span class="h-author-name">{{ authorName }}</span>
             </div>
             <div class="h-controls">
-              <span class="h-tag">{{ author.dynasty || '未知朝代' }}</span>
+              <span class="h-tag">{{ author.era || '未知朝代' }}</span>
               <span class="h-tag">{{ authorPieces.length }} 篇</span>
             </div>
           </div>
@@ -95,7 +95,7 @@ function goHome() { router.push('/') }
             <div class="h-info">
               <h1 class="h-name">{{ authorName }}</h1>
               <div class="h-meta">
-                <span v-if="author.dynasty" class="h-dynasty">{{ author.dynasty }}</span>
+                <span v-if="author.era" class="h-era">{{ author.era }}</span>
                 <span class="h-count">{{ authorPieces.length }} 篇收錄作品</span>
               </div>
             </div>
@@ -174,7 +174,7 @@ function goHome() { router.push('/') }
   letter-spacing: 10px; color: var(--ink);
   margin-left: 20px;
 }
-.v-dynasty {
+.v-era {
   font-size: 20px; color: var(--gold);
   font-weight: 600; letter-spacing: 4px;
   margin-left: 12px;
@@ -286,7 +286,7 @@ function goHome() { router.push('/') }
 }
 .h-name { font-size: 36px; font-weight: 900; letter-spacing: 6px; color: var(--ink); }
 .h-meta { display: flex; gap: 16px; margin-top: 8px; font-family: var(--sans); font-size: 14px; }
-.h-dynasty { color: var(--gold); font-weight: 600; letter-spacing: 2px; }
+.h-era { color: var(--gold); font-weight: 600; letter-spacing: 2px; }
 .h-count { color: var(--ink-faint); letter-spacing: 1px; }
 
 .h-bio {

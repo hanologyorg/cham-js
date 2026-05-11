@@ -79,6 +79,10 @@ function onTap(event: MouseEvent) {
   cursor: help;
   transition: background 0.15s;
 }
+:deep(.ann-target.ann-overlap) {
+  border-bottom-width: 3px;
+  border-bottom-style: double;
+}
 :deep(.ann-target:hover) {
   background: rgba(194, 58, 43, 0.08);
 }

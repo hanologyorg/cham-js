@@ -140,7 +140,7 @@ export interface Piece {
   title: string
   author: string
   authorId: string
-  dynasty: string
+  era: string
   genre: BookGenre
   verses: VerseLine[]
   sections: Record<string, string>
@@ -162,8 +162,8 @@ export interface Author {
   '@id': string
   '@type': string
   name: string
-  dynasty: string
-  poemCount: number
+  era: string
+  workCount: number
   bio?: string
   born?: string
   died?: string
@@ -180,5 +180,5 @@ export interface Dynasty {
   '@type': string
   name: string
   authors: string[]
-  poemCount: number
+  workCount: number
 }

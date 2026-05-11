@@ -508,7 +508,7 @@ describe('buildAuthorsJson', () => {
     const json = buildAuthorsJson(authors, pieces as any)
     expect(json).toHaveLength(1)
     expect(json[0].name).toBe('李白')
-    expect(json[0].poemCount).toBe(1)
+    expect(json[0].workCount).toBe(1)
   })
 
   it('counts pieces for all contributors', () => {
@@ -527,21 +527,21 @@ describe('buildAuthorsJson', () => {
     }]
     const json = buildAuthorsJson(authors, pieces as any)
     const byName = Object.fromEntries(json.map(a => [a.name, a]))
-    expect(byName['老子'].poemCount).toBe(1)
-    expect(byName['王弼'].poemCount).toBe(1)
-    expect(byName['河上公'].poemCount).toBe(1)
+    expect(byName['老子'].workCount).toBe(1)
+    expect(byName['王弼'].workCount).toBe(1)
+    expect(byName['河上公'].workCount).toBe(1)
   })
 })
 
 describe('buildDynastiesJson', () => {
   it('builds dynasty JSON-LD from pieces', () => {
     const pieces = [
-      { dynasty: '唐', author: '李白', bookId: 'x', num: 1, title: '', authorId: '', genre: 'poetry', verses: [], sections: {}, annotations: [] },
-      { dynasty: '唐', author: '杜甫', bookId: 'x', num: 2, title: '', authorId: '', genre: 'poetry', verses: [], sections: {}, annotations: [] },
+      { era: '唐', author: '李白', bookId: 'x', num: 1, title: '', authorId: '', genre: 'poetry', verses: [], sections: {}, annotations: [] },
+      { era: '唐', author: '杜甫', bookId: 'x', num: 2, title: '', authorId: '', genre: 'poetry', verses: [], sections: {}, annotations: [] },
     ]
     const json = buildDynastiesJson(pieces as any)
     expect(json['唐']).toBeDefined()
-    expect(json['唐'].poemCount).toBe(2)
+    expect(json['唐'].workCount).toBe(2)
     expect(json['唐'].authors).toEqual(['李白', '杜甫'])
   })
 })

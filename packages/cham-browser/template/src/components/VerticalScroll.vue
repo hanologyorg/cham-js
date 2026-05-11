@@ -96,6 +96,11 @@ function onTap(event: MouseEvent) {
   cursor: help;
   transition: background 0.15s;
 }
+:deep(.ann-target.ann-overlap) {
+  border-left-width: 3px;
+  border-left-style: double;
+  padding-left: 3px;
+}
 :deep(.ann-num) {
   font-size: 0.45em;
   font-family: var(--sans);

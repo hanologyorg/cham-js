@@ -21,7 +21,6 @@ interface SiteConfig {
   logoDark?: string
   aboutFile?: string
   libraryDir: string
-  authorsFile?: string
   outputDir?: string
   publicDir?: string
   pretty?: boolean
@@ -38,7 +37,6 @@ function loadConfig(configPath: string): SiteConfig {
     logoDark: raw.logoDark as string | undefined,
     aboutFile: raw.aboutFile as string | undefined,
     libraryDir: raw.libraryDir as string || 'library/content',
-    authorsFile: raw.authorsFile as string | undefined,
     outputDir: raw.outputDir as string || 'dist',
     publicDir: raw.publicDir as string | undefined,
     pretty: raw.pretty as boolean | undefined ?? true,
@@ -66,13 +64,87 @@ function loadBookConfig(bookDir: string): BookConfig {
 
 // ─── I/O Adapters ─────────────────────────────────────────────
 
-function loadAuthors(config: SiteConfig, configDir: string): Record<string, AuthorRecord> {
-  const defaultPath = join(configDir, 'library', 'data', 'authors.yaml')
-  const authorsPath = config.authorsFile
-    ? resolve(configDir, config.authorsFile)
-    : defaultPath
-  if (!existsSync(authorsPath)) return {}
-  return parseYaml(readFileSync(authorsPath, 'utf-8')) as Record<string, AuthorRecord>
+function loadAuthors(configDir: string): Record<string, AuthorRecord> {
+  const authorsDir = join(configDir, 'library', 'authors')
+  const indexPath = join(authorsDir, '_index.yaml')
+  if (!existsSync(indexPath)) {
+    console.warn('No authors/_index.yaml found, authors will be empty')
+    return {}
+  }
+
+  const indexData = parseYaml(readFileSync(indexPath, 'utf-8')) as { authors: Record<string, string> }
+  const personIndex = indexData.authors
+
+  // Build dynasty label → gbCode lookup
+  const dynastyToGbCode = new Map<string, string>()
+  const dynastiesPath = join(configDir, 'library', 'register', 'dynasties.yaml')
+  if (existsSync(dynastiesPath)) {
+    const dynasties = parseYaml(readFileSync(dynastiesPath, 'utf-8')) as Array<{
+      label: string; names?: string[]; gb_code?: string
+    }>
+    for (const d of dynasties) {
+      if (d.gb_code) {
+        dynastyToGbCode.set(d.label, d.gb_code)
+        if (d.names) for (const n of d.names) dynastyToGbCode.set(n, d.gb_code)
+      }
+    }
+  }
+
+  const seenDirs = new Set<string>()
+  const records: Record<string, AuthorRecord> = {}
+
+  for (const [ref, dirName] of Object.entries(personIndex)) {
+    if (seenDirs.has(dirName)) continue
+    seenDirs.add(dirName)
+
+    const yamlPath = join(authorsDir, dirName, 'author.yaml')
+    if (!existsSync(yamlPath)) continue
+
+    const data = parseYaml(readFileSync(yamlPath, 'utf-8')) as Record<string, unknown>
+    const era = (data.dynasty as string) || (data.era as string) || ''
+    const eraCode = dynastyToGbCode.get(era) || ''
+
+    let bio = ''
+    const bioSources = data.bio_sources as Array<{ file: string }> | undefined
+    if (bioSources?.length) {
+      const bioFile = join(authorsDir, dirName, bioSources[0].file)
+      if (existsSync(bioFile)) {
+        bio = readFileSync(bioFile, 'utf-8').replace(/^---\n[\s\S]*?\n---\n/, '').trim()
+      }
+    }
+
+    const ctextId = typeof data['@id'] === 'string' && data['@id'].startsWith('ctext:')
+      ? data['@id'].replace('ctext:', '') : undefined
+
+    records[ref] = {
+      name: (data.label as string) || ref,
+      dynasty: era,
+      era,
+      eraCode: eraCode || undefined,
+      bio: bio || undefined,
+      born: (data['cprop:born'] as { '@value': string })?.['@value'],
+      died: (data['cprop:died'] as { '@value': string })?.['@value'],
+      courtesyName: data['cprop:name-style'] as string | undefined,
+      artName: data['cprop:name-art'] as string | undefined,
+      wikidata: data['cprop:authority-wikidata'] as string | undefined,
+      ctextId,
+      wikipediaZh: data['cprop:link-wikipedia_zh'] as string | undefined,
+      wikipediaEn: data['cprop:link-wikipedia_en'] as string | undefined,
+    }
+  }
+
+  // Map alias refs to the same record
+  for (const [ref, dirName] of Object.entries(personIndex)) {
+    if (!records[ref]) {
+      const canonical = Object.entries(personIndex).find(
+        ([r, d]) => d === dirName && records[r],
+      )
+      if (canonical) records[ref] = records[canonical[0]]
+    }
+  }
+
+  console.log(`Authors: ${seenDirs.size} directories, ${Object.keys(records).length} refs`)
+  return records
 }
 
 function loadAboutHtml(config: SiteConfig, configDir: string): string {
@@ -141,7 +213,7 @@ function generateData(config: SiteConfig, configDir: string): {
   allPieces: OutputPiece[]
 } {
   const libraryDir = resolve(configDir, config.libraryDir)
-  const authors = loadAuthors(config, configDir)
+  const authors = loadAuthors(configDir)
   const books = scanBooks(libraryDir)
 
   const allPieces: OutputPiece[] = []
@@ -176,30 +248,105 @@ function generateData(config: SiteConfig, configDir: string): {
 
   mkdirSync(dataDir, { recursive: true })
   mkdirSync(join(dataDir, 'books'), { recursive: true })
+  mkdirSync(join(dataDir, 'pieces'), { recursive: true })
+  mkdirSync(join(dataDir, 'authors'), { recursive: true })
 
   const indent = config.pretty ? 2 : 0
 
+  // library.json
   writeFileSync(
     join(dataDir, 'library.json'),
     JSON.stringify(library, null, indent),
     'utf-8',
   )
 
+  // Per-book data (full + meta)
   for (const bd of bookDataList) {
     writeFileSync(
       join(dataDir, 'books', `${bd.meta.id}.json`),
       JSON.stringify(bd, null, indent),
       'utf-8',
     )
+    writeFileSync(
+      join(dataDir, 'books', `${bd.meta.id}.meta.json`),
+      JSON.stringify(bd.meta, null, indent),
+      'utf-8',
+    )
   }
 
-  const authorsJson = buildAuthorsJson(authors, allPieces)
+  // Piece index (lightweight summaries for ALL pieces)
+  const pieceIndex = allPieces.map(p => ({
+    id: `${p.bookId}/${p.num}`,
+    t: p.title,
+    a: p.author,
+    ar: p.authorId,
+    e: p.era || p.dynasty,
+    ec: p.eraCode || '',
+    b: p.bookId,
+    g: p.genre,
+    n: p.num,
+    v1: p.verses[0]?.text?.slice(0, 20) || '',
+  }))
   writeFileSync(
-    join(dataDir, 'authors.json'),
-    JSON.stringify(authorsJson, null, indent),
+    join(dataDir, 'index.json'),
+    JSON.stringify(pieceIndex, null, indent),
     'utf-8',
   )
 
+  // Per-piece JSON files
+  for (const piece of allPieces) {
+    const pieceDir = join(dataDir, 'pieces', piece.bookId)
+    mkdirSync(pieceDir, { recursive: true })
+    writeFileSync(join(pieceDir, `${piece.num}.json`), JSON.stringify(piece, null, indent), 'utf-8')
+  }
+
+  // Per-author split data
+  const workCounts = new Map<string, { works: string[]; era: string; eraCode: string }>()
+  for (const p of allPieces) {
+    if (!workCounts.has(p.authorId)) {
+      const author = authors[p.authorId]
+      workCounts.set(p.authorId, {
+        works: [],
+        era: author?.era || author?.dynasty || p.era || p.dynasty,
+        eraCode: author?.eraCode || p.eraCode || '',
+      })
+    }
+    workCounts.get(p.authorId)!.works.push(`${p.bookId}/${p.num}`)
+  }
+
+  const authorIndex: Array<{ id: string; name: string; era: string; eraCode: string; workCount: number }> = []
+  for (const [ref, data] of Object.entries(authors)) {
+    if (!data.name) continue
+    const wc = workCounts.get(ref)
+    const entry = {
+      id: ref,
+      name: data.name,
+      era: wc?.era || data.era || data.dynasty || '',
+      eraCode: wc?.eraCode || data.eraCode || '',
+      workCount: wc?.works.length || 0,
+    }
+    authorIndex.push(entry)
+
+    // Per-author detail JSON
+    writeFileSync(
+      join(dataDir, 'authors', `${ref}.json`),
+      JSON.stringify({
+        ...entry,
+        names: [],
+        bio: data.bio || '',
+        bioSource: '',
+        ctext: data.ctextId ? Number(data.ctextId) : undefined,
+        wikidata: data.wikidata,
+        wikipediaZh: data.wikipediaZh,
+        wikipediaEn: data.wikipediaEn,
+        works: wc?.works || [],
+      }, null, indent),
+      'utf-8',
+    )
+  }
+  writeFileSync(join(dataDir, 'authors', 'index.json'), JSON.stringify(authorIndex, null, indent), 'utf-8')
+
+  // Dynasties/eras (using era field)
   const dynastiesJson = buildDynastiesJson(allPieces)
   writeFileSync(
     join(dataDir, 'dynasties.json'),
@@ -207,7 +354,7 @@ function generateData(config: SiteConfig, configDir: string): {
     'utf-8',
   )
 
-  console.log(`Data: ${bookMetas.length} book(s), ${allPieces.length} piece(s)`)
+  console.log(`Data: ${bookMetas.length} book(s), ${allPieces.length} piece(s), ${authorIndex.length} author(s)`)
 
   return { bookMetas, allPieces }
 }
@@ -364,7 +511,7 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
           readFileSync(join(outputDir, 'data', 'library.json'), 'utf-8')
         )
         const authors: { name: string }[] = JSON.parse(
-          readFileSync(join(outputDir, 'data', 'authors.json'), 'utf-8')
+          readFileSync(join(outputDir, 'data', 'authors', 'index.json'), 'utf-8')
         )
 
         for (const book of library.books) {

@@ -11,6 +11,7 @@ const props = defineProps<{
   annotations: Annotation[]
   layerLabels?: Record<string, string>
   style?: Record<string, string>
+  vertical?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -30,7 +31,6 @@ const mode = computed<DisplayMode>(() => {
   return 'popup'
 })
 
-// Pane/sheet modes: stay visible until explicitly dismissed
 const stickyVisible = ref(false)
 
 watch(() => props.visible, (v) => {
@@ -77,10 +77,22 @@ function kindLabel(ann: Annotation): string {
   return map[ann.kind] || ann.kind
 }
 
+const hasOverlap = computed(() =>
+  props.annotations.some(a => {
+    const seg = annotationToPronSegment(a)
+    return !seg && props.annotations.filter(b =>
+      b.range.scope === a.range.scope &&
+      b.range.verseIndex === a.range.verseIndex &&
+      (b.range.start ?? 0) !== (a.range.start ?? 0) ||
+      (b.range.end ?? 0) !== (a.range.end ?? 0)
+    ).length > 0
+  })
+)
+
 function onDocClick(e: MouseEvent) {
   if (!stickyVisible.value) return
   const el = (e.target as HTMLElement)
-  if (el.closest('.ann-left-pane, .ann-bottom-sheet, .ann-popup')) return
+  if (el.closest('.ann-left-pane, .ann-right-pane, .ann-bottom-sheet, .ann-popup')) return
   if (el.closest('.ann-target')) return
   dismiss()
 }
@@ -107,11 +119,11 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <!-- Desktop left pane (>= 1024px) -->
-    <Transition name="ann-slide-right">
+    <!-- Desktop pane: LEFT for horizontal, RIGHT for vertical -->
+    <Transition :name="vertical ? 'ann-slide-left' : 'ann-slide-right'">
       <div
         v-if="mode === 'pane' && stickyVisible && annotations.length"
-        class="ann-left-pane"
+        :class="vertical ? 'ann-right-pane' : 'ann-left-pane'"
         @mouseenter="emit('tooltipEnter')"
         @mouseleave="emit('tooltipLeave')"
       >
@@ -133,11 +145,12 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <!-- Tablet popup (768–1023px) -->
+    <!-- Tablet popup -->
     <Transition name="ann-fade">
       <div
         v-if="mode === 'popup' && visible && annotations.length"
         class="ann-popup"
+        :class="{ 'ann-popup--vertical': vertical }"
         :style="style"
         @mouseenter="emit('tooltipEnter')"
         @mouseleave="emit('tooltipLeave')"
@@ -153,7 +166,7 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <!-- Mobile bottom sheet (< 768px) -->
+    <!-- Mobile bottom sheet -->
     <Transition name="ann-sheet">
       <div
         v-if="mode === 'sheet' && stickyVisible && annotations.length"
@@ -242,11 +255,27 @@ onBeforeUnmount(() => {
   white-space: pre-line;
 }
 
-/* ─── Desktop Left Pane ─── */
+/* ─── Desktop Left Pane (horizontal mode) ─── */
 .ann-left-pane {
   position: fixed;
   top: 72px;
   left: 20px;
+  width: 300px;
+  max-height: calc(100vh - 100px);
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(var(--shadow-rgb), 0.12);
+  z-index: 1000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ─── Desktop Right Pane (vertical mode) ─── */
+.ann-right-pane {
+  position: fixed;
+  top: 72px;
+  right: 20px;
   width: 300px;
   max-height: calc(100vh - 100px);
   background: var(--surface-warm);
@@ -340,7 +369,7 @@ onBeforeUnmount(() => {
 
 /* ─── Transitions ─── */
 
-/* Left pane slide from left */
+/* Left pane slide from left (horizontal mode) */
 .ann-slide-right-enter-active {
   transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -354,6 +383,22 @@ onBeforeUnmount(() => {
 .ann-slide-right-leave-to {
   opacity: 0;
   transform: translateX(-16px);
+}
+
+/* Right pane slide from right (vertical mode) */
+.ann-slide-left-enter-active {
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ann-slide-left-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.ann-slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(24px);
+}
+.ann-slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(16px);
 }
 
 /* Popup fade */
@@ -385,7 +430,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1023px) {
-  .ann-left-pane { display: none; }
+  .ann-left-pane, .ann-right-pane { display: none; }
 }
 
 @media (min-width: 1024px) {

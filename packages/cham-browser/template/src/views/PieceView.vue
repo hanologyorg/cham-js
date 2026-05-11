@@ -228,16 +228,16 @@ const selectedAuthorBio = computed(() => {
   return a?.bio || piece.value?.sections?.author_bio || ''
 })
 
-const selectedAuthorDynasty = computed(() => {
+const selectedAuthorEra = computed(() => {
   const name = selectedAuthorName.value
   const a = getAuthor(name)
-  return a?.dynasty || piece.value?.dynasty || ''
+  return a?.era || piece.value?.era || ''
 })
 
-const selectedAuthorPoemCount = computed(() => {
+const selectedAuthorWorkCount = computed(() => {
   const name = selectedAuthorName.value
   const a = getAuthor(name)
-  return a?.poemCount || 0
+  return a?.workCount || 0
 })
 
 const selectedAuthorData = computed(() => {
@@ -435,6 +435,7 @@ function tcy(n: number): string {
         :annotations="interaction.items"
         :layer-labels="layerLabels"
         :style="interaction.style"
+        :vertical="true"
         @close="interaction.dismiss"
         @tooltip-enter="interaction.onTooltipEnter"
         @tooltip-leave="interaction.onTooltipLeave"
@@ -448,9 +449,9 @@ function tcy(n: number): string {
               <div class="v-pane-header">
                 <div class="v-pane-name">{{ selectedAuthorName }}</div>
                 <div class="v-pane-meta">
-                  <span v-if="selectedAuthorDynasty">{{ selectedAuthorDynasty }}</span>
+                  <span v-if="selectedAuthorEra">{{ selectedAuthorEra }}</span>
                   <span v-if="authorLifespan">{{ authorLifespan }}</span>
-                  <span v-if="selectedAuthorPoemCount" class="v-pane-count">{{ t('stat.pieceCount', { count: selectedAuthorPoemCount }) }}</span>
+                  <span v-if="selectedAuthorWorkCount" class="v-pane-count">{{ t('stat.pieceCount', { count: selectedAuthorWorkCount }) }}</span>
                 </div>
                 <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="v-pane-names">
                   <span v-if="selectedAuthorData?.courtesyName">字{{ selectedAuthorData.courtesyName }}</span>
@@ -483,7 +484,7 @@ function tcy(n: number): string {
           <div class="h-nav-inner">
             <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-nav-title-row">
-              <span v-if="piece.dynasty" class="h-dynasty">{{ piece.dynasty }}</span>
+              <span v-if="piece.era" class="h-era">{{ piece.era }}</span>
               <span class="h-breadcrumb">
                 <span v-if="piece.source?.textRef" class="h-source-link" @click="router.push(`/${piece.source.textRef}`)">
                   {{ meta?.title }} →
@@ -602,6 +603,7 @@ function tcy(n: number): string {
         :annotations="interaction.items"
         :layer-labels="layerLabels"
         :style="interaction.style"
+        :vertical="false"
         @close="interaction.dismiss"
         @tooltip-enter="interaction.onTooltipEnter"
         @tooltip-leave="interaction.onTooltipLeave"
@@ -618,9 +620,9 @@ function tcy(n: number): string {
                 <div>
                   <div class="h-pane-name">{{ selectedAuthorName }}</div>
                   <div class="h-pane-meta">
-                    <span v-if="selectedAuthorDynasty" class="h-pane-dynasty">{{ selectedAuthorDynasty }}</span>
+                    <span v-if="selectedAuthorEra" class="h-pane-era">{{ selectedAuthorEra }}</span>
                     <span v-if="authorLifespan" class="h-pane-lifespan">{{ authorLifespan }}</span>
-                    <span v-if="selectedAuthorPoemCount" class="h-pane-count">{{ t('piece.collected', { count: selectedAuthorPoemCount }) }}</span>
+                    <span v-if="selectedAuthorWorkCount" class="h-pane-count">{{ t('piece.collected', { count: selectedAuthorWorkCount }) }}</span>
                   </div>
                   <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="h-pane-alt-names">
                     <span v-if="selectedAuthorData?.courtesyName">字 {{ selectedAuthorData.courtesyName }}</span>
@@ -838,7 +840,7 @@ function tcy(n: number): string {
   min-width: 0;
 }
 
-.h-dynasty {
+.h-era {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
@@ -1024,7 +1026,7 @@ function tcy(n: number): string {
 }
 .h-pane-name { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: var(--ink); }
 .h-pane-meta { font-size: 14px; color: var(--ink-faint); letter-spacing: 2px; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
-.h-pane-dynasty {
+.h-pane-era {
   display: inline-flex;
   padding: 2px 8px;
   background: var(--vermillion);
@@ -1262,7 +1264,7 @@ function tcy(n: number): string {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .h-dynasty { font-size: 10px; padding: 1px 6px; }
+  .h-era { font-size: 10px; padding: 1px 6px; }
   .h-sep { margin: 0 4px; }
   .h-controls {
     margin-left: 0;

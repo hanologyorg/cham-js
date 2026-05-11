@@ -91,6 +91,30 @@ function extractPoemContent(xhtml: string): string {
   return m ? m[1] : ''
 }
 
+function isPlausibleSectionTitle(title: string): boolean {
+  const t = title.trim()
+  if (t.length === 0 || t.length > 30) return false
+
+  // Reject speaker markers
+  if (/^[大夫文學御史賢良丞相后太后].*[曰云]$/.test(t)) return false
+  if (t === '丞相' || t === '大夫' || t === '大夫不說') return false
+  if (/○$/.test(t)) return false
+
+  // Medium/long text (9-30 chars): require known structural patterns
+  if (t.length > 8) {
+    if (/第[一二三四五六七八九十百千萬]+$/.test(t)) return true
+    if (/.+卷.+/.test(t)) return true
+    if (/(?:提要|序|考證|原目|目録|音義|解|注|疏|義|章句|跋|後記|附錄|皇帝)$/.test(t)) return true
+    return false
+  }
+
+  // Short text (1-8 chars): accept broadly but filter obvious body text
+  if (/^[^，。；：！？]{2,4}[曰云言謂對問答]$/.test(t)) return false
+  if (/^[故是以若雖然夫而又是以蓋故將]/.test(t) && /[，。；]/.test(t)) return false
+  if (/[，。；：！？、]/.test(t)) return false
+  return true
+}
+
 function isSectionTitleLine(line: string): string | null {
   const sectionTitleRe = /<span id="[^"]*"[^>]*><a[^>]*class="mw-selflink-fragment"[^>]*>([^<]*)<\/a><\/span>/
   const m = line.match(sectionTitleRe)
@@ -100,6 +124,8 @@ function isSectionTitleLine(line: string): string | null {
   const rest = line.replace(/<span[^>]*><a[^>]*class="mw-selflink-fragment"[^>]*>[^<]*<\/a><\/span>/, '')
   const stripped = rest.replace(/<[^>]+>/g, '').trim()
   if (stripped.length > 0) return null
+
+  if (!isPlausibleSectionTitle(m[1])) return null
 
   return m[1]
 }
@@ -277,7 +303,28 @@ function parseXhtmlFile(xhtml: string, volumeLabel: string, ctx: ParseContext = 
   let currentSection: ParsedSection | null = null
   let sectionNum = 0
 
+  let pastToc = false
+
   for (const line of parsedLines) {
+    // Detect TOC boundary — skip all section detection after this point
+    const tocCheck = line.type === 'section_title' ? (line.sectionTitle ?? line.cleanText) : line.cleanText
+    if (tocCheck && /(?:原目|目[錄録录])$/.test(tocCheck.trim())) {
+      pastToc = true
+      continue
+    }
+
+    // Skip all section title detection when inside TOC
+    if (pastToc) {
+      if (line.type === 'section_title') continue
+      if (line.type === 'blank') continue
+      if (currentSection) {
+        currentSection.lines.push(line)
+      } else {
+        headerLines.push(line)
+      }
+      continue
+    }
+
     // Detect section titles from explicit spans
     if (line.type === 'section_title' && line.sectionTitle) {
       sectionNum++
