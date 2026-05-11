@@ -29,8 +29,8 @@ function filterAboutByLocale(html: string, loc: string): string {
 }
 
 const filteredAboutHtml = computed(() => {
-  if (!aboutHtml.value) return ''
-  let html = filterAboutByLocale(aboutHtml.value, locale.value)
+  if (!aboutHtml) return ''
+  let html = filterAboutByLocale(aboutHtml, locale.value)
   if (CHAM_VERSION || CHAM_BROWSER_VERSION) {
     const versionLine = `<div class="about-versions"><span>v${[CHAM_BROWSER_VERSION, CHAM_VERSION].filter(Boolean).join(' / cham@')}</span></div>`
     html += versionLine
