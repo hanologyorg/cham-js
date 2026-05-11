@@ -12,6 +12,7 @@ import VerticalScroll from '../components/VerticalScroll.vue'
 import HorizontalDisplay from '../components/HorizontalDisplay.vue'
 import SectionBlock from '../components/SectionBlock.vue'
 import AnnotationTooltip from '../components/AnnotationTooltip.vue'
+import AnnotationPane from '../components/AnnotationPane.vue'
 import AnnotationControlBar from '../components/AnnotationControlBar.vue'
 import SideNav from '../components/SideNav.vue'
 import PartGroup from '../components/PartGroup.vue'
@@ -24,7 +25,7 @@ const router = useRouter()
 const { getPiece, pieces, meta, load, getAdjacentNums } = useBook()
 await load(props.bookId)
 
-const { layout, annotationsVisible: prefAnnotationsVisible } = useReadingMode()
+const { layout, annotationsVisible: prefAnnotationsVisible, annotationPane } = useReadingMode()
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
 const { t } = useI18n()
@@ -96,6 +97,51 @@ const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotati
 const hasLayers = computed(() => annotationLayers.value.length > 1)
 const activeLayerIds = ref<string[]>([])
 const annotationsVisible = prefAnnotationsVisible
+const paneVisible = ref(false)
+const paneActiveId = ref('')
+
+function onAnnotationHover(event: MouseEvent, annotations: Annotation[]) {
+  if (annotationPane.value && isVertical.value) {
+    paneActiveId.value = annotations[0]?.id || ''
+  } else {
+    interaction.onHover(event, annotations)
+  }
+}
+function onAnnotationLeave() {
+  if (annotationPane.value && isVertical.value) return
+  interaction.onLeave()
+}
+function onAnnotationTap(event: MouseEvent, annotations: Annotation[]) {
+  if (annotationPane.value && isVertical.value) {
+    if (!paneVisible.value) paneVisible.value = true
+    paneActiveId.value = annotations[0]?.id || ''
+  } else {
+    interaction.onTap(event, annotations)
+  }
+}
+function onPaneSelect(ann: Annotation) {
+  const el = document.querySelector(`[data-ann-ids*="${ann.id}"]`) as HTMLElement | null
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    el.classList.add('ann-flash')
+    setTimeout(() => el.classList.remove('ann-flash'), 1500)
+  }
+}
+const annotationHeadwords = computed(() => {
+  const result: Record<string, string> = {}
+  for (const ann of mergedAnnotations.value) {
+    result[ann.id] = getHeadword(ann)
+  }
+  return result
+})
+
+watch([annotationPane, isVertical], ([pane, vert]) => {
+  if (pane && vert) {
+    interaction.dismiss()
+  } else {
+    paneVisible.value = false
+  }
+})
 
 function initLayers() {
   if (hasLayers.value && activeLayerIds.value.length === 0) {
@@ -300,7 +346,8 @@ function tcy(n: number): string {
 </script>
 
 <template>
-  <div v-if="piece">
+  <template v-if="piece">
+  <div>
     <!-- ═══════ 直排模式 ═══════ -->
     <div v-if="isVertical" class="v-root">
       <SideNav
@@ -337,6 +384,16 @@ function tcy(n: number): string {
           </div>
         </section>
 
+        <div class="v-inline-nav">
+          <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
+            ▼
+          </button>
+          <span v-else class="v-inav-spacer" />
+          <button v-if="adjacent.prev !== null" class="v-inav" @click="navigate(-1)" :title="t('piece.previous')">
+            ▲
+          </button>
+        </div>
+
         <section v-if="isMultiPart" class="v-poem-col v-multipart">
           <PartGroup
             v-for="group in partGroups"
@@ -344,9 +401,9 @@ function tcy(n: number): string {
             :label="group.label"
             :parts="group.parts"
             :vertical="true"
-            @annotation-hover="interaction.onHover"
-            @annotation-leave="interaction.onLeave"
-            @annotation-tap="interaction.onTap"
+            @annotation-hover="onAnnotationHover"
+            @annotation-leave="onAnnotationLeave"
+            @annotation-tap="onAnnotationTap"
           />
         </section>
 
@@ -357,9 +414,9 @@ function tcy(n: number): string {
             :verses="piece.verses"
             :author-initial="piece.author?.charAt(0) || '詩'"
             :annotations="mergedAnnotations"
-            @annotation-hover="interaction.onHover"
-            @annotation-leave="interaction.onLeave"
-            @annotation-tap="interaction.onTap"
+            @annotation-hover="onAnnotationHover"
+            @annotation-leave="onAnnotationLeave"
+            @annotation-tap="onAnnotationTap"
             @open-author="openAuthorPane"
           />
         </section>
@@ -431,16 +488,15 @@ function tcy(n: number): string {
         </nav>
       </div>
 
-      <AnnotationTooltip
-        :visible="interaction.visible"
-        :annotations="interaction.items"
-        :headword="interaction.headword"
+      <AnnotationPane
+        v-if="annotationPane"
+        :visible="paneVisible"
+        :annotations="mergedAnnotations"
+        :headwords="annotationHeadwords"
         :layer-labels="layerLabels"
-        :style="interaction.style"
-        :vertical="true"
-        @close="interaction.dismiss"
-        @tooltip-enter="interaction.onTooltipEnter"
-        @tooltip-leave="interaction.onTooltipLeave"
+        :active-id="paneActiveId"
+        @close="paneVisible = false"
+        @select="onPaneSelect"
       />
 
       <Teleport to="body">
@@ -600,18 +656,6 @@ function tcy(n: number): string {
         </div>
       </div>
 
-      <AnnotationTooltip
-        :visible="interaction.visible"
-        :annotations="interaction.items"
-        :headword="interaction.headword"
-        :layer-labels="layerLabels"
-        :style="interaction.style"
-        :vertical="false"
-        @close="interaction.dismiss"
-        @tooltip-enter="interaction.onTooltipEnter"
-        @tooltip-leave="interaction.onTooltipLeave"
-      />
-
       <BackToTop />
 
       <Teleport to="body">
@@ -659,6 +703,19 @@ function tcy(n: number): string {
       </Teleport>
     </div>
   </div>
+
+  <AnnotationTooltip
+    v-if="piece && !(annotationPane && isVertical)"
+    :visible="interaction.visible"
+    :annotations="interaction.items"
+    :headword="interaction.headword"
+    :layer-labels="layerLabels"
+    :style="interaction.style"
+    @close="interaction.dismiss"
+    @tooltip-enter="interaction.onTooltipEnter"
+    @tooltip-leave="interaction.onTooltipLeave"
+  />
+  </template>
 
   <div v-else class="page-loading">
     <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" class="page-loading-logo" />
@@ -1231,6 +1288,55 @@ function tcy(n: number): string {
 .v-source-link:active { opacity: 1; }
 .v-poem-author:active { color: var(--vermillion); }
 .h-author-link:active { color: var(--vermillion); }
+
+/* ─── 直排行內導航 ─── */
+.v-inline-nav {
+  writing-mode: horizontal-tb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+.v-inav {
+  width: 30px;
+  height: 44px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-faint);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.v-inav:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+  background: var(--surface-warm);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.06);
+}
+.v-inav:active {
+  transform: scale(0.94);
+}
+.v-inav-spacer {
+  width: 30px;
+  height: 44px;
+}
+
+/* ─── 注釋閃爍 ─── */
+:deep(.ann-flash) {
+  animation: ann-flash-anim 1.2s ease-out;
+}
+@keyframes ann-flash-anim {
+  0% { background: rgba(194, 58, 43, 0.2); }
+  100% { background: transparent; }
+}
 
 /* ═══════ 行動裝置適配 ═══════ */
 

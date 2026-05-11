@@ -4,7 +4,7 @@ import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
 import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
 
-const { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, setTheme, setLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible } = useReadingMode()
+const { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, annotationPane, setTheme, setLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible, setAnnotationPane } = useReadingMode()
 const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
 const open = ref(false)
 
@@ -46,6 +46,21 @@ function close() { open.value = false }
             class="rt-opt"
             :class="{ active: !annotationsVisible }"
             @click="setAnnotationsVisible(false)"
+          >{{ t('settings.hide') }}</button>
+        </div>
+      </div>
+      <div class="rt-group">
+        <div class="rt-label">{{ t('settings.annotationPane') }}</div>
+        <div class="rt-options">
+          <button
+            class="rt-opt"
+            :class="{ active: annotationPane }"
+            @click="setAnnotationPane(true)"
+          >{{ t('settings.show') }}</button>
+          <button
+            class="rt-opt"
+            :class="{ active: !annotationPane }"
+            @click="setAnnotationPane(false)"
           >{{ t('settings.hide') }}</button>
         </div>
       </div>

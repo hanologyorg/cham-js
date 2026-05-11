@@ -280,6 +280,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  writing-mode: horizontal-tb;
 }
 
 .ann-card-close {
@@ -347,6 +348,7 @@ onBeforeUnmount(() => {
   z-index: 1000;
   display: flex;
   flex-direction: column;
+  writing-mode: horizontal-tb;
 }
 
 .ann-sheet-handle {

@@ -20,6 +20,7 @@ const layout = ref<LayoutMode>('vertical')
 const mainFontSize = ref<FontSize>(24)
 const bodyFontSize = ref<FontSize>(16)
 const annotationsVisible = ref(true)
+const annotationPane = ref(false)
 
 if (!import.meta.env.SSR) {
   // Theme and font sizes only affect CSS, safe to apply before hydration
@@ -34,6 +35,9 @@ if (!import.meta.env.SSR) {
 
   const savedAnnVis = localStorage.getItem('annotationsVisible')
   if (savedAnnVis === 'false') annotationsVisible.value = false
+
+  const savedAnnPane = localStorage.getItem('annotationPane')
+  if (savedAnnPane === 'true') annotationPane.value = true
 
   // Layout controls v-if/v-else DOM structure — must defer to after hydration
   // to avoid SSR/client mismatch (SSR always renders vertical)
@@ -65,6 +69,10 @@ if (!import.meta.env.SSR) {
   watch(annotationsVisible, v => {
     localStorage.setItem('annotationsVisible', String(v))
   })
+
+  watch(annotationPane, v => {
+    localStorage.setItem('annotationPane', String(v))
+  })
 }
 
 export function useReadingMode() {
@@ -81,5 +89,7 @@ export function useReadingMode() {
   function setBodyFontSize(s: FontSize) { bodyFontSize.value = s }
   function setAnnotationsVisible(v: boolean) { annotationsVisible.value = v }
   function toggleAnnotationsVisible() { annotationsVisible.value = !annotationsVisible.value }
-  return { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, setTheme, cycleTheme, setLayout, toggleLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible, toggleAnnotationsVisible }
+  function setAnnotationPane(v: boolean) { annotationPane.value = v }
+  function toggleAnnotationPane() { annotationPane.value = !annotationPane.value }
+  return { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, annotationPane, setTheme, cycleTheme, setLayout, toggleLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible, toggleAnnotationsVisible, setAnnotationPane, toggleAnnotationPane }
 }
