@@ -276,15 +276,45 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 72px;
   right: 20px;
-  width: 300px;
-  max-height: calc(100vh - 100px);
+  height: calc(100vh - 100px);
+  width: auto;
+  max-width: 300px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   background: var(--surface-warm);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 8px 40px rgba(var(--shadow-rgb), 0.12);
   z-index: 1000;
-  overflow-y: auto;
+  overflow-x: auto;
   overscroll-behavior: contain;
+}
+.ann-right-pane .ann-pane-inner {
+  padding: 14px 16px;
+}
+.ann-right-pane .ann-pane-close {
+  top: 10px;
+  right: auto;
+  left: 10px;
+}
+.ann-right-pane .ann-detail {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+.ann-right-pane .ann-detail-head {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0;
+  margin-left: 8px;
+}
+.ann-right-pane .ann-detail-body {
+  padding-left: 0;
+  padding-top: 4px;
+}
+.ann-right-pane .ann-text-block {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  line-height: 2;
 }
 
 .ann-pane-close {

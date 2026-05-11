@@ -779,7 +779,7 @@ function tcy(n: number): string {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 16px 8px;
