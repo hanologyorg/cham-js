@@ -67,6 +67,7 @@ function toggleLayer(id: string) {
 
 <style scoped>
 .ann-bar {
+  writing-mode: horizontal-tb;
   display: flex;
   flex-direction: column;
   gap: 6px;

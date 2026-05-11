@@ -778,16 +778,13 @@ function tcy(n: number): string {
 .v-nav-btn {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
+  padding: 20px 12px;
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1.6;
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
@@ -795,10 +792,12 @@ function tcy(n: number): string {
 }
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
+  margin-bottom: 0.5em;
 }
 .v-nav-label {
   font-size: 11px; color: var(--ink-faint);
   font-family: var(--sans); letter-spacing: 2px;
+  margin-bottom: 0.5em;
 }
 .v-nav-title {
   font-size: 18px; font-weight: 700;
