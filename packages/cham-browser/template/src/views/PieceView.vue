@@ -442,6 +442,10 @@ function tcy(n: number): string {
         @tooltip-enter="interaction.onTooltipEnter"
         @tooltip-leave="interaction.onTooltipLeave"
       />
+
+      <Teleport to="body">
+        <Transition name="overlay">
+          <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
             <div class="v-author-pane" @click.stop>
               <button class="v-pane-close" @click="closeAuthorPane">✕</button>
               <div class="v-pane-header">
