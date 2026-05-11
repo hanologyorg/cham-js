@@ -65,7 +65,8 @@ function toggleLayer(id: string) {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  align-items: stretch;
+  align-items: flex-start;
+  width: fit-content;
 }
 
 .ann-toggle {
@@ -103,6 +104,7 @@ function toggleLayer(id: string) {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-items: flex-start;
 }
 
 .ann-layer-btn {
@@ -117,7 +119,6 @@ function toggleLayer(id: string) {
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
-  text-align: center;
 }
 
 .ann-layer-btn:hover {
