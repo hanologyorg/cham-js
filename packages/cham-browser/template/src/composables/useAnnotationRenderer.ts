@@ -132,12 +132,23 @@ export function useAnnotationTooltip() {
   const visible = ref(false)
   const items = ref<Annotation[]>([])
   const style = ref<Record<string, string>>({})
+  const headword = ref('')
   const { layout } = useReadingMode()
 
   function show(event: MouseEvent, annotations: Annotation[]) {
     items.value = annotations
     const el = (event.target as HTMLElement).closest('.ann-target') as HTMLElement | null
     const rect = (el ?? event.target as HTMLElement).getBoundingClientRect()
+
+    // Extract headword text (strip the annotation number)
+    if (el) {
+      const clone = el.cloneNode(true) as HTMLElement
+      const nums = clone.querySelectorAll('.ann-num, sup')
+      nums.forEach(n => n.remove())
+      headword.value = clone.textContent?.trim() || ''
+    } else {
+      headword.value = ''
+    }
     const vw = window.innerWidth
     const vh = window.innerHeight
 
@@ -188,7 +199,7 @@ export function useAnnotationTooltip() {
     visible.value = true
   }
 
-  function hide() { visible.value = false }
+  function hide() { visible.value = false; headword.value = '' }
   function toggle(event: MouseEvent, annotations: Annotation[]) {
     if (visible.value) {
       const currentIds = items.value.map(a => a.id).sort().join(',')
@@ -203,5 +214,5 @@ export function useAnnotationTooltip() {
     }
   }
 
-  return { visible, items, style, show, hide, toggle }
+  return { visible, items, style, headword, show, hide, toggle }
 }

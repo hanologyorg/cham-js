@@ -434,6 +434,7 @@ function tcy(n: number): string {
       <AnnotationTooltip
         :visible="interaction.visible"
         :annotations="interaction.items"
+        :headword="interaction.headword"
         :layer-labels="layerLabels"
         :style="interaction.style"
         :vertical="true"
@@ -441,10 +442,6 @@ function tcy(n: number): string {
         @tooltip-enter="interaction.onTooltipEnter"
         @tooltip-leave="interaction.onTooltipLeave"
       />
-
-      <Teleport to="body">
-        <Transition name="overlay">
-          <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
             <div class="v-author-pane" @click.stop>
               <button class="v-pane-close" @click="closeAuthorPane">✕</button>
               <div class="v-pane-header">
@@ -602,6 +599,7 @@ function tcy(n: number): string {
       <AnnotationTooltip
         :visible="interaction.visible"
         :annotations="interaction.items"
+        :headword="interaction.headword"
         :layer-labels="layerLabels"
         :style="interaction.style"
         :vertical="false"
