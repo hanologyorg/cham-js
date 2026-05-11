@@ -121,9 +121,11 @@ export interface AnnotationSection {
 }
 
 export type AnnotationKind =
-  | 'pron' | 'meaning' | 'person' | 'place' | 'event'
-  | 'date' | 'allusion' | 'commentary' | 'translation'
-  | 'collation' | 'variant' | 'see-also'
+  | 'fanqie' | 'zhiyin' | 'tone'       // classical phonetics
+  | 'pinyin' | 'bpmf' | 'jyutping'     // modern phonetics
+  | 'meaning' | 'commentary'            // semantic
+  | 'person' | 'place' | 'event' | 'date' | 'allusion'
+  | 'collation' | 'variant' | 'see-also' | 'translation'
   | (string & {})
 
 export type AnnotationTarget =

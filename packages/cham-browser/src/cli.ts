@@ -346,6 +346,29 @@ function generateData(config: SiteConfig, configDir: string): {
   }
   writeFileSync(join(dataDir, 'authors', 'index.json'), JSON.stringify(authorIndex, null, indent), 'utf-8')
 
+  // Flat authors.json for template useData (full Author objects)
+  const authorsFlat = authorIndex.map(entry => {
+    const data = authors[entry.id]
+    return {
+      '@id': `author:${encodeURIComponent(entry.name)}`,
+      '@type': 'Person',
+      name: entry.name,
+      era: entry.era,
+      eraCode: entry.eraCode,
+      workCount: entry.workCount,
+      bio: data?.bio || '',
+      born: data?.born,
+      died: data?.died,
+      courtesyName: data?.courtesyName,
+      artName: data?.artName,
+      wikidata: data?.wikidata,
+      ctextId: data?.ctextId,
+      wikipediaZh: data?.wikipediaZh,
+      wikipediaEn: data?.wikipediaEn,
+    }
+  })
+  writeFileSync(join(dataDir, 'authors.json'), JSON.stringify(authorsFlat, null, indent), 'utf-8')
+
   // Dynasties/eras (using era field)
   const dynastiesJson = buildDynastiesJson(allPieces)
   writeFileSync(
