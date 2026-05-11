@@ -400,11 +400,244 @@ function parseXhtmlFile(xhtml: string, volumeLabel: string, ctx: ParseContext = 
 
 // ─── CHAM Kind Mapping ────────────────────────────────────────
 
-function annotationToKind(ann: ParsedAnnotation): AnnotationKind {
-  if (ann.hasFanqie) return 'fanqie'
-  if (ann.hasCollation) return 'collation'
-  if (ann.skqsImages.length > 0) return 'variant'
+// A single sub-annotation extracted from a packed SKQS annotation
+interface SplitEntry {
+  kind: AnnotationKind
+  headword?: string
+  value: string
+  params?: Record<string, string>
+}
+
+const CNI_RE = /[，。；：！？、]/
+const SKQS_COLLATION_RE = /○按|○案|○/
+
+function classifyAnnotationContent(content: string, hasSkqsImages: boolean): AnnotationKind {
+  if (hasSkqsImages) return 'variant'
+  if (SKQS_COLLATION_RE.test(content) && content.length < 30) return 'collation'
   return 'meaning'
+}
+
+// Check if content is a dense sound string (packed fanqie/zhiyin entries)
+function isDenseSoundString(content: string): boolean {
+  // Dense strings have multiple 音 or 切 markers without narrative structure
+  const soundMarkers = (content.match(/[音切]/g) || []).length
+  const cniPunct = (content.match(CNI_RE) || []).length
+  return soundMarkers >= 2 && cniPunct === 0 && content.length > 10
+}
+
+// Parse a dense string of fanqie/zhiyin entries (mengzi-zhushu format)
+// e.g. "宓音伏羲音戲齕恨沒切釁許覲切舍音捨"
+function parseDenseSoundString(text: string): SplitEntry[] {
+  const entries: SplitEntry[] = []
+  let pos = 0
+
+  while (pos < text.length) {
+    const rem = text.slice(pos)
+
+    // Fanqie: target(1) + upper(1) + lower(1) + 切
+    const fq = rem.match(/^([㐀-鿿])([㐀-鿿])([㐀-鿿])切/)
+    if (fq) {
+      entries.push({ kind: 'fanqie', headword: fq[1], value: `${fq[2]}${fq[3]}切`, params: { upper: fq[2], lower: fq[3] } })
+      pos += fq[0].length
+      continue
+    }
+
+    // Fanqie variant: target(1) + upper/lower(1) + 反
+    const fan = rem.match(/^([㐀-鿿])([㐀-鿿])反/)
+    if (fan) {
+      entries.push({ kind: 'fanqie', headword: fan[1], value: `${fan[2]}反`, params: { upper: fan[2] } })
+      pos += fan[0].length
+      continue
+    }
+
+    // Zhiyin: target + 音 + homophone (headword and homophone are always 1 char)
+    const zy = rem.match(/^([㐀-鿿])音([㐀-鿿])(?=[㐀-鿿音切反聲○同]|$)/)
+    if (zy) {
+      entries.push({ kind: 'zhiyin', headword: zy[1], value: zy[2] })
+      pos += zy[0].length
+      continue
+    }
+
+    // Tone: target + [上去平入]聲
+    const tn = rem.match(/^([㐀-鿿])([上去平入]聲)/)
+    if (tn) {
+      entries.push({ kind: 'tone', headword: tn[1], value: tn[2] })
+      pos += tn[0].length
+      continue
+    }
+
+    // Variant/同 marker
+    const vr = rem.match(/^([㐀-鿿])同/)
+    if (vr) {
+      entries.push({ kind: 'variant', headword: vr[1], value: '同' })
+      pos += vr[0].length
+      continue
+    }
+
+    // Skip common context markers that aren't annotation entries
+    if (rem.startsWith('如字')) { pos += 2; continue }
+    if (rem.startsWith('下同') || rem.startsWith('皆同')) { pos += 2; continue }
+    if (rem.match(/^[丁張趙陸孔劉]云?/)) {
+      // Scholar attribution — skip to next recognizable entry
+      const skip = rem.match(/^[丁張趙陸孔劉]云?[，。；：]?/)
+      if (skip) { pos += skip[0].length; continue }
+    }
+
+    // Unknown — skip one char
+    pos++
+  }
+
+  return entries
+}
+
+// Split a tab-separated trailing note into sub-entries
+// e.g. "緹音提恣肆也" → [zhiyin(緹→提), meaning(恣→肆也)]
+// e.g. "處上聲" → [tone(處, 上聲)]
+// e.g. "適音嫡○按注漢紀當作史記" → [zhiyin(適→嫡), collation(按注...)]
+function splitTrailingNote(text: string): SplitEntry[] {
+  const entries: SplitEntry[] = []
+  let remaining = text.trim()
+
+  // Extract collation sections (○...)
+  if (remaining.includes('○')) {
+    const parts = remaining.split('○')
+    // Text before ○
+    if (parts[0].trim()) {
+      entries.push(...splitPhoneticNote(parts[0].trim()))
+    }
+    // Each ○ section is collation
+    for (let i = 1; i < parts.length; i++) {
+      const collText = parts[i].trim()
+      if (collText) {
+        entries.push({ kind: 'collation', value: collText })
+      }
+    }
+    return entries
+  }
+
+  return splitPhoneticNote(remaining)
+}
+
+// Split a phonetic note that may contain multiple entries without separators
+// e.g. "緹音提恣肆也" or "餤音淡殞䘮也"
+function splitPhoneticNote(text: string): SplitEntry[] {
+  const entries: SplitEntry[] = []
+
+  // Try zhiyin: X音Y at start (headword and homophone are always exactly 1 character)
+  const zy = text.match(/^([㐀-鿿])音([㐀-鿿])/)
+  if (zy) {
+    entries.push({ kind: 'zhiyin', headword: zy[1], value: zy[2] })
+    const rest = text.slice(zy[0].length)
+    if (rest.trim()) {
+      const r = rest.trim()
+      entries.push({ kind: 'meaning', headword: r[0], value: r })
+    }
+    return entries
+  }
+
+  // Try tone: X[上去平入]聲
+  const tn = text.match(/^([㐀-鿿])([上去平入]聲)(.*)$/)
+  if (tn) {
+    entries.push({ kind: 'tone', headword: tn[1], value: tn[2] })
+    const rest = (tn[3] || '').trim()
+    if (rest) {
+      entries.push({ kind: 'meaning', value: rest })
+    }
+    return entries
+  }
+
+  // Try fanqie: X[AB]切 or X[AB]反
+  const fq = text.match(/^([㐀-鿿])([㐀-鿿])([㐀-鿿])([切反])(.*)$/)
+  if (fq) {
+    entries.push({ kind: 'fanqie', headword: fq[1], value: `${fq[2]}${fq[3]}${fq[4]}`, params: { upper: fq[2], lower: fq[3] } })
+    const rest = (fq[5] || '').trim()
+    if (rest) {
+      entries.push({ kind: 'meaning', value: rest })
+    }
+    return entries
+  }
+
+  // Fallback: single meaning entry
+  if (text) {
+    entries.push({ kind: 'meaning', value: text })
+  }
+  return entries
+}
+
+// Main annotation content splitter
+function splitAnnotationContent(content: string, hasSkqsImages: boolean, hasFanqie: boolean): SplitEntry[] {
+  // Pure variant annotation — don't split
+  if (hasSkqsImages) {
+    return [{ kind: 'variant', value: content }]
+  }
+
+  // Empty or punctuation-only — skip
+  if (/^[○◎・\s]+$/.test(content)) {
+    return []
+  }
+
+  // Dense sound string (many fanqie/zhiyin packed together)
+  if (hasFanqie && isDenseSoundString(content)) {
+    const parsed = parseDenseSoundString(content)
+    if (parsed.length > 0) return parsed
+  }
+
+  // Collation-only annotation
+  if (/^○/.test(content) && !content.includes('　')) {
+    return [{ kind: 'collation', value: content.replace(/^○/, '').trim() || content }]
+  }
+
+  // Split on full-width space (　) — main commentary + trailing notes
+  if (content.includes('　')) {
+    const segments = content.split('　')
+    const entries: SplitEntry[] = []
+
+    // First segment is the main commentary
+    const main = segments[0].trim()
+    if (main) {
+      entries.push({ kind: 'meaning', value: main })
+    }
+
+    // Subsequent segments are trailing phonetic/meaning notes
+    for (let i = 1; i < segments.length; i++) {
+      const seg = segments[i].trim()
+      if (!seg) continue
+      entries.push(...splitTrailingNote(seg))
+    }
+    return entries
+  }
+
+  // Single-segment annotation with embedded 音 — try inline extraction
+  if (hasFanqie && content.length > 10) {
+    // Check for embedded X音Y patterns within longer meaning text
+    // Only extract if the sound note is clearly at the end or embedded with a clear boundary
+    const inlineSound = content.match(/^(.+?)　?([㐀-鿿])音([㐀-鿿])(.*?)$/)
+    if (inlineSound && inlineSound[1].length > 5) {
+      const entries: SplitEntry[] = []
+      entries.push({ kind: 'meaning', value: inlineSound[1].trim() })
+      entries.push({ kind: 'zhiyin', headword: inlineSound[2], value: inlineSound[3] })
+      if (inlineSound[4] && inlineSound[4].trim()) {
+        entries.push({ kind: 'meaning', value: inlineSound[4].trim() })
+      }
+      return entries
+    }
+  }
+
+  // Default: check if content is a standalone phonetic annotation
+  let kind: AnnotationKind = 'meaning'
+  if (/^[㐀-鿿][㐀-鿿][㐀-鿿][切反]$/.test(content)) {
+    const fqMatch = content.match(/^([㐀-鿿])([㐀-鿿])([㐀-鿿])([切反])$/)!
+    return [{ kind: 'fanqie', headword: fqMatch[1], value: `${fqMatch[2]}${fqMatch[3]}${fqMatch[4]}`, params: { upper: fqMatch[2], lower: fqMatch[3] } }]
+  }
+  if (/^[㐀-鿿]音[㐀-鿿]$/.test(content)) {
+    const zyMatch = content.match(/^([㐀-鿿])音([㐀-鿿])$/)!
+    return [{ kind: 'zhiyin', headword: zyMatch[1], value: zyMatch[2] }]
+  }
+  if (/^[㐀-鿿][上去平入]聲$/.test(content)) {
+    const tnMatch = content.match(/^([㐀-鿿])([上去平入]聲)$/)!
+    return [{ kind: 'tone', headword: tnMatch[1], value: tnMatch[2] }]
+  }
+  return [{ kind, value: content }]
 }
 
 function padNum(n: number): string {
@@ -594,16 +827,39 @@ export class EpubConverter {
     for (const line of section.lines) {
       for (const ann of line.annotations) {
         markerId++
-        const params: Record<string, string> = {}
+        const baseParams: Record<string, string> = {}
         if (ann.skqsImages.length > 0) {
-          params.skqs = ann.skqsImages.map(s => s.altText).join(',')
+          baseParams.skqs = ann.skqsImages.map(s => s.altText).join(',')
         }
-        entries.push({
-          target: { type: 'marker', markerId },
-          kind: annotationToKind(ann),
-          params,
-          value: ann.content,
-        })
+
+        const split = splitAnnotationContent(ann.content, ann.skqsImages.length > 0, ann.hasFanqie)
+
+        if (split.length === 0) continue
+
+        if (split.length === 1) {
+          // Single entry — use as before but with proper kind
+          const s = split[0]
+          entries.push({
+            target: { type: 'marker', markerId },
+            kind: s.kind,
+            params: { ...baseParams, ...s.params },
+            headword: s.headword,
+            value: s.value,
+          })
+        } else {
+          // Multiple entries — first gets the marker, rest share it
+          // (headword field identifies the target character for each)
+          for (let i = 0; i < split.length; i++) {
+            const s = split[i]
+            entries.push({
+              target: { type: 'marker', markerId },
+              kind: s.kind,
+              params: { ...baseParams, ...s.params },
+              headword: s.headword,
+              value: s.value,
+            })
+          }
+        }
       }
     }
 

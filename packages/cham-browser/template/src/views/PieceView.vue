@@ -212,7 +212,7 @@ const proseSections = computed(() => {
 })
 
 
-const { getAuthor, loadShared } = useData()
+const { getAuthor, getAuthorIndex, loadAuthorDetail, loadShared } = useData()
 await loadShared()
 
 const CHAM_LOGO_URL = import.meta.env.CHAM_LOGO_URL || ''
@@ -231,13 +231,13 @@ const selectedAuthorBio = computed(() => {
 const selectedAuthorEra = computed(() => {
   const name = selectedAuthorName.value
   const a = getAuthor(name)
-  return a?.era || piece.value?.era || ''
+  return a?.era || getAuthorIndex(name)?.era || piece.value?.era || ''
 })
 
 const selectedAuthorWorkCount = computed(() => {
   const name = selectedAuthorName.value
   const a = getAuthor(name)
-  return a?.workCount || 0
+  return a?.workCount || getAuthorIndex(name)?.workCount || 0
 })
 
 const selectedAuthorData = computed(() => {
@@ -255,6 +255,7 @@ const authorLifespan = computed(() => {
 function openAuthorPane(id?: string) {
   selectedAuthorId.value = id || piece.value?.authorId || ''
   authorPaneOpen.value = true
+  loadAuthorDetail(selectedAuthorId.value)
 }
 function closeAuthorPane() { authorPaneOpen.value = false; selectedAuthorId.value = '' }
 function goBack() { router.push(`/${props.bookId}`) }
