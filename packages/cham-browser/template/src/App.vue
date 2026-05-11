@@ -2,18 +2,41 @@
 import { useRouter } from 'vue-router'
 import { useReadingMode } from './composables/useReadingMode'
 import { useSiteConfig } from './composables/useSiteConfig'
+import { useI18n } from './composables/useI18n'
 import ReadingToolbar from './components/ReadingToolbar.vue'
-import { computed, ref, provide } from 'vue'
+import { computed, ref, watch, provide } from 'vue'
 
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
 const { logoUrl, aboutHtml } = useSiteConfig()
+const { locale } = useI18n()
 const isVertical = computed(() => layout.value === 'vertical')
+
+const CHAM_VERSION = import.meta.env.CHAM_VERSION || ''
+const CHAM_BROWSER_VERSION = import.meta.env.CHAM_BROWSER_VERSION || ''
 
 const aboutOpen = ref(false)
 function toggleAbout() { aboutOpen.value = !aboutOpen.value }
 function closeAbout() { aboutOpen.value = false }
 provide('aboutPane', { toggleAbout, closeAbout })
+
+function filterAboutByLocale(html: string, loc: string): string {
+  return html.replace(/<div\s+class="about-block"(\s+lang="([^"]*)")?[^>]*>([\s\S]*?)<\/div>\s*/g,
+    (_match, _attr, lang, _content) => {
+      if (!lang || lang === loc) return _match
+      return ''
+    })
+}
+
+const filteredAboutHtml = computed(() => {
+  if (!aboutHtml.value) return ''
+  let html = filterAboutByLocale(aboutHtml.value, locale.value)
+  if (CHAM_VERSION || CHAM_BROWSER_VERSION) {
+    const versionLine = `<div class="about-versions"><span>v${[CHAM_BROWSER_VERSION, CHAM_VERSION].filter(Boolean).join(' / cham@')}</span></div>`
+    html += versionLine
+  }
+  return html
+})
 
 function onKey(event: KeyboardEvent) {
   if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
@@ -44,13 +67,13 @@ function onKey(event: KeyboardEvent) {
       <div v-if="aboutOpen" class="about-overlay" @click="closeAbout">
         <div v-if="isVertical" class="about-pane-v" @click.stop>
           <button class="about-close" @click="closeAbout">✕</button>
-          <div class="about-v-body" v-html="aboutHtml" />
+          <div class="about-v-body" v-html="filteredAboutHtml" />
         </div>
 
         <div v-else class="about-pane-h" @click.stop>
           <button class="about-close" @click="closeAbout">✕</button>
           <img v-if="logoUrl" :src="logoUrl" alt="" class="about-logo" />
-          <div class="about-h-body" v-html="aboutHtml" />
+          <div class="about-h-body" v-html="filteredAboutHtml" />
         </div>
       </div>
     </Teleport>
@@ -127,4 +150,15 @@ function onKey(event: KeyboardEvent) {
   max-height: 80vh; overflow-x: auto;
 }
 .about-v-body :deep(p) { margin-left: 16px; text-indent: 0 }
+.about-v-body :deep(.about-versions) { margin-left: 16px; padding-top: 24px; border-top: 1px solid var(--border-light) }
+
+.about-versions {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+}
 </style>

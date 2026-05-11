@@ -361,6 +361,13 @@ function generateData(config: SiteConfig, configDir: string): {
 
 // ─── Shared Vite Config ───────────────────────────────────────
 
+function getPackageVersions(): { cham: string; chamBrowser: string } {
+  const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+  const chamPkg = JSON.parse(readFileSync(join(rootDir, 'packages', 'cham', 'package.json'), 'utf-8'))
+  const browserPkg = JSON.parse(readFileSync(join(rootDir, 'packages', 'cham-browser', 'package.json'), 'utf-8'))
+  return { cham: chamPkg.version, chamBrowser: browserPkg.version }
+}
+
 function getTemplateDir(): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
 }
@@ -458,6 +465,7 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
 
   process.env.CHAM_DATA_DIR = dataDir
 
+  const versions = getPackageVersions()
   const vite = await import('vite')
   const vue = (await import('@vitejs/plugin-vue')).default
 
@@ -475,6 +483,8 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
       'import.meta.env.CHAM_SITE_TITLE': JSON.stringify(siteTitle),
       'import.meta.env.CHAM_SITE_SUBTITLE': JSON.stringify(siteSubtitle),
       'import.meta.env.CHAM_ABOUT_HTML': JSON.stringify(aboutHtml),
+      'import.meta.env.CHAM_VERSION': JSON.stringify(versions.cham),
+      'import.meta.env.CHAM_BROWSER_VERSION': JSON.stringify(versions.chamBrowser),
     },
     server: {
       port: 3000,
@@ -499,6 +509,7 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   const vue = (await import('@vitejs/plugin-vue')).default
 
   process.env.CHAM_DATA_DIR = join(outputDir, 'data')
+  const versions = getPackageVersions()
 
   await ssgBuild(
     {
@@ -545,6 +556,8 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
         'import.meta.env.CHAM_SITE_TITLE': JSON.stringify(siteTitle),
         'import.meta.env.CHAM_SITE_SUBTITLE': JSON.stringify(siteSubtitle),
         'import.meta.env.CHAM_ABOUT_HTML': JSON.stringify(aboutHtml),
+        'import.meta.env.CHAM_VERSION': JSON.stringify(versions.cham),
+        'import.meta.env.CHAM_BROWSER_VERSION': JSON.stringify(versions.chamBrowser),
       },
       build: {
         outDir: outputDir,
