@@ -138,46 +138,51 @@ export function useAnnotationTooltip() {
     items.value = annotations
     const el = (event.target as HTMLElement).closest('.ann-target') as HTMLElement | null
     const rect = (el ?? event.target as HTMLElement).getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
 
-    if (layout.value === 'vertical') {
-      const isMobile = window.innerWidth < 768
-      if (isMobile) {
-        style.value = {
-          left: '4vw',
-          right: '4vw',
-          bottom: '0',
-          maxWidth: 'none',
-        }
-      } else if (window.innerWidth >= 1024) {
-        style.value = {
-          right: '20px',
-          top: '72px',
-          maxHeight: 'calc(100vh - 100px)',
-        }
-      } else {
-        const right = window.innerWidth - rect.left + 8
-        style.value = {
-          right: Math.min(right, window.innerWidth - 40) + 'px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-        }
+    if (vw < 768) {
+      // Mobile: bottom sheet
+      style.value = {
+        left: '0',
+        right: '0',
+        bottom: '0',
+      }
+    } else if (layout.value === 'vertical') {
+      // Vertical mode: card to the left of the annotation
+      const cardW = 340
+      const gap = 12
+      let left = Math.max(8, rect.left - cardW - gap)
+      let top = Math.max(8, Math.min(rect.top, vh - 300))
+
+      // If not enough room on left, go right
+      if (rect.left - cardW - gap < 8) {
+        left = Math.min(rect.right + gap, vw - cardW - 8)
+      }
+
+      style.value = {
+        left: left + 'px',
+        top: top + 'px',
+        width: cardW + 'px',
+        maxHeight: Math.min(vh - 16, 500) + 'px',
       }
     } else {
-      const isMobile = window.innerWidth < 768
-      if (isMobile) {
-        style.value = {
-          left: '4vw',
-          right: '4vw',
-          bottom: '0',
-          maxWidth: 'none',
-        }
-      } else {
-        const left = Math.max(8, Math.min(rect.left, window.innerWidth - 288))
-        const top = Math.max(8, rect.bottom + 8)
-        style.value = {
-          left: left + 'px',
-          top: Math.min(top, window.innerHeight - 200) + 'px',
-        }
+      // Horizontal mode: card below/above the annotation
+      const cardW = 340
+      const gap = 8
+      let left = Math.max(8, Math.min(rect.left, vw - cardW - 8))
+      let top = rect.bottom + gap
+
+      // If overflows bottom, show above
+      if (top + 200 > vh) {
+        top = Math.max(8, rect.top - gap - 200)
+      }
+
+      style.value = {
+        left: left + 'px',
+        top: top + 'px',
+        width: cardW + 'px',
+        maxHeight: Math.min(vh - top - 16, 500) + 'px',
       }
     }
     visible.value = true
