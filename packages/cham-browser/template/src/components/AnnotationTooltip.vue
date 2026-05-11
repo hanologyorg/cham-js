@@ -77,18 +77,6 @@ function kindLabel(ann: Annotation): string {
   return map[ann.kind] || ann.kind
 }
 
-const hasOverlap = computed(() =>
-  props.annotations.some(a => {
-    const seg = annotationToPronSegment(a)
-    return !seg && props.annotations.filter(b =>
-      b.range.scope === a.range.scope &&
-      b.range.verseIndex === a.range.verseIndex &&
-      (b.range.start ?? 0) !== (a.range.start ?? 0) ||
-      (b.range.end ?? 0) !== (a.range.end ?? 0)
-    ).length > 0
-  })
-)
-
 function onDocClick(e: MouseEvent) {
   if (!stickyVisible.value) return
   const el = (e.target as HTMLElement)
@@ -128,18 +116,16 @@ onBeforeUnmount(() => {
         @mouseleave="emit('tooltipLeave')"
       >
         <button class="ann-pane-close" @click="dismiss" aria-label="關閉">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
-        <div class="ann-pane-inner">
-          <div v-for="ann in annotations" :key="ann.id" class="ann-detail" :class="ann.kind">
-            <div class="ann-detail-head">
-              <span class="ann-kind-tag" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              <span v-if="layerLabel(ann)" class="ann-layer-tag">{{ layerLabel(ann) }}</span>
+        <div class="ann-pane-scroll">
+          <div v-for="ann in annotations" :key="ann.id" class="ann-entry" :class="ann.kind">
+            <div class="ann-head">
+              <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             </div>
-            <div class="ann-detail-body">
-              <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" class="ann-pron-block" />
-              <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text-block">{{ ann.text }}</div>
-            </div>
+            <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
+            <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
           </div>
         </div>
       </div>
@@ -155,13 +141,13 @@ onBeforeUnmount(() => {
         @mouseenter="emit('tooltipEnter')"
         @mouseleave="emit('tooltipLeave')"
       >
-        <div v-for="ann in annotations" :key="ann.id" class="ann-detail" :class="ann.kind">
-          <div class="ann-detail-head">
-            <span class="ann-kind-tag" :class="ann.kind">{{ kindLabel(ann) }}</span>
-            <span v-if="layerLabel(ann)" class="ann-layer-tag">{{ layerLabel(ann) }}</span>
+        <div v-for="ann in annotations" :key="ann.id" class="ann-entry" :class="ann.kind">
+          <div class="ann-head">
+            <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+            <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
           </div>
           <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
-          <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text-block">{{ ann.text }}</span>
+          <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
         </div>
       </div>
     </Transition>
@@ -175,16 +161,14 @@ onBeforeUnmount(() => {
         <button class="ann-sheet-handle" @click="dismiss">
           <span class="ann-handle-bar" />
         </button>
-        <div class="ann-sheet-inner">
-          <div v-for="ann in annotations" :key="ann.id" class="ann-detail" :class="ann.kind">
-            <div class="ann-detail-head">
-              <span class="ann-kind-tag" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              <span v-if="layerLabel(ann)" class="ann-layer-tag">{{ layerLabel(ann) }}</span>
+        <div class="ann-sheet-scroll">
+          <div v-for="ann in annotations" :key="ann.id" class="ann-entry" :class="ann.kind">
+            <div class="ann-head">
+              <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             </div>
-            <div class="ann-detail-body">
-              <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" class="ann-pron-block" />
-              <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text-block">{{ ann.text }}</div>
-            </div>
+            <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
+            <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
           </div>
         </div>
       </div>
@@ -193,66 +177,64 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* ─── Shared Entry Styles ─── */
-.ann-detail {
-  margin-bottom: 16px;
-  letter-spacing: 1px;
-  font-size: 15px;
+/* ─── Compact annotation entry ─── */
+.ann-entry {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 14px;
   color: var(--ink-mid);
+  letter-spacing: 0.5px;
+  line-height: 1.8;
 }
-.ann-detail:last-child { margin-bottom: 0; }
+.ann-entry:last-child { border-bottom: none; padding-bottom: 0; }
+.ann-entry:first-child { padding-top: 0; }
 
-.ann-detail-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.ann-kind-tag {
+.ann-head {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  gap: 6px;
+  margin-bottom: 2px;
+  vertical-align: baseline;
+}
+
+.ann-kind {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 10px;
   font-family: var(--sans);
   font-weight: 700;
   letter-spacing: 1px;
+  line-height: 1.5;
+  vertical-align: middle;
 }
-.ann-kind-tag.pronunciation { background: var(--jade); color: #fff; }
-.ann-kind-tag.semantic { background: var(--vermillion); color: #fff; }
-.ann-kind-tag.etymology { background: #6b5b95; color: #fff; }
-.ann-kind-tag.note,
-.ann-kind-tag.definition { background: var(--ink); color: var(--paper); }
-.ann-kind-tag.commentary { background: #c0392b; color: #fff; }
-.ann-kind-tag.translation { background: #2c6e49; color: #fff; }
-.ann-kind-tag.person { background: var(--ann-person); color: #fff; }
-.ann-kind-tag.place { background: var(--ann-place); color: #fff; }
-.ann-kind-tag.event { background: var(--ann-event); color: #fff; }
-.ann-kind-tag.date { background: var(--ann-date); color: #fff; }
-.ann-kind-tag.allusion { background: var(--ann-allusion); color: #fff; }
+.ann-kind.pronunciation { background: var(--jade); color: #fff; }
+.ann-kind.semantic { background: var(--vermillion); color: #fff; }
+.ann-kind.etymology { background: #6b5b95; color: #fff; }
+.ann-kind.note,
+.ann-kind.definition { background: var(--ink); color: var(--paper); }
+.ann-kind.commentary { background: #c0392b; color: #fff; }
+.ann-kind.translation { background: #2c6e49; color: #fff; }
+.ann-kind.person { background: var(--ann-person); color: #fff; }
+.ann-kind.place { background: var(--ann-place); color: #fff; }
+.ann-kind.event { background: var(--ann-event); color: #fff; }
+.ann-kind.date { background: var(--ann-date); color: #fff; }
+.ann-kind.allusion { background: var(--ann-allusion); color: #fff; }
 
-.ann-layer-tag {
-  font-size: 11px;
+.ann-layer {
+  font-size: 10px;
   font-family: var(--sans);
   color: var(--ink-faint);
-  padding: 2px 6px;
+  padding: 1px 5px;
   border: 1px solid var(--border-light);
-  border-radius: 3px;
-  letter-spacing: 1px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+  line-height: 1.4;
 }
 
-.ann-detail-body {
-  padding-left: 4px;
-}
-
-.ann-pron-block {
-  margin-bottom: 6px;
-}
-
-.ann-text-block {
-  line-height: 1.9;
+.ann-text {
   white-space: pre-line;
+  line-height: 1.8;
 }
 
 /* ─── Desktop Left Pane (horizontal mode) ─── */
@@ -260,15 +242,46 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 72px;
   left: 20px;
-  width: 300px;
+  width: 280px;
   max-height: calc(100vh - 100px);
   background: var(--surface-warm);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 8px 40px rgba(var(--shadow-rgb), 0.12);
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.ann-pane-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink-faint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  z-index: 1;
+  opacity: 0.6;
+}
+.ann-pane-close:hover {
+  opacity: 1;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.ann-pane-scroll {
+  padding: 12px 14px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  flex: 1;
 }
 
 /* ─── Desktop Right Pane (vertical mode) ─── */
@@ -278,83 +291,63 @@ onBeforeUnmount(() => {
   right: 20px;
   height: calc(100vh - 100px);
   width: auto;
-  max-width: 300px;
+  max-width: 280px;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   background: var(--surface-warm);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 8px 40px rgba(var(--shadow-rgb), 0.12);
   z-index: 1000;
-  overflow-x: auto;
-  overscroll-behavior: contain;
-}
-.ann-right-pane .ann-pane-inner {
-  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
 }
 .ann-right-pane .ann-pane-close {
-  top: 10px;
-  right: auto;
-  left: 10px;
+  position: static;
+  margin: 8px 8px 0;
+  opacity: 0.5;
+  flex-shrink: 0;
 }
-.ann-right-pane .ann-detail {
+.ann-right-pane .ann-pane-scroll {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px 14px;
+  flex: 1;
 }
-.ann-right-pane .ann-detail-head {
+.ann-right-pane .ann-entry {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border-bottom: none;
+  border-left: 1px solid var(--border-light);
+  padding: 0 0 0 12px;
+  margin-left: 8px;
+}
+.ann-right-pane .ann-entry:first-child { padding-top: 0; }
+.ann-right-pane .ann-entry:last-child { border-left: none; }
+.ann-right-pane .ann-head {
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 0;
-  margin-left: 8px;
+  margin-left: 4px;
 }
-.ann-right-pane .ann-detail-body {
-  padding-left: 0;
-  padding-top: 4px;
-}
-.ann-right-pane .ann-text-block {
+.ann-right-pane .ann-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   line-height: 2;
 }
 
-.ann-pane-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--surface);
-  color: var(--ink-light);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  z-index: 1;
-}
-.ann-pane-close:hover {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-}
-
-.ann-pane-inner {
-  padding: 16px;
-  padding-top: 14px;
-}
-
 /* ─── Tablet Popup ─── */
 .ann-popup {
   position: fixed;
-  padding: 14px 18px;
+  padding: 12px 14px;
   background: var(--surface-warm);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 16px 48px rgba(var(--shadow-rgb), 0.16);
-  max-width: 320px;
-  max-height: 60vh;
+  max-width: 300px;
+  max-height: 50vh;
   overflow-y: auto;
   z-index: 1000;
 }
@@ -365,41 +358,44 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 55vh;
+  max-height: 50vh;
   background: var(--surface-warm);
   border-top: 1px solid var(--border);
-  border-radius: 16px 16px 0 0;
+  border-radius: 14px 14px 0 0;
   box-shadow: 0 -4px 32px rgba(var(--shadow-rgb), 0.15);
   z-index: 1000;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
 }
 
 .ann-sheet-handle {
   display: flex;
   justify-content: center;
-  padding: 12px 0 6px;
+  padding: 10px 0 4px;
   width: 100%;
   border: none;
   background: none;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .ann-handle-bar {
   display: block;
-  width: 40px;
+  width: 36px;
   height: 4px;
   border-radius: 2px;
   background: var(--border);
 }
 
-.ann-sheet-inner {
-  padding: 0 20px 28px;
+.ann-sheet-scroll {
+  padding: 4px 16px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  flex: 1;
 }
 
 /* ─── Transitions ─── */
 
-/* Left pane slide from left (horizontal mode) */
 .ann-slide-right-enter-active {
   transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -408,14 +404,13 @@ onBeforeUnmount(() => {
 }
 .ann-slide-right-enter-from {
   opacity: 0;
-  transform: translateX(-24px);
+  transform: translateX(-20px);
 }
 .ann-slide-right-leave-to {
   opacity: 0;
-  transform: translateX(-16px);
+  transform: translateX(-12px);
 }
 
-/* Right pane slide from right (vertical mode) */
 .ann-slide-left-enter-active {
   transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -424,14 +419,13 @@ onBeforeUnmount(() => {
 }
 .ann-slide-left-enter-from {
   opacity: 0;
-  transform: translateX(24px);
+  transform: translateX(20px);
 }
 .ann-slide-left-leave-to {
   opacity: 0;
-  transform: translateX(16px);
+  transform: translateX(12px);
 }
 
-/* Popup fade */
 .ann-fade-enter-active {
   transition: opacity 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -440,14 +434,13 @@ onBeforeUnmount(() => {
 }
 .ann-fade-enter-from {
   opacity: 0;
-  transform: scale(0.92) translateY(4px);
+  transform: scale(0.94) translateY(4px);
 }
 .ann-fade-leave-to {
   opacity: 0;
   transform: scale(0.96);
 }
 
-/* Bottom sheet slide up */
 .ann-sheet-enter-active {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

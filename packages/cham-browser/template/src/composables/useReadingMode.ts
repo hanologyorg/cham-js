@@ -19,6 +19,7 @@ const theme = ref<Theme>('light')
 const layout = ref<LayoutMode>('vertical')
 const mainFontSize = ref<FontSize>(24)
 const bodyFontSize = ref<FontSize>(16)
+const annotationsVisible = ref(true)
 
 if (!import.meta.env.SSR) {
   // Theme and font sizes only affect CSS, safe to apply before hydration
@@ -30,6 +31,9 @@ if (!import.meta.env.SSR) {
 
   const savedBody = parseInt(localStorage.getItem('bodyFontSize') || '', 10)
   if (FONT_SIZES.includes(savedBody as any)) bodyFontSize.value = savedBody as FontSize
+
+  const savedAnnVis = localStorage.getItem('annotationsVisible')
+  if (savedAnnVis === 'false') annotationsVisible.value = false
 
   // Layout controls v-if/v-else DOM structure — must defer to after hydration
   // to avoid SSR/client mismatch (SSR always renders vertical)
@@ -57,6 +61,10 @@ if (!import.meta.env.SSR) {
     document.documentElement.style.setProperty('--body-font-size', s + 'px')
     localStorage.setItem('bodyFontSize', String(s))
   }, { immediate: true })
+
+  watch(annotationsVisible, v => {
+    localStorage.setItem('annotationsVisible', String(v))
+  })
 }
 
 export function useReadingMode() {
@@ -71,5 +79,7 @@ export function useReadingMode() {
   }
   function setMainFontSize(s: FontSize) { mainFontSize.value = s }
   function setBodyFontSize(s: FontSize) { bodyFontSize.value = s }
-  return { theme, layout, mainFontSize, bodyFontSize, setTheme, cycleTheme, setLayout, toggleLayout, setMainFontSize, setBodyFontSize }
+  function setAnnotationsVisible(v: boolean) { annotationsVisible.value = v }
+  function toggleAnnotationsVisible() { annotationsVisible.value = !annotationsVisible.value }
+  return { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, setTheme, cycleTheme, setLayout, toggleLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible, toggleAnnotationsVisible }
 }

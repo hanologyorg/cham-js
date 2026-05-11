@@ -24,7 +24,7 @@ const router = useRouter()
 const { getPiece, pieces, meta, load, getAdjacentNums } = useBook()
 await load(props.bookId)
 
-const { layout } = useReadingMode()
+const { layout, annotationsVisible: prefAnnotationsVisible } = useReadingMode()
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
 const { t } = useI18n()
@@ -95,7 +95,7 @@ const totalAnnotationCount = computed(() => {
 const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotationLayers || [])
 const hasLayers = computed(() => annotationLayers.value.length > 1)
 const activeLayerIds = ref<string[]>([])
-const annotationsVisible = ref(true)
+const annotationsVisible = prefAnnotationsVisible
 
 function initLayers() {
   if (hasLayers.value && activeLayerIds.value.length === 0) {
