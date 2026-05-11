@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { AnnotationLayer } from '../types'
 
 const props = defineProps<{
@@ -13,7 +14,12 @@ const emit = defineEmits<{
   'update:annotationsVisible': [visible: boolean]
 }>()
 
-const hasLayers = () => props.layers.length > 1
+// Only named layers (skip 'default' — base annotations are always shown)
+const toggleableLayers = computed(() =>
+  props.layers.filter(l => l.id !== 'default')
+)
+
+const hasLayers = () => toggleableLayers.value.length > 0
 
 function toggleAnnotations() {
   if (props.annotationsVisible) {
@@ -21,7 +27,7 @@ function toggleAnnotations() {
     if (hasLayers()) emit('update:activeIds', [])
   } else {
     emit('update:annotationsVisible', true)
-    if (hasLayers()) emit('update:activeIds', props.layers.map(l => l.id))
+    if (hasLayers()) emit('update:activeIds', toggleableLayers.value.map(l => l.id))
   }
 }
 
@@ -47,16 +53,15 @@ function toggleLayer(id: string) {
       @click="toggleAnnotations"
       :title="annotationsVisible ? '隱藏注釋' : '顯示注釋'"
     >注</button>
-    <div v-if="hasLayers() && annotationsVisible" class="ann-layers">
-      <button
-        v-for="layer in layers"
-        :key="layer.id"
-        class="ann-layer-btn"
-        :class="{ active: activeIds.includes(layer.id) }"
-        @click="toggleLayer(layer.id)"
-        :title="layer.label"
-      >{{ layer.shortLabel }}</button>
-    </div>
+    <button
+      v-for="layer in toggleableLayers"
+      :key="layer.id"
+      v-show="annotationsVisible"
+      class="ann-layer-btn"
+      :class="{ active: activeIds.includes(layer.id) }"
+      @click="toggleLayer(layer.id)"
+      :title="layer.label"
+    >{{ layer.shortLabel }}</button>
   </div>
 </template>
 
@@ -65,8 +70,7 @@ function toggleLayer(id: string) {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  align-items: flex-start;
-  width: fit-content;
+  align-items: center;
 }
 
 .ann-toggle {
@@ -82,9 +86,6 @@ function toggleLayer(id: string) {
   letter-spacing: 0;
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .ann-toggle:hover {
@@ -100,15 +101,9 @@ function toggleLayer(id: string) {
   color: #fff;
 }
 
-.ann-layers {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
-}
-
 .ann-layer-btn {
-  padding: 5px 10px;
+  width: 36px;
+  padding: 5px 0;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: none;
@@ -119,6 +114,7 @@ function toggleLayer(id: string) {
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  text-align: center;
 }
 
 .ann-layer-btn:hover {
@@ -143,7 +139,7 @@ function toggleLayer(id: string) {
     font-size: 17px;
   }
   .ann-layer-btn {
-    padding: 6px 12px;
+    width: 40px;
     font-size: 12px;
   }
 }
