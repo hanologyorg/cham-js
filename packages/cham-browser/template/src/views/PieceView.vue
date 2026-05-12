@@ -386,11 +386,11 @@ function tcy(n: number): string {
 
         <div class="v-inline-nav">
           <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
-            ▼
+            ◀
           </button>
           <span v-else class="v-inav-spacer" />
           <button v-if="adjacent.prev !== null" class="v-inav" @click="navigate(-1)" :title="t('piece.previous')">
-            ▲
+            ▶
           </button>
         </div>
 
@@ -475,13 +475,13 @@ function tcy(n: number): string {
 
         <nav class="v-nav">
           <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)">
-            <span class="v-nav-dir">▲</span>
+            <span class="v-nav-dir">▶</span>
             <span class="v-nav-label">{{ t('piece.previous') }}</span>
             <span class="v-nav-title">{{ getPiece(adjacent.prev)?.title }}</span>
           </button>
           <div v-else class="v-nav-spacer" />
           <button v-if="adjacent.next !== null" class="v-nav-btn" @click="navigate(1)">
-            <span class="v-nav-dir">▼</span>
+            <span class="v-nav-dir">◀</span>
             <span class="v-nav-label">{{ t('piece.next') }}</span>
             <span class="v-nav-title">{{ getPiece(adjacent.next)?.title }}</span>
           </button>

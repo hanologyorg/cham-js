@@ -21,6 +21,71 @@ const emit = defineEmits<{
 
 const bodyRef = ref<HTMLElement | null>(null)
 
+// ─── Resize ───
+const paneWidth = ref(320)
+const MIN_W = 180
+const MAX_W = 500
+const RESIZE_KEY = 'ann-pane-width'
+
+function initWidth() {
+  try {
+    const saved = localStorage.getItem(RESIZE_KEY)
+    if (saved) {
+      const w = parseInt(saved, 10)
+      if (w >= MIN_W && w <= MAX_W) paneWidth.value = w
+      return
+    }
+  } catch {}
+  paneWidth.value = props.vertical ? 240 : 320
+}
+
+let resizing = false
+let resizeStartX = 0
+let resizeStartW = 0
+let hasMoved = false
+let moveFn: ((e: MouseEvent | TouchEvent) => void) | null = null
+let endFn: (() => void) | null = null
+
+function onHandleStart(e: MouseEvent | TouchEvent) {
+  resizing = true
+  hasMoved = false
+  resizeStartX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  resizeStartW = paneWidth.value
+
+  moveFn = (ev: MouseEvent | TouchEvent) => {
+    if (!resizing) return
+    const x = 'touches' in ev ? ev.touches[0].clientX : (ev as MouseEvent).clientX
+    const dx = x - resizeStartX
+    if (Math.abs(dx) > 2) hasMoved = true
+    paneWidth.value = Math.max(MIN_W, Math.min(MAX_W, resizeStartW + dx))
+  }
+
+  endFn = () => {
+    resizing = false
+    if (!hasMoved) {
+      emit('close')
+    } else {
+      try { localStorage.setItem(RESIZE_KEY, String(paneWidth.value)) } catch {}
+    }
+    if (moveFn) {
+      document.removeEventListener('mousemove', moveFn)
+      document.removeEventListener('touchmove', moveFn)
+    }
+    if (endFn) {
+      document.removeEventListener('mouseup', endFn)
+      document.removeEventListener('touchend', endFn)
+    }
+    moveFn = null
+    endFn = null
+  }
+
+  document.addEventListener('mousemove', moveFn)
+  document.addEventListener('mouseup', endFn)
+  document.addEventListener('touchmove', moveFn, { passive: false })
+  document.addEventListener('touchend', endFn)
+  e.preventDefault()
+}
+
 function getSegment(ann: Annotation) {
   return annotationToPronSegment(ann)
 }
@@ -69,14 +134,33 @@ watch(() => props.activeId, async (id) => {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 })
 
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
+onMounted(() => {
+  initWidth()
+  document.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+  if (moveFn) {
+    document.removeEventListener('mousemove', moveFn)
+    document.removeEventListener('touchmove', moveFn)
+  }
+  if (endFn) {
+    document.removeEventListener('mouseup', endFn)
+    document.removeEventListener('touchend', endFn)
+  }
+})
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="ann-pane">
-      <div v-if="visible && annotations.length" class="ann-pane" :class="{ vertical }">
+      <div
+        v-if="visible && annotations.length"
+        class="ann-pane"
+        :class="{ vertical }"
+        :style="{ width: paneWidth + 'px' }"
+      >
         <div class="ann-pane-header">
           <span class="ann-pane-title">注釋</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
@@ -93,17 +177,28 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
             :class="{ active: activeId === ann.id, [ann.kind]: true }"
             @click="emit('select', ann)"
           >
-            <div class="ann-pane-entry-head">
-              <span class="ann-pane-idx">{{ toChineseNumber(idx + 1) }}</span>
-              <span v-if="headword(ann)" class="ann-pane-word">{{ headword(ann) }}</span>
-              <span class="ann-pane-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              <span v-if="layerLabel(ann)" class="ann-pane-layer">{{ layerLabel(ann) }}</span>
+            <!-- Vertical: headword column on the right side -->
+            <div v-if="vertical && headword(ann)" class="ann-pane-v-word">
+              <span class="ann-pane-word-v">{{ headword(ann) }}</span>
+              <span class="ann-pane-idx-v">{{ toChineseNumber(idx + 1) }}</span>
             </div>
-            <div class="ann-pane-entry-body">
-              <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
-              <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-pane-text">{{ ann.text }}</div>
+            <div class="ann-pane-entry-main">
+              <div class="ann-pane-entry-head">
+                <span v-if="!vertical" class="ann-pane-idx">{{ toChineseNumber(idx + 1) }}</span>
+                <span v-if="!vertical && headword(ann)" class="ann-pane-word">{{ headword(ann) }}</span>
+                <span class="ann-pane-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                <span v-if="layerLabel(ann)" class="ann-pane-layer">{{ layerLabel(ann) }}</span>
+              </div>
+              <div class="ann-pane-entry-body">
+                <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
+                <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-pane-text">{{ ann.text }}</div>
+              </div>
             </div>
           </div>
+        </div>
+        <!-- Resize / close handle on right edge -->
+        <div class="ann-pane-handle" @mousedown="onHandleStart" @touchstart.prevent="onHandleStart">
+          <span class="ann-handle-grip" />
         </div>
       </div>
     </Transition>
@@ -115,7 +210,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   position: fixed;
   left: 0;
   top: 0;
-  width: 320px;
   height: 100vh;
   background: var(--surface-warm);
   border-right: 1px solid var(--border);
@@ -276,7 +370,35 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   white-space: pre-line;
 }
 
-/* Transition */
+/* ─── Resize / close handle ─── */
+.ann-pane-handle {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 14px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ann-handle-grip {
+  display: block;
+  width: 3px;
+  height: 32px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: all 0.2s;
+}
+
+.ann-pane-handle:hover .ann-handle-grip {
+  background: var(--vermillion);
+  height: 48px;
+}
+
+/* ─── Transition ─── */
 .ann-pane-enter-active {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -290,16 +412,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 @media (max-width: 768px) {
   .ann-pane {
-    width: 100%;
+    width: 100% !important;
     height: auto;
     max-height: 55vh;
     top: auto;
     bottom: 0;
-    left: 0;
     border-right: none;
     border-top: 1px solid var(--border);
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 24px rgba(var(--shadow-rgb), 0.08);
+  }
+  .ann-pane-handle {
+    display: none;
   }
   .ann-pane-enter-from,
   .ann-pane-leave-to {
@@ -311,7 +435,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 .ann-pane.vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  width: 220px;
 }
 
 .ann-pane.vertical .ann-pane-body {
@@ -322,6 +445,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 }
 
 .ann-pane.vertical .ann-pane-entry {
+  display: flex;
+  flex-direction: column;
   padding: 10px 6px;
   border-bottom: none;
   border-right: 3px solid transparent;
@@ -337,6 +462,37 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 .ann-pane.vertical .ann-pane-entry.active.pronunciation {
   border-right-color: var(--jade);
+}
+
+/* Vertical headword on the right (first in vertical-rl reading order) */
+.ann-pane-v-word {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-left: 1px solid var(--border-light);
+}
+
+.ann-pane-word-v {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--ink);
+}
+
+.ann-pane-idx-v {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vermillion);
+}
+
+.ann-pane-entry.active.pronunciation .ann-pane-idx-v {
+  color: var(--jade);
 }
 
 .ann-pane.vertical .ann-pane-entry-head {
@@ -355,5 +511,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 .ann-pane.vertical .ann-pane-close {
   writing-mode: horizontal-tb;
+}
+
+.ann-pane.vertical .ann-pane-handle {
+  writing-mode: horizontal-tb;
+}
+
+@media (max-width: 768px) {
+  .ann-pane.vertical .ann-pane-handle {
+    display: none;
+  }
 }
 </style>
