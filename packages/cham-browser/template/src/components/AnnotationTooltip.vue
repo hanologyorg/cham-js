@@ -414,27 +414,32 @@ onBeforeUnmount(() => {
 .ann-card.vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .ann-card.vertical .ann-card-head {
   padding: 10px 6px;
+  border-bottom: none;
+  border-left: 1px solid var(--border-light);
 }
 
 .ann-card.vertical .ann-card-scroll {
   display: flex;
-  flex-direction: row;
-  padding: 8px 6px;
-  overflow-y: auto;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .ann-card.vertical .ann-entry {
+  flex-shrink: 0;
   border-bottom: none;
-  padding: 8px 0;
+  padding: 0 10px;
+  border-right: 1px solid var(--border-light);
 }
 
-.ann-card.vertical .ann-entry + .ann-entry {
-  border-top: 1px solid var(--border-light);
+.ann-card.vertical .ann-entry:first-child {
+  border-right: none;
 }
 
 .ann-card.vertical .ann-card-close {

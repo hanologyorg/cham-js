@@ -160,8 +160,8 @@ export function useAnnotationTooltip() {
         bottom: '0',
       }
     } else if (layout.value === 'vertical') {
-      // Vertical mode: tall narrow card to the left of the annotation
-      const cardW = 180
+      // Vertical mode: wide card with multi-column layout to the left
+      const cardW = 260
       const cardH = Math.min(vh - 16, 480)
       const gap = 12
       let left = Math.max(8, rect.left - cardW - gap)
