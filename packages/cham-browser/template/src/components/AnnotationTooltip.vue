@@ -415,6 +415,8 @@ onBeforeUnmount(() => {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-direction: column;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .ann-card.vertical .ann-card-head {
@@ -436,6 +438,8 @@ onBeforeUnmount(() => {
   border-bottom: none;
   padding: 0 10px;
   border-right: 1px solid var(--border-light);
+  max-height: inherit;
+  overflow-y: hidden;
 }
 
 .ann-card.vertical .ann-entry:first-child {

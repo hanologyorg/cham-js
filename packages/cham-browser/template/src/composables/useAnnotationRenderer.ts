@@ -200,7 +200,7 @@ export function useAnnotationTooltip() {
     visible.value = true
   }
 
-  function hide() { visible.value = false; headword.value = '' }
+  function hide() { visible.value = false }
   function toggle(event: MouseEvent, annotations: Annotation[]) {
     if (visible.value) {
       const currentIds = items.value.map(a => a.id).sort().join(',')
