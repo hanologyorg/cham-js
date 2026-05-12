@@ -466,21 +466,27 @@ onBeforeUnmount(() => {
   writing-mode: horizontal-tb;
 }
 
+.ann-sheet.vertical .ann-sheet-head {
+  writing-mode: horizontal-tb;
+}
+
 .ann-sheet.vertical .ann-sheet-scroll {
   display: flex;
-  flex-direction: row;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 4px 16px 24px;
+  flex-direction: column;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0 24px;
 }
 
 .ann-sheet.vertical .ann-entry {
+  flex-shrink: 0;
   border-bottom: none;
-  padding: 8px 0;
+  padding: 0 14px;
+  border-right: 1px solid var(--border-light);
 }
 
-.ann-sheet.vertical .ann-entry + .ann-entry {
-  border-top: 1px solid var(--border-light);
+.ann-sheet.vertical .ann-entry:first-child {
+  border-right: none;
 }
 
 .ann-sheet.vertical .ann-pron-h {
