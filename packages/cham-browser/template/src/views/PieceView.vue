@@ -742,13 +742,13 @@ function tcy(n: number): string {
   align-items: flex-start;
   justify-content: center;
   gap: 16px;
-  padding: 40px 24px;
+  padding: 40px 20px;
   border-right: 1px solid var(--border);
   scroll-snap-align: start;
 }
 .v-poem-title {
   font-size: 40px; font-weight: 900;
-  letter-spacing: 12px; color: var(--ink);
+  letter-spacing: 10px; color: var(--ink);
   padding-left: 20px;
   border-left: 4px solid var(--vermillion);
   line-height: 1.6;
@@ -783,7 +783,7 @@ function tcy(n: number): string {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 24px;
+  padding: 20px 16px;
 }
 
 .v-multipart {
@@ -791,15 +791,15 @@ function tcy(n: number): string {
   flex-direction: row-reverse;
   align-items: flex-start;
   gap: 0;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 100px);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 24px 16px;
+  padding: 20px 16px;
   scrollbar-width: thin;
-  scrollbar-color: var(--gold) var(--paper);
+  scrollbar-color: var(--gold) transparent;
 }
 
-.v-multipart::-webkit-scrollbar { height: 4px; }
+.v-multipart::-webkit-scrollbar { height: 3px; }
 .v-multipart::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-section {
@@ -831,15 +831,17 @@ function tcy(n: number): string {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 24px 12px;
+  padding: 24px 16px;
   gap: 32px;
   scroll-snap-align: start;
+  background: var(--surface);
+  border-right: 1px solid var(--border-light);
 }
 .v-nav-spacer { flex: 1; }
 .v-nav-btn {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  padding: 20px 12px;
+  padding: 20px 14px;
   background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: 6px;
@@ -1345,10 +1347,16 @@ function tcy(n: number): string {
 @media (max-width: 768px) {
   /* ─── 直排模式 ─── */
   .v-page { margin-right: var(--nav-width, 44px); }
-  .v-title-col { padding: 24px 16px; }
-  .v-poem-title { font-size: 32px; letter-spacing: 8px; }
-  .v-poem-author { font-size: 20px; }
-  .v-poem-col { padding: 16px; }
+  .v-title-col { padding: 20px 12px; }
+  .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
+  .v-poem-author { font-size: 18px; letter-spacing: 4px; }
+  .v-poem-col { padding: 12px 8px; }
+  .v-inline-nav { padding: 0 4px; }
+  .v-inav { width: 26px; height: 36px; font-size: 12px; }
+  .v-inav-spacer { width: 26px; height: 36px; }
+  .v-nav { padding: 16px 8px; gap: 20px; }
+  .v-nav-btn { padding: 14px 10px; }
+  .v-nav-title { font-size: 16px; letter-spacing: 2px; }
 
   /* ─── 橫排模式導航 ─── */
   .h-nav { padding: 0 16px; }

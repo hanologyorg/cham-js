@@ -36,7 +36,7 @@ function kindLabel(ann: Annotation): string {
     etymology: '詞源',
     note: '備注',
     definition: '釋義',
-    commentary: '評註',
+    commentary: '注',
     translation: '譯文',
     person: '人名',
     place: '地名',
@@ -311,19 +311,24 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 .ann-pane.vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  width: 240px;
+  width: 220px;
 }
 
 .ann-pane.vertical .ann-pane-body {
-  overflow-x: auto;
-  overflow-y: hidden;
+  display: flex;
+  flex-direction: row;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .ann-pane.vertical .ann-pane-entry {
-  padding: 12px 8px;
+  padding: 10px 6px;
   border-bottom: none;
-  border-left: 1px solid var(--border-light);
   border-right: 3px solid transparent;
+}
+
+.ann-pane.vertical .ann-pane-entry + .ann-pane-entry {
+  border-top: 1px solid var(--border-light);
 }
 
 .ann-pane.vertical .ann-pane-entry.active {
@@ -335,12 +340,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 }
 
 .ann-pane.vertical .ann-pane-entry-head {
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
 }
 
 .ann-pane.vertical .ann-pane-text {
   line-height: 2;
   letter-spacing: 1px;
+}
+
+.ann-pane.vertical .ann-pane-header {
+  flex-direction: row;
+}
+
+.ann-pane.vertical .ann-pane-close {
+  writing-mode: horizontal-tb;
 }
 </style>

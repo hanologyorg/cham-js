@@ -228,8 +228,9 @@ button { font-family: inherit; }
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
   scroll-snap-type: x proximity;
+  scroll-padding: 0 48px;
 }
-.v-page::-webkit-scrollbar { height: 4px; }
+.v-page::-webkit-scrollbar { height: 3px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 /* ===== VIEW LOADING STATE ===== */
@@ -283,4 +284,20 @@ button { font-family: inherit; }
   width: 56px; height: auto;
   object-fit: contain;
   animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* ===== LAYOUT TRANSITION ===== */
+.v-root, .h-root {
+  transition: opacity 0.2s ease;
+}
+
+/* ===== DARK MODE VERTICAL WARMTH ===== */
+[data-theme="dark"] .v-scroll,
+[data-theme="oled"] .v-scroll {
+  box-shadow: 0 0 40px rgba(194, 58, 43, 0.03), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .sb-vertical,
+[data-theme="oled"] .sb-vertical {
+  border-right-color: var(--border-light);
 }

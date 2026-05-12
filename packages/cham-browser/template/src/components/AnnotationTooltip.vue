@@ -54,7 +54,7 @@ function kindLabel(ann: Annotation): string {
     etymology: '詞源',
     note: '備注',
     definition: '釋義',
-    commentary: '評註',
+    commentary: '注',
     translation: '譯文',
     person: '人名',
     place: '地名',
@@ -414,26 +414,33 @@ onBeforeUnmount(() => {
 .ann-card.vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  flex-direction: row;
+}
+
+.ann-card.vertical .ann-card-head {
+  padding: 10px 6px;
 }
 
 .ann-card.vertical .ann-card-scroll {
   display: flex;
   flex-direction: row;
-  padding: 10px 8px;
+  padding: 8px 6px;
+  overflow-y: auto;
 }
 
 .ann-card.vertical .ann-entry {
   border-bottom: none;
-  padding: 8px 4px;
+  padding: 8px 0;
 }
 
 .ann-card.vertical .ann-entry + .ann-entry {
   border-top: 1px solid var(--border-light);
-  margin-top: 4px;
 }
 
 .ann-card.vertical .ann-card-close {
   writing-mode: horizontal-tb;
+  top: 4px;
+  right: 4px;
 }
 
 .ann-card.vertical .ann-pron-h {
@@ -442,7 +449,6 @@ onBeforeUnmount(() => {
 
 .ann-card.vertical .ann-entry-body {
   padding-left: 0;
-  padding-top: 4px;
 }
 
 .ann-card.vertical .ann-text {
@@ -453,24 +459,28 @@ onBeforeUnmount(() => {
 .ann-sheet.vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  flex-direction: row;
+}
+
+.ann-sheet.vertical .ann-sheet-handle {
+  writing-mode: horizontal-tb;
 }
 
 .ann-sheet.vertical .ann-sheet-scroll {
   display: flex;
-  flex-direction: column;
-  overflow-x: auto;
-  overflow-y: hidden;
+  flex-direction: row;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 4px 16px 24px;
 }
 
 .ann-sheet.vertical .ann-entry {
   border-bottom: none;
-  border-left: 1px solid var(--border-light);
-  padding: 0 12px;
+  padding: 8px 0;
 }
 
-.ann-sheet.vertical .ann-entry:first-child {
-  border-left: none;
+.ann-sheet.vertical .ann-entry + .ann-entry {
+  border-top: 1px solid var(--border-light);
 }
 
 .ann-sheet.vertical .ann-pron-h {
@@ -480,9 +490,5 @@ onBeforeUnmount(() => {
 .ann-sheet.vertical .ann-text {
   white-space: pre-line;
   line-height: 2;
-}
-
-.ann-sheet.vertical .ann-sheet-handle {
-  writing-mode: horizontal-tb;
 }
 </style>

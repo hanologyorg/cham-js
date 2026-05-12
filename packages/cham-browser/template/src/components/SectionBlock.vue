@@ -172,39 +172,51 @@ const paragraphsHtml = computed(() => {
   text-orientation: mixed;
   height: 100vh;
   flex-shrink: 0;
-  padding: 32px 20px;
+  padding: 32px 24px;
   border-right: 1px solid var(--border);
   overflow-x: auto;
   overflow-y: hidden;
   opacity: 1;
   transform: none;
   transition: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
 }
+.sb-vertical::-webkit-scrollbar { height: 3px; }
+.sb-vertical::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 .sb-vertical .sb-header {
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 0;
-  margin-left: 16px;
+  margin-left: 20px;
   padding-bottom: 0;
   border-bottom: none;
   padding-left: 16px;
-  border-left: 1px solid var(--border);
+  border-left: 2px solid var(--vermillion);
 }
 .sb-vertical .sb-num {
   width: auto; height: auto;
   border-radius: 0;
   background: none;
   color: var(--vermillion);
-  font-size: 18px;
+  font-size: 16px;
+}
+.sb-vertical .sb-header h3 {
+  font-size: 20px;
+  letter-spacing: 6px;
 }
 .sb-vertical .sb-text {
   margin-left: 16px;
   text-align: start;
+  font-size: var(--body-font-size, 16px);
+  line-height: 2.2;
+  letter-spacing: 1px;
 }
 .sb-vertical .sb-text :deep(p) {
   margin-bottom: 0;
   margin-left: 12px;
   text-indent: 0;
+  line-height: 2.4;
 }
 .sb-vertical .sb-ann-entry {
   margin-bottom: 0;

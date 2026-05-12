@@ -347,10 +347,13 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 }
 
 @media (max-width: 768px) {
-  .sidenav { width: 44px; padding: 8px 0; gap: 6px; }
-  .sn-brand { width: 32px; height: 38px; }
-  .sn-seal { font-size: 15px; }
-  .sn-btn { width: 30px; height: 30px; }
-  .sn-context { font-size: 10px; max-height: 80px; }
+  .sidenav { width: 44px; padding: 8px 0; gap: 5px; }
+  .sn-brand { width: 30px; height: 36px; margin-bottom: 2px; }
+  .sn-seal { font-size: 14px; }
+  .sn-btn { width: 28px; height: 28px; }
+  .sn-btn svg { width: 15px; height: 15px; }
+  .sn-context { font-size: 10px; max-height: 70px; }
+  .sn-settings { width: 180px; right: 52px; padding: 12px; }
+  .sn-layout-tag { width: 20px; height: 20px; font-size: 10px; }
 }
 </style>

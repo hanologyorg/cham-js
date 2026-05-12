@@ -58,7 +58,7 @@ function onTap(event: MouseEvent) {
 .v-scroll {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 100px);
   overflow-x: auto; overflow-y: hidden;
   padding: 32px 24px;
   background: var(--surface);
@@ -67,15 +67,15 @@ function onTap(event: MouseEvent) {
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
   position: relative;
   scrollbar-width: thin;
-  scrollbar-color: var(--gold) var(--paper);
+  scrollbar-color: var(--gold) transparent;
 }
-.v-scroll::-webkit-scrollbar { height: 4px; }
+.v-scroll::-webkit-scrollbar { height: 3px; }
 .v-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-scroll-title {
   font-size: 36px; font-weight: 900; color: var(--ink);
-  letter-spacing: 12px; margin-left: 24px;
-  padding-left: 24px; border-left: 3px solid var(--vermillion);
+  letter-spacing: 10px; margin-left: 24px;
+  padding-left: 20px; border-left: 3px solid var(--vermillion);
   line-height: 1.6;
 }
 .v-scroll-author {
@@ -84,9 +84,9 @@ function onTap(event: MouseEvent) {
 }
 .v-scroll-clickable { cursor: pointer; transition: color 0.15s; }
 .v-scroll-clickable:hover { color: var(--vermillion); }
-.v-scroll-body { margin-left: 28px; }
+.v-scroll-body { margin-left: 24px; }
 .v-scroll-line {
-  font-size: var(--main-font-size, 24px); line-height: 2.4; letter-spacing: 8px;
+  font-size: var(--main-font-size, 24px); line-height: 2.4; letter-spacing: 6px;
   color: var(--ink); display: block;
 }
 
