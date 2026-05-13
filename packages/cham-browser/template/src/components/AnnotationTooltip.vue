@@ -475,6 +475,12 @@ onBeforeUnmount(() => {
 
 .ann-sheet.vertical .ann-sheet-handle {
   writing-mode: horizontal-tb;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 6px 0 0;
+  z-index: 1;
 }
 
 .ann-sheet.vertical .ann-sheet-head {
