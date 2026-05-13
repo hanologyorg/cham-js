@@ -155,20 +155,26 @@ onBeforeUnmount(() => {
         <button class="ann-sheet-handle" @click="dismiss">
           <span class="ann-handle-bar" />
         </button>
-        <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
-          <span class="ann-headword">{{ headword }}</span>
-          <span class="ann-badge-count" v-if="annotations.length > 1">{{ annotations.length }}</span>
-        </div>
-        <div class="ann-sheet-scroll">
-          <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
-            <div class="ann-entry-header">
-              <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
+        <div class="ann-sheet-body" :class="{ vertical }">
+          <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
+            <span class="ann-headword">{{ headword }}</span>
+            <span class="ann-badge-count" v-if="annotations.length > 1">{{ annotations.length }}</span>
+          </div>
+          <div class="ann-sheet-scroll">
+            <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
+              <div class="ann-entry-header">
+                <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
+              </div>
+              <div class="ann-entry-body">
+                <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
+                <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
+              </div>
             </div>
-            <div class="ann-entry-body">
-              <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-              <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
-            </div>
+          </div>
+          <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind()">
+            <span class="ann-sheet-v-word">{{ headword }}</span>
+            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ annotations.length }}</span>
           </div>
         </div>
       </div>
@@ -467,50 +473,69 @@ onBeforeUnmount(() => {
   line-height: 2;
 }
 
-.ann-sheet.vertical {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-direction: row;
-}
-
-.ann-sheet.vertical .ann-sheet-handle {
-  writing-mode: horizontal-tb;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 6px 0 0;
-  z-index: 1;
-}
-
-.ann-sheet.vertical .ann-sheet-head {
-  writing-mode: horizontal-tb;
-}
-
-.ann-sheet.vertical .ann-sheet-scroll {
+.ann-sheet-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 8px 0 24px;
+  overflow: hidden;
+  min-height: 0;
 }
 
-.ann-sheet.vertical .ann-entry {
+.ann-sheet-body.vertical {
+  flex-direction: row-reverse;
+}
+
+.ann-sheet-body.vertical > .ann-sheet-head {
+  display: none;
+}
+
+.ann-sheet-body:not(.vertical) > .ann-sheet-v-head {
+  display: none;
+}
+
+.ann-sheet-v-head {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  border-left: 1px solid var(--border-light);
   flex-shrink: 0;
-  border-bottom: none;
-  padding: 0 14px;
-  border-right: 1px solid var(--border-light);
 }
 
-.ann-sheet.vertical .ann-entry:first-child {
-  border-right: none;
+.ann-sheet-v-word {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: var(--ink);
 }
 
-.ann-sheet.vertical .ann-pron-h {
+.ann-badge-count-v {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 2px 8px;
+  letter-spacing: 0;
   writing-mode: horizontal-tb;
 }
 
-.ann-sheet.vertical .ann-text {
+.ann-sheet-body.vertical .ann-sheet-scroll {
+  flex: 1;
+  min-width: 0;
+}
+
+.ann-sheet-body.vertical .ann-pron-h {
+  writing-mode: horizontal-tb;
+}
+
+.ann-sheet-body.vertical .ann-text {
   white-space: pre-line;
   line-height: 2;
 }
