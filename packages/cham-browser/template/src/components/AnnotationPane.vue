@@ -518,8 +518,24 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
+  /* Vertical mode on mobile: keep left sidebar, not bottom sheet */
+  .ann-pane.vertical {
+    width: 80vw !important;
+    height: 100vh !important;
+    max-height: none !important;
+    top: 0 !important;
+    bottom: auto !important;
+    border-right: 1px solid var(--border) !important;
+    border-top: none !important;
+    border-radius: 0 !important;
+    box-shadow: 4px 0 24px rgba(var(--shadow-rgb), 0.06) !important;
+  }
   .ann-pane.vertical .ann-pane-handle {
-    display: none;
+    display: flex !important;
+  }
+  .ann-pane.vertical.ann-pane-enter-from,
+  .ann-pane.vertical.ann-pane-leave-to {
+    transform: translateX(-100%) !important;
   }
 }
 </style>

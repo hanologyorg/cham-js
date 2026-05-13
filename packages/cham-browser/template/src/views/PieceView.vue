@@ -385,12 +385,12 @@ function tcy(n: number): string {
         </section>
 
         <div class="v-inline-nav">
-          <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
-            ▼
-          </button>
-          <span v-else class="v-inav-spacer" />
           <button v-if="adjacent.prev !== null" class="v-inav" @click="navigate(-1)" :title="t('piece.previous')">
             ▲
+          </button>
+          <span v-else class="v-inav-spacer" />
+          <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
+            ▼
           </button>
         </div>
 
