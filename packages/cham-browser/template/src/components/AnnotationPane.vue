@@ -432,28 +432,15 @@ onBeforeUnmount(() => {
 }
 
 /* ─── Vertical mode ─── */
-.ann-pane.vertical {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-}
-
-.ann-pane.vertical .ann-pane-body {
-  display: flex;
-  flex-direction: row;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
+/* Pane stays in horizontal-tb; only the headword uses vertical-rl */
 
 .ann-pane.vertical .ann-pane-entry {
   display: flex;
-  flex-direction: column;
-  padding: 10px 6px;
-  border-bottom: none;
+  flex-direction: row-reverse;
+  gap: 8px;
+  align-items: flex-start;
+  border-left: none;
   border-right: 3px solid transparent;
-}
-
-.ann-pane.vertical .ann-pane-entry + .ann-pane-entry {
-  border-top: 1px solid var(--border-light);
 }
 
 .ann-pane.vertical .ann-pane-entry.active {
@@ -464,16 +451,22 @@ onBeforeUnmount(() => {
   border-right-color: var(--jade);
 }
 
-/* Vertical headword on the right (first in vertical-rl reading order) */
+.ann-pane.vertical .ann-pane-entry-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Vertical headword — only this element uses vertical writing */
 .ann-pane-v-word {
   writing-mode: vertical-rl;
   text-orientation: upright;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
+  padding: 0 8px;
   border-left: 1px solid var(--border-light);
+  flex-shrink: 0;
 }
 
 .ann-pane-word-v {
@@ -495,30 +488,12 @@ onBeforeUnmount(() => {
   color: var(--jade);
 }
 
-.ann-pane.vertical .ann-pane-entry-head {
-  flex-direction: row;
-  gap: 4px;
-}
-
 .ann-pane.vertical .ann-pane-text {
   line-height: 2;
   letter-spacing: 1px;
 }
 
-.ann-pane.vertical .ann-pane-header {
-  flex-direction: row;
-}
-
-.ann-pane.vertical .ann-pane-close {
-  writing-mode: horizontal-tb;
-}
-
-.ann-pane.vertical .ann-pane-handle {
-  writing-mode: horizontal-tb;
-}
-
 @media (max-width: 768px) {
-  /* Vertical mode on mobile: keep left sidebar, not bottom sheet */
   .ann-pane.vertical {
     width: 80vw !important;
     height: 100vh !important;

@@ -181,6 +181,7 @@ onBeforeUnmount(() => {
 .ann-card-head,
 .ann-sheet-head {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   padding: 10px 14px;
@@ -420,6 +421,7 @@ onBeforeUnmount(() => {
 }
 
 .ann-card.vertical .ann-card-head {
+  writing-mode: horizontal-tb;
   padding: 10px 6px;
   border-bottom: none;
   border-left: 1px solid var(--border-light);
