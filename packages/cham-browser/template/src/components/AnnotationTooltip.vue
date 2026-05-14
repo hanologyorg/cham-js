@@ -443,7 +443,7 @@ onBeforeUnmount(() => {
 
 /* ─── Vertical mode ─── */
 .ann-card.vertical {
-  flex-direction: row;
+  flex-direction: row-reverse;
   overflow: hidden;
 }
 
