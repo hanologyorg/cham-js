@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { annotationToPronSegment } from '../utils/annotationParser'
 import { toChineseNumber } from '../utils/chineseNumber'
 import PronunciationGroup from './PronunciationGroup.vue'
@@ -21,6 +21,10 @@ const emit = defineEmits<{
 
 const bodyRef = ref<HTMLElement | null>(null)
 
+const ww = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
+const isMobile = computed(() => ww.value < 768)
+function onResize() { ww.value = window.innerWidth }
+
 // ─── Resize ───
 const paneWidth = ref(320)
 const MIN_W = 180
@@ -36,7 +40,7 @@ function initWidth() {
       return
     }
   } catch {}
-  paneWidth.value = props.vertical ? 240 : 320
+  paneWidth.value = props.vertical ? (ww.value < 768 ? Math.round(ww.value * 0.65) : 240) : 320
 }
 
 let resizing = false
@@ -137,10 +141,12 @@ watch(() => props.activeId, async (id) => {
 onMounted(() => {
   initWidth()
   document.addEventListener('keydown', onKeydown)
+  window.addEventListener('resize', onResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('resize', onResize)
   if (moveFn) {
     document.removeEventListener('mousemove', moveFn)
     document.removeEventListener('touchmove', moveFn)
@@ -154,6 +160,13 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
+    <Transition name="ann-dim">
+      <div
+        v-if="visible && annotations.length && vertical && isMobile"
+        class="ann-pane-dim"
+        @click="emit('close')"
+      />
+    </Transition>
     <Transition name="ann-pane">
       <div
         v-if="visible && annotations.length"
@@ -165,7 +178,7 @@ onBeforeUnmount(() => {
           <span class="ann-pane-title">注釋</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
           <button class="ann-pane-close" @click="emit('close')" aria-label="關閉">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
         <div ref="bodyRef" class="ann-pane-body">
@@ -404,6 +417,21 @@ onBeforeUnmount(() => {
   height: 48px;
 }
 
+/* ─── Backdrop dim (mobile vertical) ─── */
+.ann-pane-dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--shadow-rgb), 0.24);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 299;
+}
+
+.ann-dim-enter-active { transition: opacity 0.3s ease; }
+.ann-dim-leave-active { transition: opacity 0.15s ease; }
+.ann-dim-enter-from,
+.ann-dim-leave-to { opacity: 0; }
+
 /* ─── Transition ─── */
 .ann-pane-enter-active {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -521,7 +549,14 @@ onBeforeUnmount(() => {
 
 .ann-pane.vertical .ann-pane-close {
   margin-left: 0;
-  margin-top: auto;
+  margin-top: 0;
+  margin-bottom: 12px;
+  order: -1;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
 }
 
 .ann-pane.vertical .ann-pane-count,
@@ -536,7 +571,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) {
   .ann-pane.vertical {
-    width: 80vw !important;
+    width: 65vw !important;
     height: 100vh !important;
     max-height: none !important;
     top: 0 !important;
@@ -546,9 +581,17 @@ onBeforeUnmount(() => {
     border-top: none !important;
     border-radius: 0 !important;
     box-shadow: -4px 0 24px rgba(var(--shadow-rgb), 0.06) !important;
+    z-index: 300;
   }
   .ann-pane.vertical .ann-pane-handle {
     display: flex !important;
+  }
+  .ann-pane.vertical .ann-pane-body {
+    padding: 20px 0;
+  }
+  .ann-pane.vertical .ann-pane-close {
+    width: 36px;
+    height: 36px;
   }
   .ann-pane.vertical.ann-pane-enter-from,
   .ann-pane.vertical.ann-pane-leave-to {
