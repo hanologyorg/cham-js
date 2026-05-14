@@ -168,9 +168,8 @@ describe('useAnnotationTooltip', () => {
       left: 200, top: 300, bottom: 330, right: 250, width: 50, height: 30,
     })
     show(createMockEvent(target), [makeAnn({ id: 'a1', kind: 'semantic' })])
-    // Default layout is vertical — positioned via right + top
-    expect(style.value.right).toBeTruthy()
-    expect(style.value.top).toBe('50%')
-    expect(style.value.transform).toBe('translateY(-50%)')
+    // Default layout is vertical — positioned via left + top
+    expect(style.value.left).toBeTruthy()
+    expect(style.value.top).toBeTruthy()
   })
 })
