@@ -134,11 +134,11 @@ onBeforeUnmount(() => {
           <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
             <div class="ann-entry-header">
               <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
             </div>
             <div class="ann-entry-body">
+              <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
               <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-              <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
+              <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
             </div>
           </div>
         </div>
@@ -164,11 +164,11 @@ onBeforeUnmount(() => {
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
               <div class="ann-entry-header">
                 <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
-                <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
               </div>
               <div class="ann-entry-body">
+                <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
                 <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</div>
+                <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
               </div>
             </div>
           </div>
@@ -508,8 +508,6 @@ onBeforeUnmount(() => {
 }
 
 .ann-card.vertical .ann-entry-header {
-  flex-direction: row;
-  align-items: flex-start;
   gap: 4px;
 }
 
