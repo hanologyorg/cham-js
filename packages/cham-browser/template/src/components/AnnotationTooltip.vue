@@ -480,6 +480,8 @@ onBeforeUnmount(() => {
   border-right: 1px solid var(--border-light);
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  display: flex;
+  flex-direction: row;
 }
 
 .ann-card.vertical .ann-entry:first-child {
@@ -506,7 +508,7 @@ onBeforeUnmount(() => {
 }
 
 .ann-card.vertical .ann-entry-header {
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   gap: 4px;
 }
@@ -592,6 +594,8 @@ onBeforeUnmount(() => {
   border-bottom: none;
   border-right: 1px solid var(--border-light);
   padding: 0 10px;
+  display: flex;
+  flex-direction: row;
 }
 
 .ann-sheet-body.vertical .ann-entry:last-child {
