@@ -48,18 +48,20 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.1);
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 @media (max-width: 768px) {
   .btt { bottom: 88px; right: 16px; width: 36px; height: 36px; }
 }
 .btt:hover {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.16);
+  background: var(--vermillion);
+  color: #fff;
+  border-color: var(--vermillion);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(194, 58, 43, 0.2);
 }
 
 .btt-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }

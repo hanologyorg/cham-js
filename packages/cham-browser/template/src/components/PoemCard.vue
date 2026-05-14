@@ -40,15 +40,16 @@ const preview = computed(() => {
   position: absolute;
   top: 0; left: 0;
   width: 3px; height: 0;
-  background: var(--vermillion);
-  transition: height 0.3s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+  background: linear-gradient(180deg, var(--vermillion), var(--gold));
+  transition: height 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .pc-root:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(var(--shadow-rgb), 0.1);
   border-color: var(--gold);
 }
 .pc-root:hover .pc-accent { height: 100%; }
+.pc-root:hover .pc-title { color: var(--vermillion); }
 .pc-root:active { transform: scale(0.98); }
 .pc-body { padding: 24px; }
 .pc-num {
@@ -67,6 +68,7 @@ const preview = computed(() => {
   font-size: 20px; font-weight: 700;
   letter-spacing: 2px; margin-bottom: 6px;
   color: var(--ink);
+  transition: color 0.25s ease;
 }
 .pc-author {
   font-size: 13px; color: var(--ink-light);
@@ -130,6 +132,7 @@ const preview = computed(() => {
 .pc-vertical .pc-accent {
   top: auto; left: 0; bottom: 0;
   width: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--vermillion));
   transition: width 0.35s ease;
 }
 .pc-vertical:hover {

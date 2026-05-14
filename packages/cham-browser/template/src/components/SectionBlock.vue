@@ -89,8 +89,8 @@ const paragraphsHtml = computed(() => {
 .sb-root {
   margin-bottom: 40px;
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.5s ease, transform 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+  transform: translateY(16px);
+  transition: opacity 0.6s ease, transform 0.6s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .sb-root.sb-visible {
   opacity: 1;

@@ -44,7 +44,8 @@ function onTap(event: MouseEvent) {
     <div
       v-for="(_, i) in verses"
       :key="i"
-      class="h-display-line"
+      class="h-display-line h-verse-anim"
+      :style="{ animationDelay: (0.15 + i * 0.08) + 's' }"
       v-html="verseHtml(i)"
     />
   </div>
@@ -59,6 +60,7 @@ function onTap(event: MouseEvent) {
   padding: 40px 56px;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
   text-align: center;
+  animation: poemReveal 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 .h-display-title {
   font-size: 32px; font-weight: 900;
@@ -73,18 +75,30 @@ function onTap(event: MouseEvent) {
   font-size: var(--main-font-size, 24px); line-height: 2.6;
   letter-spacing: 4px; color: var(--ink);
 }
+.h-verse-anim {
+  animation: verseFade 0.45s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+@keyframes poemReveal {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes verseFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 :deep(.ann-target) {
   border-bottom: 2px solid var(--vermillion);
   cursor: help;
-  transition: background 0.15s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 :deep(.ann-target.ann-overlap) {
   border-bottom-width: 3px;
   border-bottom-style: double;
 }
 :deep(.ann-target:hover) {
-  background: rgba(194, 58, 43, 0.08);
+  background: rgba(194, 58, 43, 0.1);
+  box-shadow: 0 2px 8px rgba(194, 58, 43, 0.08);
 }
 :deep(.ann-num) {
   font-size: 10px;
@@ -96,7 +110,8 @@ function onTap(event: MouseEvent) {
   letter-spacing: 0;
 }
 :deep(.ann-target.pronunciation:hover) {
-  background: rgba(58, 107, 94, 0.08);
+  background: rgba(58, 107, 94, 0.1);
+  box-shadow: 0 2px 8px rgba(58, 107, 94, 0.08);
 }
 :deep(.ann-target.pronunciation) {
   border-bottom-color: var(--jade);
@@ -117,19 +132,24 @@ function onTap(event: MouseEvent) {
   border-bottom-color: var(--ann-allusion);
 }
 :deep(.ann-target.person:hover) {
-  background: rgba(58, 90, 140, 0.08);
+  background: rgba(58, 90, 140, 0.1);
+  box-shadow: 0 2px 8px rgba(58, 90, 140, 0.08);
 }
 :deep(.ann-target.place:hover) {
-  background: rgba(139, 105, 20, 0.08);
+  background: rgba(139, 105, 20, 0.1);
+  box-shadow: 0 2px 8px rgba(139, 105, 20, 0.08);
 }
 :deep(.ann-target.event:hover) {
-  background: rgba(107, 76, 138, 0.08);
+  background: rgba(107, 76, 138, 0.1);
+  box-shadow: 0 2px 8px rgba(107, 76, 138, 0.08);
 }
 :deep(.ann-target.date:hover) {
-  background: rgba(42, 122, 122, 0.08);
+  background: rgba(42, 122, 122, 0.1);
+  box-shadow: 0 2px 8px rgba(42, 122, 122, 0.08);
 }
 :deep(.ann-target.allusion:hover) {
-  background: rgba(181, 101, 29, 0.08);
+  background: rgba(181, 101, 29, 0.1);
+  box-shadow: 0 2px 8px rgba(181, 101, 29, 0.08);
 }
 
 @media (max-width: 768px) {

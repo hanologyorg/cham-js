@@ -846,13 +846,26 @@ function tcy(n: number): string {
   border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   line-height: 1.6;
+  position: relative;
+  overflow: hidden;
+}
+.v-nav-btn::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--gold), var(--vermillion));
+  transform: scaleY(0);
+  transition: transform 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
-  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
+  box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.1);
 }
+.v-nav-btn:hover::after { transform: scaleY(1); }
+.v-nav-btn:hover .v-nav-title { color: var(--vermillion); }
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
   margin-bottom: 0.5em;
@@ -865,6 +878,7 @@ function tcy(n: number): string {
 .v-nav-title {
   font-size: 18px; font-weight: 700;
   letter-spacing: 3px; color: var(--ink);
+  transition: color 0.25s ease;
 }
 
 /* ═══════ 橫排模式 ═══════ */
@@ -950,7 +964,7 @@ function tcy(n: number): string {
 .h-nav-arrow {
   width: 32px; height: 32px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 6px;
   background: none;
   font-family: var(--sans);
   font-size: 16px;
@@ -1026,20 +1040,21 @@ function tcy(n: number): string {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 2px;
-  background: var(--vermillion);
+  background: linear-gradient(90deg, var(--vermillion), var(--gold));
   transform: scaleX(0);
-  transition: transform 0.3s ease;
+  transition: transform 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .h-nav-btn:hover {
   border-color: var(--gold);
   box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.1);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 .h-nav-btn:hover::after { transform: scaleX(1); }
+.h-nav-btn:hover .h-nav-title { color: var(--vermillion); }
 .h-nav-btn:active { transform: scale(0.98); }
 .h-nav-btn.h-nav-next { text-align: right; }
 .h-nav-label { font-size: 11px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; margin-bottom: 4px; }
-.h-nav-title { font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--ink); }
+.h-nav-title { font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--ink); transition: color 0.25s ease; }
 
 .h-overlay {
   position: fixed; inset: 0;
@@ -1335,11 +1350,11 @@ function tcy(n: number): string {
 
 /* ─── 注釋閃爍 ─── */
 :deep(.ann-flash) {
-  animation: ann-flash-anim 1.2s ease-out;
+  animation: ann-flash-anim 1.5s ease-out;
 }
 @keyframes ann-flash-anim {
-  0% { background: rgba(194, 58, 43, 0.2); }
-  100% { background: transparent; }
+  0% { background: rgba(194, 58, 43, 0.25); box-shadow: 0 0 12px rgba(194, 58, 43, 0.15); }
+  100% { background: transparent; box-shadow: none; }
 }
 
 /* ═══════ 行動裝置適配 ═══════ */

@@ -354,15 +354,17 @@ function openBook(bookId: string) {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.lib-card:hover { border-color: var(--gold); box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.1); }
+.lib-card:hover { border-color: var(--gold); box-shadow: 0 6px 24px rgba(var(--shadow-rgb), 0.1); transform: translateY(-2px); }
+.lib-card:active { transform: scale(0.98); }
 .lib-card-accent {
   position: absolute;
   top: 0; left: 0;
   width: 3px; height: 0;
-  background: var(--vermillion);
-  transition: height 0.35s ease;
+  background: linear-gradient(180deg, var(--vermillion), var(--gold));
+  transition: height 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .lib-card:hover .lib-card-accent { height: 100%; }
+.lib-card:hover .lib-card-title { color: var(--vermillion); }
 .lib-card-top {
   display: flex;
   align-items: baseline;
@@ -372,6 +374,7 @@ function openBook(bookId: string) {
 .lib-card-title {
   font-size: 22px; font-weight: 900;
   letter-spacing: 4px; color: var(--ink);
+  transition: color 0.25s ease;
 }
 .lib-card-genre {
   font-size: 11px;

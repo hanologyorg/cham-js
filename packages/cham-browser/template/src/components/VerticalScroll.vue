@@ -47,7 +47,8 @@ function onTap(event: MouseEvent) {
       <span
         v-for="(_, i) in verses"
         :key="i"
-        class="v-scroll-line"
+        class="v-scroll-line v-verse-anim"
+        :style="{ animationDelay: (0.2 + i * 0.06) + 's' }"
         v-html="verseHtml(i)"
       />
     </div>
@@ -68,6 +69,7 @@ function onTap(event: MouseEvent) {
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
+  animation: poemRevealV 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
 .v-scroll::-webkit-scrollbar { height: 3px; }
 .v-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
@@ -89,12 +91,23 @@ function onTap(event: MouseEvent) {
   font-size: var(--main-font-size, 24px); line-height: 2.4; letter-spacing: 6px;
   color: var(--ink); display: block;
 }
+.v-verse-anim {
+  animation: verseFadeV 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+@keyframes poemRevealV {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes verseFadeV {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 :deep(.ann-target) {
   border-left: 2px solid var(--vermillion);
   padding-left: 2px;
   cursor: help;
-  transition: background 0.15s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 :deep(.ann-target.ann-overlap) {
   border-left-width: 3px;
@@ -115,10 +128,12 @@ function onTap(event: MouseEvent) {
   letter-spacing: -1px;
 }
 :deep(.ann-target:hover) {
-  background: rgba(194, 58, 43, 0.08);
+  background: rgba(194, 58, 43, 0.1);
+  box-shadow: 0 -2px 8px rgba(194, 58, 43, 0.08);
 }
 :deep(.ann-target.pronunciation:hover) {
-  background: rgba(58, 107, 94, 0.08);
+  background: rgba(58, 107, 94, 0.1);
+  box-shadow: 0 -2px 8px rgba(58, 107, 94, 0.08);
 }
 :deep(.ann-target.pronunciation) {
   border-left-color: var(--jade);
@@ -142,18 +157,23 @@ function onTap(event: MouseEvent) {
   border-left-color: var(--ann-allusion);
 }
 :deep(.ann-target.person:hover) {
-  background: rgba(58, 90, 140, 0.08);
+  background: rgba(58, 90, 140, 0.1);
+  box-shadow: 0 -2px 8px rgba(58, 90, 140, 0.08);
 }
 :deep(.ann-target.place:hover) {
-  background: rgba(139, 105, 20, 0.08);
+  background: rgba(139, 105, 20, 0.1);
+  box-shadow: 0 -2px 8px rgba(139, 105, 20, 0.08);
 }
 :deep(.ann-target.event:hover) {
-  background: rgba(107, 76, 138, 0.08);
+  background: rgba(107, 76, 138, 0.1);
+  box-shadow: 0 -2px 8px rgba(107, 76, 138, 0.08);
 }
 :deep(.ann-target.date:hover) {
-  background: rgba(42, 122, 122, 0.08);
+  background: rgba(42, 122, 122, 0.1);
+  box-shadow: 0 -2px 8px rgba(42, 122, 122, 0.08);
 }
 :deep(.ann-target.allusion:hover) {
-  background: rgba(181, 101, 29, 0.08);
+  background: rgba(181, 101, 29, 0.1);
+  box-shadow: 0 -2px 8px rgba(181, 101, 29, 0.08);
 }
 </style>
