@@ -446,8 +446,7 @@ onBeforeUnmount(() => {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-direction: column;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .ann-card.vertical .ann-card-head {
@@ -458,6 +457,7 @@ onBeforeUnmount(() => {
   border-left: 1px solid var(--border-light);
   flex-direction: row;
   align-items: center;
+  flex-shrink: 0;
 }
 .ann-card.vertical .ann-headword {
   letter-spacing: 6px;
@@ -472,6 +472,8 @@ onBeforeUnmount(() => {
   padding: 8px 0;
   overflow-x: auto;
   overflow-y: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .ann-card.vertical .ann-entry {
@@ -479,8 +481,6 @@ onBeforeUnmount(() => {
   border-bottom: none;
   padding: 0 10px;
   border-right: 1px solid var(--border-light);
-  max-height: inherit;
-  overflow-y: hidden;
 }
 
 .ann-card.vertical .ann-entry:first-child {
