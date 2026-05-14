@@ -89,7 +89,7 @@ function onTap(event: MouseEvent) {
 .v-scroll-body { margin-left: 24px; }
 .v-scroll-line {
   font-size: var(--main-font-size, 24px); line-height: 2.4; letter-spacing: 6px;
-  color: var(--ink); display: block;
+  color: var(--ink); display: block; white-space: pre-wrap;
 }
 .v-verse-anim {
   animation: verseFadeV 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;

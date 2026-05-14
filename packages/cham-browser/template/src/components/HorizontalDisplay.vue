@@ -73,7 +73,7 @@ function onTap(event: MouseEvent) {
 }
 .h-display-line {
   font-size: var(--main-font-size, 24px); line-height: 2.6;
-  letter-spacing: 4px; color: var(--ink);
+  letter-spacing: 4px; color: var(--ink); white-space: pre-wrap;
 }
 .h-verse-anim {
   animation: verseFade 0.45s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;

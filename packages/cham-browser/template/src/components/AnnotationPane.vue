@@ -384,6 +384,12 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
+.ann-pane.vertical .ann-pane-handle {
+  right: auto;
+  left: -6px;
+  cursor: col-resize;
+}
+
 .ann-handle-grip {
   display: block;
   width: 3px;
@@ -411,7 +417,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 768px) {
-  .ann-pane {
+  .ann-pane:not(.vertical) {
     width: 100% !important;
     height: auto;
     max-height: 55vh;
@@ -422,75 +428,110 @@ onBeforeUnmount(() => {
     border-radius: 14px 14px 0 0;
     box-shadow: 0 -4px 24px rgba(var(--shadow-rgb), 0.08);
   }
-  .ann-pane-handle {
+  .ann-pane:not(.vertical) .ann-pane-handle {
     display: none;
   }
-  .ann-pane-enter-from,
-  .ann-pane-leave-to {
+  .ann-pane:not(.vertical).ann-pane-enter-from,
+  .ann-pane:not(.vertical).ann-pane-leave-to {
     transform: translateY(100%);
   }
 }
 
 /* ─── Vertical mode ─── */
-/* Pane stays in horizontal-tb; only the headword uses vertical-rl */
+
+.ann-pane.vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border-right: none;
+  border-left: 1px solid var(--border);
+  box-shadow: -4px 0 24px rgba(var(--shadow-rgb), 0.06);
+}
+
+.ann-pane.vertical .ann-pane-header {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border-bottom: none;
+  border-left: 1px solid var(--border-light);
+  padding: 16px 12px;
+  flex-direction: row;
+  align-items: center;
+}
+
+.ann-pane.vertical .ann-pane-body {
+  overflow-y: hidden;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+}
 
 .ann-pane.vertical .ann-pane-entry {
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 8px;
-  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: none;
+  border-right: 1px solid var(--border-light);
   border-left: none;
-  border-right: 3px solid transparent;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.ann-pane.vertical .ann-pane-entry:last-child {
+  border-right: none;
 }
 
 .ann-pane.vertical .ann-pane-entry.active {
+  border-left-color: transparent;
   border-right-color: var(--vermillion);
 }
 
 .ann-pane.vertical .ann-pane-entry.active.pronunciation {
+  border-left-color: transparent;
   border-right-color: var(--jade);
 }
 
-.ann-pane.vertical .ann-pane-entry-main {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Vertical headword — only this element uses vertical writing */
-.ann-pane-v-word {
+.ann-pane.vertical .ann-pane-v-word {
   writing-mode: vertical-rl;
   text-orientation: upright;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 0 8px;
+  gap: 4px;
+  padding: 0 6px;
   border-left: 1px solid var(--border-light);
   flex-shrink: 0;
 }
 
-.ann-pane-word-v {
-  font-family: var(--serif);
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: 6px;
-  color: var(--ink);
+.ann-pane.vertical .ann-pane-entry-main {
+  padding: 0 8px;
 }
 
-.ann-pane-idx-v {
-  font-family: var(--serif);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--vermillion);
+.ann-pane.vertical .ann-pane-entry-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
-.ann-pane-entry.active.pronunciation .ann-pane-idx-v {
-  color: var(--jade);
+.ann-pane.vertical .ann-pane-entry-body {
+  padding-left: 0;
 }
 
 .ann-pane.vertical .ann-pane-text {
   line-height: 2;
   letter-spacing: 1px;
+}
+
+.ann-pane.vertical .ann-pane-close {
+  margin-left: 0;
+  margin-top: auto;
+}
+
+.ann-pane.vertical .ann-pane-count,
+.ann-pane.vertical .ann-pane-kind,
+.ann-pane.vertical .ann-pane-layer {
+  writing-mode: horizontal-tb;
+}
+
+.ann-pane.vertical .ann-pane-pron {
+  writing-mode: horizontal-tb;
 }
 
 @media (max-width: 768px) {
@@ -500,10 +541,11 @@ onBeforeUnmount(() => {
     max-height: none !important;
     top: 0 !important;
     bottom: auto !important;
-    border-right: 1px solid var(--border) !important;
+    border-left: 1px solid var(--border) !important;
+    border-right: none !important;
     border-top: none !important;
     border-radius: 0 !important;
-    box-shadow: 4px 0 24px rgba(var(--shadow-rgb), 0.06) !important;
+    box-shadow: -4px 0 24px rgba(var(--shadow-rgb), 0.06) !important;
   }
   .ann-pane.vertical .ann-pane-handle {
     display: flex !important;

@@ -849,22 +849,11 @@ function tcy(n: number): string {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   line-height: 1.6;
   position: relative;
-  overflow: hidden;
-}
-.v-nav-btn::after {
-  content: '';
-  position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, var(--gold), var(--vermillion));
-  transform: scaleY(0);
-  transition: transform 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
   box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.1);
 }
-.v-nav-btn:hover::after { transform: scaleY(1); }
 .v-nav-btn:hover .v-nav-title { color: var(--vermillion); }
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
