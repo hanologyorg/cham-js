@@ -489,10 +489,12 @@ onBeforeUnmount(() => {
   overflow-y: hidden;
   overflow-x: auto;
   overscroll-behavior: contain;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ann-pane.vertical .ann-pane-entry {
-  padding: 12px 0;
+  padding: 24px 12px;
   border-bottom: none;
   border-right: 1px solid var(--border-light);
   border-left: none;
@@ -571,7 +573,9 @@ onBeforeUnmount(() => {
 
 @media (max-width: 768px) {
   .ann-pane.vertical {
-    width: 65vw !important;
+    width: auto !important;
+    max-width: 65vw !important;
+    min-width: 180px;
     height: 100vh !important;
     max-height: none !important;
     top: 0 !important;
@@ -585,9 +589,6 @@ onBeforeUnmount(() => {
   }
   .ann-pane.vertical .ann-pane-handle {
     display: flex !important;
-  }
-  .ann-pane.vertical .ann-pane-body {
-    padding: 20px 0;
   }
   .ann-pane.vertical .ann-pane-close {
     width: 36px;
