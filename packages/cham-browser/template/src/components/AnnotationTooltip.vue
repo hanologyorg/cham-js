@@ -443,9 +443,7 @@ onBeforeUnmount(() => {
 
 /* ─── Vertical mode ─── */
 .ann-card.vertical {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
 }
 
@@ -454,7 +452,7 @@ onBeforeUnmount(() => {
   text-orientation: upright;
   padding: 6px 10px;
   border-bottom: none;
-  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
   flex-direction: row;
   align-items: center;
   flex-shrink: 0;
@@ -468,12 +466,11 @@ onBeforeUnmount(() => {
 
 .ann-card.vertical .ann-card-scroll {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding: 8px 0;
-  overflow-x: auto;
   overflow-y: hidden;
+  overflow-x: auto;
   flex: 1;
-  min-height: 0;
 }
 
 .ann-card.vertical .ann-entry {
@@ -481,6 +478,8 @@ onBeforeUnmount(() => {
   border-bottom: none;
   padding: 0 10px;
   border-right: 1px solid var(--border-light);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
 
 .ann-card.vertical .ann-entry:first-child {
@@ -490,7 +489,7 @@ onBeforeUnmount(() => {
 .ann-card.vertical .ann-card-close {
   writing-mode: horizontal-tb;
   top: 4px;
-  right: 4px;
+  left: 4px;
 }
 
 .ann-card.vertical .ann-pron-h {
@@ -504,6 +503,16 @@ onBeforeUnmount(() => {
 .ann-card.vertical .ann-text {
   white-space: pre-line;
   line-height: 2;
+}
+
+.ann-card.vertical .ann-entry-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ann-card.vertical .ann-entry:last-child {
+  border-right: none;
 }
 
 .ann-sheet-body {
