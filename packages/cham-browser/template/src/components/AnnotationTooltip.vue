@@ -125,8 +125,8 @@ onBeforeUnmount(() => {
         @mouseleave="emit('tooltipLeave')"
       >
         <div v-if="headword" class="ann-card-head" :class="dominantKind()">
-          <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</div>
           <div class="ann-headword">{{ headword }}</div>
+          <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}注</div>
         </div>
         <button class="ann-card-close" @click="dismiss" aria-label="關閉">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -158,8 +158,8 @@ onBeforeUnmount(() => {
         </button>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
-            <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</div>
             <div class="ann-headword">{{ headword }}</div>
+            <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}注</div>
           </div>
           <div class="ann-sheet-scroll">
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
           </div>
           <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind()">
             <span class="ann-sheet-v-word">{{ headword }}</span>
-            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ toChineseNumber(annotations.length) }}</span>
+            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ toChineseNumber(annotations.length) }}注</span>
           </div>
         </div>
       </div>

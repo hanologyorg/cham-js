@@ -841,6 +841,9 @@ function tcy(n: number): string {
 .v-nav-btn {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
   padding: 20px 14px;
   background: var(--surface);
   border: 1px solid var(--border-light);
@@ -857,12 +860,12 @@ function tcy(n: number): string {
 .v-nav-btn:hover .v-nav-title { color: var(--vermillion); }
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
-  margin-bottom: 0.5em;
+  margin-bottom: 0.3em;
 }
 .v-nav-label {
   font-size: 11px; color: var(--ink-faint);
   font-family: var(--sans); letter-spacing: 2px;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.3em;
 }
 .v-nav-title {
   font-size: 18px; font-weight: 700;
