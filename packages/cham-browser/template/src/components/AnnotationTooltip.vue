@@ -125,8 +125,8 @@ onBeforeUnmount(() => {
         @mouseleave="emit('tooltipLeave')"
       >
         <div v-if="headword" class="ann-card-head" :class="dominantKind()">
-          <span class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</span>
-          <span class="ann-headword">{{ headword }}</span>
+          <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</div>
+          <div class="ann-headword">{{ headword }}</div>
         </div>
         <button class="ann-card-close" @click="dismiss" aria-label="關閉">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -158,8 +158,8 @@ onBeforeUnmount(() => {
         </button>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
-            <span class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</span>
-            <span class="ann-headword">{{ headword }}</span>
+            <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</div>
+            <div class="ann-headword">{{ headword }}</div>
           </div>
           <div class="ann-sheet-scroll">
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
@@ -204,22 +204,17 @@ onBeforeUnmount(() => {
 }
 
 .ann-badge-count {
-  display: inline-block;
   padding: 1px 7px;
-  border-radius: 3px;
   font-size: 10px;
   font-family: var(--sans);
   font-weight: 700;
   letter-spacing: 1px;
   line-height: 1.5;
-  background: var(--vermillion);
-  color: #fff;
-  margin-bottom: 5px;
+  color: var(--vermillion);
 }
 
 /* ─── Annotation entry ─── */
 .ann-entry {
-  padding: 10px 0;
   border-bottom: 1px solid var(--border-light);
   font-size: 14px;
   color: var(--ink-mid);
@@ -453,7 +448,7 @@ onBeforeUnmount(() => {
   text-orientation: upright;
   padding: 6px 8px;
   border-bottom: none;
-  border-right: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
   flex-direction: row;
   align-items: center;
   flex-shrink: 0;
@@ -463,7 +458,8 @@ onBeforeUnmount(() => {
   border-left: 1px solid var(--border-light);
 }
 .ann-card.vertical .ann-badge-count {
-  writing-mode: horizontal-tb;
+  writing-mode: vertical-rl;
+  margin-bottom: 5px;
 }
 
 .ann-card.vertical .ann-card-scroll {
