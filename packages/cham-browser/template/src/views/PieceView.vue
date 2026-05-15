@@ -857,8 +857,10 @@ function tcy(n: number): string {
   margin-bottom: 0.3em;
 }
 .v-nav-title {
+  display: inline-block;
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  min-height: 120px;
   font-size: 18px; font-weight: 700;
   letter-spacing: 3px; color: var(--ink);
   transition: color 0.25s ease;
