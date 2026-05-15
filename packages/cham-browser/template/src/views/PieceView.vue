@@ -475,14 +475,12 @@ function tcy(n: number): string {
 
         <nav class="v-nav">
           <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)">
-            <span class="v-nav-dir">▲</span>
-            <span class="v-nav-label">{{ t('piece.previous') }}</span>
+            <span class="v-nav-info"><span class="v-nav-dir">▲</span><span class="v-nav-label">{{ t('piece.previous') }}</span></span>
             <span class="v-nav-title">{{ getPiece(adjacent.prev)?.title }}</span>
           </button>
           <div v-else class="v-nav-spacer" />
           <button v-if="adjacent.next !== null" class="v-nav-btn" @click="navigate(1)">
-            <span class="v-nav-dir">▼</span>
-            <span class="v-nav-label">{{ t('piece.next') }}</span>
+            <span class="v-nav-info"><span class="v-nav-dir">▼</span><span class="v-nav-label">{{ t('piece.next') }}</span></span>
             <span class="v-nav-title">{{ getPiece(adjacent.next)?.title }}</span>
           </button>
         </nav>
@@ -841,6 +839,8 @@ function tcy(n: number): string {
 .v-nav-btn {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  display: flex;
+  flex-direction: column;
   padding: 20px 14px;
   background: var(--surface);
   border: 1px solid var(--border-light);
@@ -848,13 +848,15 @@ function tcy(n: number): string {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   line-height: 1.6;
-  position: relative;
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
   box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.1);
 }
 .v-nav-btn:hover .v-nav-title { color: var(--vermillion); }
+.v-nav-info {
+  display: block;
+}
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
   margin-bottom: 0.3em;
