@@ -160,22 +160,27 @@ export function useAnnotationTooltip() {
         bottom: '0',
       }
     } else if (layout.value === 'vertical') {
-      // Vertical mode: wide card with multi-column layout to the left
-      const cardW = 260
+      // Vertical mode: card next to hovered text
+      const maxW = 260
       const cardH = Math.min(vh - 16, 480)
       const gap = 12
-      let left = Math.max(8, rect.left - cardW - gap)
+      let left = Math.max(8, rect.left - maxW - gap)
       let top = Math.max(8, Math.min(rect.top, vh - cardH))
 
       // If not enough room on left, go right
-      if (rect.left - cardW - gap < 8) {
-        left = Math.min(rect.right + gap, vw - cardW - 8)
+      if (left < 8) {
+        left = rect.right + gap
+      }
+
+      // Clamp to viewport
+      if (left + maxW > vw - 8) {
+        left = Math.max(8, vw - maxW - 8)
       }
 
       style.value = {
         left: left + 'px',
         top: top + 'px',
-        width: cardW + 'px',
+        maxWidth: maxW + 'px',
         maxHeight: cardH + 'px',
       }
     } else {
