@@ -121,7 +121,6 @@ function onTap(event: MouseEvent) {
   font-family: var(--sans);
   font-weight: 600;
   color: var(--vermillion);
-  text-combine-upright: all;
   text-align: end;
   letter-spacing: 0;
 }
