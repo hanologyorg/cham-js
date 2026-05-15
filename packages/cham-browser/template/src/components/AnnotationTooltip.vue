@@ -229,7 +229,6 @@ onBeforeUnmount(() => {
 
 .ann-entry-header {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
   margin-bottom: 3px;
 }
@@ -466,7 +465,7 @@ onBeforeUnmount(() => {
 
 .ann-card.vertical .ann-card-scroll {
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
   padding: 8px 0;
   overflow-y: hidden;
   overflow-x: auto;
