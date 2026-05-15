@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { annotationToPronSegment } from '../utils/annotationParser'
+import { toChineseNumber } from '../utils/chineseNumber'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
 
@@ -124,8 +125,8 @@ onBeforeUnmount(() => {
         @mouseleave="emit('tooltipLeave')"
       >
         <div v-if="headword" class="ann-card-head" :class="dominantKind()">
+          <span class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</span>
           <span class="ann-headword">{{ headword }}</span>
-          <span class="ann-badge-count" v-if="annotations.length > 1">{{ annotations.length }}</span>
         </div>
         <button class="ann-card-close" @click="dismiss" aria-label="關閉">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -157,8 +158,8 @@ onBeforeUnmount(() => {
         </button>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
+            <span class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}</span>
             <span class="ann-headword">{{ headword }}</span>
-            <span class="ann-badge-count" v-if="annotations.length > 1">{{ annotations.length }}</span>
           </div>
           <div class="ann-sheet-scroll">
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
@@ -174,7 +175,7 @@ onBeforeUnmount(() => {
           </div>
           <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind()">
             <span class="ann-sheet-v-word">{{ headword }}</span>
-            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ annotations.length }}</span>
+            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ toChineseNumber(annotations.length) }}</span>
           </div>
         </div>
       </div>
@@ -204,15 +205,16 @@ onBeforeUnmount(() => {
 }
 
 .ann-badge-count {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 10px;
   font-family: var(--sans);
-  font-size: 11px;
   font-weight: 700;
-  color: var(--ink-faint);
-  background: var(--surface-warm);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  padding: 2px 8px;
-  letter-spacing: 0;
+  letter-spacing: 1px;
+  line-height: 1.5;
+  background: var(--vermillion);
+  color: #fff;
 }
 
 /* ─── Annotation entry ─── */
