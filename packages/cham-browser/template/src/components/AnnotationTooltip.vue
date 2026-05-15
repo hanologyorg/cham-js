@@ -470,6 +470,7 @@ onBeforeUnmount(() => {
   overflow-y: hidden;
   overflow-x: auto;
   flex: 1;
+  min-width: 0;
 }
 
 .ann-card.vertical .ann-entry {
