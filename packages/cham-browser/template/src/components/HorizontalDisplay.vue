@@ -91,6 +91,8 @@ function onTap(event: MouseEvent) {
   border-bottom: 2px solid var(--vermillion);
   cursor: help;
   transition: background 0.2s ease, box-shadow 0.2s ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 :deep(.ann-target.ann-overlap) {
   border-bottom-width: 3px;
