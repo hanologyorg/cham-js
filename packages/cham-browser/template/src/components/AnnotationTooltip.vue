@@ -462,9 +462,6 @@ onBeforeUnmount(() => {
   border-right: none;
   border-left: 1px solid var(--border-light);
 }
-.ann-card.vertical .ann-headword {
-  letter-spacing: 6px;
-}
 .ann-card.vertical .ann-badge-count {
   writing-mode: horizontal-tb;
 }
