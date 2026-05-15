@@ -225,7 +225,6 @@ const paragraphsHtml = computed(() => {
   border-bottom: none;
 }
 .sb-vertical .sb-ann-head {
-  flex-direction: column;
   align-items: flex-start;
   gap: 4px;
 }
