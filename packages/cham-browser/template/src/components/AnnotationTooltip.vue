@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--border-light);
   font-size: 14px;
   color: var(--ink-mid);
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
   line-height: 1.8;
 }
 .ann-entry:last-child { border-bottom: none; padding-bottom: 0; }
@@ -252,7 +252,7 @@ onBeforeUnmount(() => {
 .ann-kind.etymology { background: #6b5b95; color: #fff; }
 .ann-kind.note,
 .ann-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-kind.commentary { background: #c0392b; color: #fff; }
+.ann-kind.commentary { background: #c0392b; color: #fff; align-self: center; }
 .ann-kind.translation { background: #2c6e49; color: #fff; }
 .ann-kind.person { background: var(--ann-person); color: #fff; }
 .ann-kind.place { background: var(--ann-place); color: #fff; }
@@ -273,6 +273,7 @@ onBeforeUnmount(() => {
 .ann-text {
   white-space: pre-line;
   line-height: 1.8;
+  padding-top: 5px;
 }
 
 /* ─── Floating card ─── */
@@ -475,7 +476,7 @@ onBeforeUnmount(() => {
 .ann-card.vertical .ann-entry {
   flex-shrink: 0;
   border-bottom: none;
-  padding: 0 10px;
+  margin: 0 3px;
   border-right: 1px solid var(--border-light);
   writing-mode: vertical-rl;
   text-orientation: mixed;
