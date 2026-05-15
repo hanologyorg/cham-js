@@ -190,7 +190,6 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-light);
   background: var(--surface);
@@ -215,6 +214,7 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   background: var(--vermillion);
   color: #fff;
+  margin-bottom: 5px;
 }
 
 /* ─── Annotation entry ─── */
@@ -451,12 +451,16 @@ onBeforeUnmount(() => {
 .ann-card.vertical .ann-card-head {
   writing-mode: vertical-rl;
   text-orientation: upright;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-bottom: none;
   border-right: 1px solid var(--border-light);
   flex-direction: row;
   align-items: center;
   flex-shrink: 0;
+}
+.ann-card.vertical .ann-card-head.commentary {
+  border-right: none;
+  border-left: 1px solid var(--border-light);
 }
 .ann-card.vertical .ann-headword {
   letter-spacing: 6px;
