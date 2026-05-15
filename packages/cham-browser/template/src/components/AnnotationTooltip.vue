@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
   font-size: 10px;
   font-family: var(--sans);
   color: var(--ink-faint);
-  padding: 1px 5px;
+  padding: 5px 2px;
   border: 1px solid var(--border-light);
   border-radius: 2px;
   letter-spacing: 0.5px;
@@ -443,7 +443,6 @@ onBeforeUnmount(() => {
 /* ─── Vertical mode ─── */
 .ann-card.vertical {
   flex-direction: row-reverse;
-  overflow: hidden;
 }
 
 .ann-card.vertical .ann-card-head {
