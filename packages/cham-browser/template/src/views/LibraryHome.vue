@@ -91,20 +91,23 @@ function openBook(bookId: string) {
           <div class="v-divider"></div>
         </section>
 
-        <section class="v-cards-col">
-          <div
-            v-for="book in books"
-            :key="book.id"
-            class="v-book-card"
-            @click="openBook(book.id)"
-          >
-            <div class="v-book-accent"></div>
-            <h2 class="v-book-title">{{ book.title }}</h2>
-            <p v-if="book.subtitle" class="v-book-sub">{{ book.subtitle }}</p>
-            <div class="v-book-stats">
-              <span class="v-book-count">{{ t('stat.pieceCount', { count: book.count }) }}</span>
+        <section class="v-shelf">
+          <template v-for="group in groupedBooks" :key="group.category">
+            <div class="v-shelf-cat">
+              <span class="v-cat-label">{{ group.category }}</span>
             </div>
-          </div>
+            <div
+              v-for="book in group.books"
+              :key="book.id"
+              class="v-spine"
+              :class="'v-spine-' + bookCategory(book).replace(/\s/g, '-')"
+              @click="openBook(book.id)"
+            >
+              <span class="v-spine-accent"></span>
+              <span class="v-spine-title">{{ book.title }}</span>
+              <span class="v-spine-badge">{{ book.count }}</span>
+            </div>
+          </template>
         </section>
       </div>
     </div>
@@ -189,71 +192,126 @@ function openBook(bookId: string) {
   margin-left: 20px;
 }
 
-.v-cards-col {
+.v-shelf {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 40px 16px;
   height: 100vh;
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
-  align-items: flex-start;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
 }
+.v-shelf::-webkit-scrollbar { height: 3px; }
+.v-shelf::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
-.v-book-card {
+/* ─── Category separator ─── */
+.v-shelf-cat {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 24px 16px;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 6px;
+  flex-shrink: 0;
+}
+.v-cat-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: var(--ink-faint);
+  padding: 8px 3px;
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+/* ─── Book spine ─── */
+.v-spine {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+  width: 44px;
+  padding: 16px 0;
   border-left: 1px solid var(--border-light);
   cursor: pointer;
-  transition: all 0.3s ease;
   position: relative;
+  box-sizing: border-box;
+  transition: background 0.25s ease, width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.v-book-card:hover {
-  background: var(--surface);
+.v-spine:hover {
+  background: linear-gradient(90deg, rgba(var(--shadow-rgb), 0.04), rgba(var(--shadow-rgb), 0.01));
+  width: 56px;
 }
-.v-book-accent {
+.v-spine:active {
+  transform: scale(0.97);
+}
+
+.v-spine-accent {
   position: absolute;
-  top: 0; right: 0;
-  width: 0; height: 3px;
-  background: var(--vermillion);
-  transition: width 0.35s ease;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v-book-card:hover .v-book-accent { width: 100%; }
-.v-book-title {
-  font-size: 32px; font-weight: 900;
-  letter-spacing: 8px; color: var(--ink);
-  margin-left: 16px; padding-left: 16px;
-  border-left: 3px solid var(--vermillion);
-  line-height: 1.6;
+.v-spine:hover .v-spine-accent {
+  height: 100%;
 }
-.v-book-sub {
+
+/* Accent colors per category */
+.v-spine .v-spine-accent { background: var(--vermillion); }
+.v-spine.v-spine-教科書 .v-spine-accent { background: var(--gold); }
+.v-spine.v-spine-四庫全書 .v-spine-accent { background: var(--jade); }
+
+.v-spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   font-size: 14px;
-  color: var(--ink-light);
+  font-weight: 700;
   letter-spacing: 3px;
-  margin-left: 12px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 12px 0;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.v-spine:hover .v-spine-title {
+  color: var(--vermillion);
+}
+.v-spine.v-spine-教科書:hover .v-spine-title { color: var(--gold); }
+.v-spine.v-spine-四庫全書:hover .v-spine-title { color: var(--jade); }
+
+.v-spine-badge {
+  writing-mode: horizontal-tb;
   font-family: var(--sans);
-}
-.v-book-stats {
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid var(--border);
-}
-.v-book-count {
-  font-size: 13px;
+  font-size: 9px;
+  font-weight: 700;
   color: var(--ink-faint);
-  letter-spacing: 2px;
-  font-family: var(--sans);
-  padding: 2px 8px;
   background: var(--surface-warm);
-  border-radius: 4px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 1px 6px;
+  margin-top: auto;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.v-spine:hover .v-spine-badge {
+  opacity: 1;
 }
 
 /* ═══════ 橫排模式 ═══════ */
@@ -403,6 +461,9 @@ function openBook(bookId: string) {
 @media (max-width: 768px) {
   .v-page { padding: 0 16px; }
   .v-title { font-size: 36px; letter-spacing: 10px; }
+  .v-spine { width: 38px; }
+  .v-spine:hover { width: 48px; }
+  .v-spine-title { font-size: 13px; letter-spacing: 2px; }
   .lib-root { padding: 40px 16px 80px; }
   .lib-hero { margin-bottom: 32px; }
   .lib-hero h1 { font-size: 28px; letter-spacing: 4px; }
