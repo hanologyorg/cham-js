@@ -75,12 +75,12 @@ onUnmounted(detach)
   top: 0; left: 0;
   height: 3px;
   background: linear-gradient(90deg, var(--vermillion), var(--gold));
-  box-shadow: 0 0 8px rgba(194, 58, 43, 0.2);
+  box-shadow: 0 0 8px rgba(var(--shadow-rgb), 0.15);
 }
 .rp-v {
   top: 0; left: 0;
   width: 3px;
   background: linear-gradient(180deg, var(--vermillion), var(--gold));
-  box-shadow: 0 0 8px rgba(194, 58, 43, 0.2);
+  box-shadow: 0 0 8px rgba(var(--shadow-rgb), 0.15);
 }
 </style>

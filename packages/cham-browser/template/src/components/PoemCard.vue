@@ -128,7 +128,7 @@ const preview = computed(() => {
   top: auto; left: 0; bottom: 0;
   width: 0; height: 3px;
   background: linear-gradient(90deg, var(--gold), var(--vermillion));
-  transition: width 0.35s ease;
+  transition: width 0.35s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 .pc-vertical:hover {
   transform: translateX(-4px);

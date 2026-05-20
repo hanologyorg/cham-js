@@ -233,6 +233,9 @@ function goHome() { router.push('/') }
   border-color: var(--gold);
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
 }
+.v-work:active {
+  transform: scale(0.97);
+}
 .v-work-num {
   font-size: 11px; color: var(--ink-faint);
   font-family: var(--sans); letter-spacing: 2px;
@@ -331,6 +334,9 @@ function goHome() { router.push('/') }
   border-color: var(--gold);
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
   transform: translateY(-2px);
+}
+.h-work:active {
+  transform: scale(0.98);
 }
 .h-work-num { font-size: 11px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; }
 .h-work-title { font-size: 18px; font-weight: 700; letter-spacing: 2px; margin: 6px 0 4px; }

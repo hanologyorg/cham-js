@@ -199,6 +199,7 @@ onBeforeUnmount(() => {
 /* ─── Annotation entry ─── */
 .ann-entry {
   border-bottom: 1px solid var(--border-light);
+  padding: 8px 0;
   font-size: 14px;
   color: var(--ink-mid);
   letter-spacing: 1.5px;
@@ -229,11 +230,11 @@ onBeforeUnmount(() => {
 }
 .ann-kind.pronunciation { background: var(--jade); color: #fff; }
 .ann-kind.semantic { background: var(--vermillion); color: #fff; }
-.ann-kind.etymology { background: #6b5b95; color: #fff; }
+.ann-kind.etymology { background: var(--ann-etymology); color: #fff; }
 .ann-kind.note,
 .ann-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-kind.commentary { background: #c0392b; color: #fff; align-self: center; }
-.ann-kind.translation { background: #2c6e49; color: #fff; }
+.ann-kind.commentary { background: var(--ann-commentary); color: #fff; }
+.ann-kind.translation { background: var(--ann-translation); color: #fff; }
 .ann-kind.person { background: var(--ann-person); color: #fff; }
 .ann-kind.place { background: var(--ann-place); color: #fff; }
 .ann-kind.event { background: var(--ann-event); color: #fff; }

@@ -336,6 +336,10 @@ function scrollToCatalog() {
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(var(--shadow-rgb), 0.12);
 }
+.h-cta:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(var(--shadow-rgb), 0.08);
+}
 
 .h-catalog { max-width: 1200px; margin: 0 auto; padding: 80px 40px; }
 .h-catalog-header { text-align: center; margin-bottom: 60px; }

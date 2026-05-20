@@ -530,6 +530,7 @@ function tcy(n: number): string {
           </div>
         </Transition>
       </Teleport>
+      <BackToTop vertical :scroll-container="vPageRef" />
     </div>
 
     <!-- ═══════ 橫排模式 ═══════ -->
@@ -694,7 +695,7 @@ function tcy(n: number): string {
                   {{ p.trim() }}
                 </div>
               </div>
-              <div v-if="!selectedAuthorBio" class="h-pane-empty">暫無作者資料</div>
+              <div v-if="!selectedAuthorBio" class="h-pane-empty">{{ t('piece.noAuthorData') }}</div>
             </div>
           </div>
         </Transition>

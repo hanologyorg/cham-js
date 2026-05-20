@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
+import { useI18n } from '../composables/useI18n'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
 
@@ -22,6 +23,7 @@ const emit = defineEmits<{
 
 const bodyRef = ref<HTMLElement | null>(null)
 
+const { t } = useI18n()
 const ww = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 const isMobile = computed(() => ww.value < 768)
 function onResize() { ww.value = window.innerWidth }
@@ -158,7 +160,7 @@ onBeforeUnmount(() => {
         :style="{ width: paneWidth + 'px' }"
       >
         <div class="ann-pane-header">
-          <span class="ann-pane-title">注釋</span>
+          <span class="ann-pane-title">{{ t('annotation.all') }}</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
           <button class="ann-pane-close" @click="emit('close')" aria-label="關閉">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -171,7 +173,10 @@ onBeforeUnmount(() => {
             :data-ann-id="ann.id"
             class="ann-pane-entry"
             :class="{ active: activeId === ann.id, [ann.kind]: true }"
+            role="button"
+            tabindex="0"
             @click="emit('select', ann)"
+            @keydown.enter="emit('select', ann)"
           >
             <!-- Vertical: headword column on the right side -->
             <div v-if="vertical && headword(ann)" class="ann-pane-v-word">
@@ -289,6 +294,11 @@ onBeforeUnmount(() => {
   background: var(--surface);
 }
 
+.ann-pane-entry:focus-visible {
+  outline: 2px solid var(--vermillion);
+  outline-offset: -2px;
+}
+
 .ann-pane-entry.active.pronunciation {
   border-left-color: var(--jade);
 }
@@ -334,11 +344,11 @@ onBeforeUnmount(() => {
 
 .ann-pane-kind.pronunciation { background: var(--jade); color: #fff; }
 .ann-pane-kind.semantic { background: var(--vermillion); color: #fff; }
-.ann-pane-kind.etymology { background: #6b5b95; color: #fff; }
+.ann-pane-kind.etymology { background: var(--ann-etymology); color: #fff; }
 .ann-pane-kind.note,
 .ann-pane-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-pane-kind.commentary { background: #c0392b; color: #fff; }
-.ann-pane-kind.translation { background: #2c6e49; color: #fff; }
+.ann-pane-kind.commentary { background: var(--ann-commentary); color: #fff; }
+.ann-pane-kind.translation { background: var(--ann-translation); color: #fff; }
 .ann-pane-kind.person { background: var(--ann-person); color: #fff; }
 .ann-pane-kind.place { background: var(--ann-place); color: #fff; }
 .ann-pane-kind.event { background: var(--ann-event); color: #fff; }
