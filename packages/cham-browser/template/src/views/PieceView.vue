@@ -789,7 +789,8 @@ function tcy(n: number): string {
   flex-direction: row-reverse;
   align-items: flex-start;
   gap: 0;
-  max-height: calc(100vh - 100px);
+  height: 100vh;
+  box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
   padding: 20px 16px;
