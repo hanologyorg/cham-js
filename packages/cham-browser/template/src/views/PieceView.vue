@@ -232,12 +232,12 @@ const totalPartAnnotationCount = computed(() => {
   return piece.value?.parts?.reduce((sum, p) => sum + p.annotations.length, 0) ?? 0
 })
 
-const SECTION_META: Record<string, { label: string; special: boolean }> = {
-  background: { label: '背景資料', special: false },
-  analysis: { label: '賞析重點', special: false },
-  preparation: { label: '預習活動', special: true },
-  follow_up: { label: '跟進活動', special: true },
-  think_questions: { label: '想一想', special: true },
+const SECTION_META: Record<string, { special: boolean }> = {
+  background: { special: false },
+  analysis: { special: false },
+  preparation: { special: true },
+  follow_up: { special: true },
+  think_questions: { special: true },
 }
 
 const proseSections = computed(() => {
@@ -245,13 +245,12 @@ const proseSections = computed(() => {
   if (ss && ss.length > 0) {
     return ss.filter(s => s.key !== 'author_bio' && s.body)
   }
-  // Fallback to legacy sections record
   const sections = piece.value?.sections || {}
   const result: { key: string; title: string; body: string; order: number; special: boolean }[] = []
-  for (const [key, label] of Object.entries({ background: '背景資料', analysis: '賞析重點', preparation: '預習活動', follow_up: '跟進活動', think_questions: '想一想' })) {
+  for (const [key, i18nKey] of Object.entries({ background: 'section.background', analysis: 'section.analysis', preparation: 'section.preparation', follow_up: 'section.follow_up', think_questions: 'section.think_questions' })) {
     if (sections[key]) {
       const meta = SECTION_META[key]
-      result.push({ key, title: label, body: sections[key], order: meta ? (key === 'background' ? 1 : key === 'analysis' ? 2 : 3) : 99, special: meta?.special ?? false })
+      result.push({ key, title: t(i18nKey), body: sections[key], order: meta ? (key === 'background' ? 1 : key === 'analysis' ? 2 : 3) : 99, special: meta?.special ?? false })
     }
   }
   return result

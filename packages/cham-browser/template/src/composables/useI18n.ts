@@ -68,6 +68,11 @@ const messages: Record<Locale, Record<string, string>> = {
     'role.editor': '編者',
     'role.translator': '譯者',
     'role.annotator': '注者',
+    'section.background': '背景資料',
+    'section.analysis': '賞析重點',
+    'section.preparation': '預習活動',
+    'section.follow_up': '跟進活動',
+    'section.think_questions': '想一想',
   },
   'zh-Hans': {
     'site.title': '古典诗文图书馆',
@@ -128,6 +133,11 @@ const messages: Record<Locale, Record<string, string>> = {
     'role.editor': '编者',
     'role.translator': '译者',
     'role.annotator': '注者',
+    'section.background': '背景资料',
+    'section.analysis': '赏析重点',
+    'section.preparation': '预习活动',
+    'section.follow_up': '跟进活动',
+    'section.think_questions': '想一想',
   },
   'en': {
     'site.title': 'Classical Chinese Text Library',
@@ -188,6 +198,11 @@ const messages: Record<Locale, Record<string, string>> = {
     'role.editor': 'Editor',
     'role.translator': 'Translator',
     'role.annotator': 'Annotator',
+    'section.background': 'Background',
+    'section.analysis': 'Analysis',
+    'section.preparation': 'Pre-reading',
+    'section.follow_up': 'Follow-up',
+    'section.think_questions': 'Think About It',
   },
 }
 

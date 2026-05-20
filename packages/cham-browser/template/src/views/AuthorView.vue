@@ -7,11 +7,14 @@ import { useData } from '../composables/useData'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
+import { useI18n } from '../composables/useI18n'
 import SideNav from '../components/SideNav.vue'
+import BackToTop from '../components/BackToTop.vue'
 import type { Piece } from '../types'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const { loadLibrary, books, singleBook } = useLibrary()
 await loadLibrary()
@@ -51,11 +54,11 @@ function goHome() { router.push('/') }
           <div class="v-seal">{{ authorName.charAt(0) }}</div>
           <h1 class="v-name">{{ authorName }}</h1>
           <span v-if="author.era" class="v-era">{{ author.era }}</span>
-          <span class="v-count">{{ authorPieces.length }} 篇收錄作品</span>
+          <span class="v-count">{{ t('author.worksCount', { count: authorPieces.length }) }}</span>
         </section>
 
         <section v-if="author.bio" class="v-bio">
-          <div class="v-bio-label">作者簡介</div>
+          <div class="v-bio-label">{{ t('author.biography') }}</div>
           <div class="v-bio-text">{{ author.bio }}</div>
         </section>
 
@@ -63,7 +66,10 @@ function goHome() { router.push('/') }
           v-for="piece in authorPieces"
           :key="`${piece.bookId}-${piece.num}`"
           class="v-work"
+          role="button"
+          tabindex="0"
           @click="openPiece(piece)"
+          @keydown.enter="openPiece(piece)"
         >
           <div class="v-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
           <div class="v-work-title">{{ piece.title }}</div>
@@ -76,15 +82,15 @@ function goHome() { router.push('/') }
       <div class="h-page">
         <nav class="h-nav">
           <div class="h-nav-inner">
-            <button class="h-back" @click="goBack">← 返回</button>
+            <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-breadcrumb">
-              <span class="h-sep">作者</span>
+              <span class="h-sep">{{ t('role.author') }}</span>
               <span class="h-sep">·</span>
               <span class="h-author-name">{{ authorName }}</span>
             </div>
             <div class="h-controls">
-              <span class="h-tag">{{ author.era || '未知朝代' }}</span>
-              <span class="h-tag">{{ authorPieces.length }} 篇</span>
+              <span class="h-tag">{{ author.era || t('author.unknownEra') }}</span>
+              <span class="h-tag">{{ t('stat.pieceCount', { count: authorPieces.length }) }}</span>
             </div>
           </div>
         </nav>
@@ -96,24 +102,27 @@ function goHome() { router.push('/') }
               <h1 class="h-name">{{ authorName }}</h1>
               <div class="h-meta">
                 <span v-if="author.era" class="h-era">{{ author.era }}</span>
-                <span class="h-count">{{ authorPieces.length }} 篇收錄作品</span>
+                <span class="h-count">{{ t('author.worksCount', { count: authorPieces.length }) }}</span>
               </div>
             </div>
           </div>
 
           <div v-if="author.bio" class="h-bio">
-            <h3>作者簡介</h3>
+            <h3>{{ t('author.biography') }}</h3>
             <p>{{ author.bio }}</p>
           </div>
 
           <div class="h-works">
-            <h3>收錄作品</h3>
+            <h3>{{ t('author.collectedWorks') }}</h3>
             <div class="h-grid">
               <div
                 v-for="piece in authorPieces"
                 :key="`${piece.bookId}-${piece.num}`"
                 class="h-work"
+                role="button"
+                tabindex="0"
                 @click="openPiece(piece)"
+                @keydown.enter="openPiece(piece)"
               >
                 <div class="h-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
                 <div class="h-work-title">{{ piece.title }}</div>
@@ -123,11 +132,13 @@ function goHome() { router.push('/') }
           </div>
         </div>
       </div>
+
+      <BackToTop />
     </div>
   </div>
 
-  <div v-else style="text-align:center;padding-top:120px">
-    <p style="font-size:18px;color:var(--ink-faint)">載入中…</p>
+  <div v-else class="page-loading">
+    <div class="page-loading-seal">文</div>
   </div>
 </template>
 

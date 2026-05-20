@@ -13,7 +13,7 @@ function genreLabel(genre: string): string {
 </script>
 
 <template>
-  <div class="bc-root" @click="router.push(`/${props.book.id}`)">
+  <div class="bc-root" role="button" tabindex="0" @click="router.push(`/${props.book.id}`)" @keydown.enter="router.push(`/${props.book.id}`)">
     <div class="bc-accent"></div>
     <div class="bc-body">
       <h2 class="bc-title">{{ props.book.title }}</h2>

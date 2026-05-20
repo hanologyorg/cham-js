@@ -78,7 +78,7 @@ function scrollToCatalog() {
         <span class="v-ch-line"> </span>
         <span class="v-count">{{ t('catalog.total', { count: filtered.length }) }}</span>
         <span class="v-search-wrap">
-          <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" />
+          <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" aria-label="search" />
         </span>
       </section>
 

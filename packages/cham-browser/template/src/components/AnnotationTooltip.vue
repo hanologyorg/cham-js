@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { annotationToPronSegment } from '../utils/annotationParser'
+import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
@@ -46,24 +47,6 @@ function layerLabel(ann: Annotation): string {
     if (ann.id.startsWith(prefix)) return label
   }
   return ''
-}
-
-function kindLabel(ann: Annotation): string {
-  const map: Record<string, string> = {
-    pronunciation: '讀音',
-    semantic: '釋義',
-    etymology: '詞源',
-    note: '備注',
-    definition: '釋義',
-    commentary: '注',
-    translation: '譯文',
-    person: '人名',
-    place: '地名',
-    event: '事件',
-    date: '紀年',
-    allusion: '典故',
-  }
-  return map[ann.kind] || ann.kind
 }
 
 function dominantKind(): string {

@@ -45,7 +45,7 @@ function onTap(event: MouseEvent) {
       v-for="(_, i) in verses"
       :key="i"
       class="h-display-line h-verse-anim"
-      :style="{ animationDelay: (0.15 + i * 0.08) + 's' }"
+      :style="{ animationDelay: Math.min(0.15 + i * 0.08, 1.2) + 's' }"
       v-html="verseHtml(i)"
     />
   </div>

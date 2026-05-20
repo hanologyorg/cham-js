@@ -53,6 +53,12 @@ function bookCategory(book: BookMeta): string {
   return t('genre.classicalText')
 }
 
+function bookCategoryKey(book: BookMeta): string {
+  if (book.id.startsWith('skqs-')) return 'fourTreasuries'
+  if (book.id === 'primary' || book.id === 'primary-culture' || book.id === 'secondary' || book.id === 'nss') return 'textbooks'
+  return 'classicalText'
+}
+
 const groupedBooks = computed(() => {
   const groups = new Map<string, BookMeta[]>()
   const order = [t('genre.textbooks'), t('genre.classicalText'), t('genre.fourTreasuries')]
@@ -100,7 +106,7 @@ function openBook(bookId: string) {
               v-for="(book, bi) in group.books"
               :key="book.id"
               class="v-spine v-spine-anim"
-              :class="'v-spine-' + bookCategory(book).replace(/\s/g, '-')"
+              :data-cat="bookCategoryKey(book)"
               :style="{ animationDelay: bi * 0.04 + 's' }"
               @click="openBook(book.id)"
             >
@@ -284,8 +290,8 @@ function openBook(bookId: string) {
 
 /* Accent colors per category */
 .v-spine .v-spine-accent { background: var(--vermillion); }
-.v-spine.v-spine-教科書 .v-spine-accent { background: var(--gold); }
-.v-spine.v-spine-四庫全書 .v-spine-accent { background: var(--jade); }
+.v-spine[data-cat="textbooks"] .v-spine-accent { background: var(--gold); }
+.v-spine[data-cat="fourTreasuries"] .v-spine-accent { background: var(--jade); }
 
 .v-spine-title {
   writing-mode: vertical-rl;
@@ -302,8 +308,8 @@ function openBook(bookId: string) {
 .v-spine:hover .v-spine-title {
   color: var(--vermillion);
 }
-.v-spine.v-spine-教科書:hover .v-spine-title { color: var(--gold); }
-.v-spine.v-spine-四庫全書:hover .v-spine-title { color: var(--jade); }
+.v-spine[data-cat="textbooks"]:hover .v-spine-title { color: var(--gold); }
+.v-spine[data-cat="fourTreasuries"]:hover .v-spine-title { color: var(--jade); }
 
 .v-spine-badge {
   writing-mode: horizontal-tb;
@@ -415,11 +421,6 @@ function openBook(bookId: string) {
   transition: all 0.3s var(--ease-out-expo, ease);
   position: relative;
   background: var(--surface);
-  animation: cardEnter 0.5s var(--ease-out-expo, ease) both;
-}
-@keyframes cardEnter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 .lib-card:hover { border-color: var(--gold); box-shadow: 0 6px 24px rgba(var(--shadow-rgb), 0.1); transform: translateY(-2px); }
 .lib-card:active { transform: scale(0.98); }

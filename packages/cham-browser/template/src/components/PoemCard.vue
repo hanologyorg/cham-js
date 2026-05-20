@@ -15,13 +15,13 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <div class="pc-root" :class="{ 'pc-vertical': vertical }" @click="$emit('click')">
+  <div class="pc-root" :class="{ 'pc-vertical': vertical }" role="button" tabindex="0" @click="$emit('click')" @keydown.enter="$emit('click')">
     <div class="pc-accent"></div>
     <div class="pc-body">
       <div class="pc-num">{{ String(poem.num).padStart(3, '0') }}</div>
       <h3 class="pc-title">{{ poem.title }}</h3>
       <div class="pc-author">{{ poem.author }}</div>
-      <p class="pc-preview" style="white-space: pre-line">{{ preview }}</p>
+      <p class="pc-preview">{{ preview }}</p>
     </div>
   </div>
 </template>
@@ -78,6 +78,7 @@ const preview = computed(() => {
   font-size: 13px; color: var(--ink-faint);
   margin-top: 14px; line-height: 1.7;
   overflow: hidden;
+  white-space: pre-line;
 }
 
 /* ─── 直排卡片：固定寬度，最小高度 ─── */

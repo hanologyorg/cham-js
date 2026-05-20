@@ -52,12 +52,14 @@ function onKey(event: KeyboardEvent) {
 <template>
   <div @keydown="onKey">
     <router-view v-slot="{ Component, route }">
-      <Suspense :key="route.fullPath">
-        <component :is="Component" />
-        <template #fallback>
-          <div class="route-loading"></div>
-        </template>
-      </Suspense>
+      <Transition name="page-fade" mode="out-in">
+        <Suspense :key="route.fullPath">
+          <component :is="Component" />
+          <template #fallback>
+            <div class="route-loading"></div>
+          </template>
+        </Suspense>
+      </Transition>
     </router-view>
     <!-- 橫排模式才顯示浮動設定鈕 -->
     <ReadingToolbar v-if="!isVertical" />
@@ -81,6 +83,11 @@ function onKey(event: KeyboardEvent) {
 </template>
 
 <style>
+.page-fade-enter-active { transition: opacity 0.15s ease, transform 0.2s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); }
+.page-fade-leave-active { transition: opacity 0.1s ease; }
+.page-fade-enter-from { opacity: 0; transform: translateY(8px); }
+.page-fade-leave-to { opacity: 0; }
+
 .about-overlay {
   position: fixed; inset: 0;
   background: rgba(var(--shadow-rgb), 0.3);
