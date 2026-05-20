@@ -75,6 +75,9 @@ const sourceLabel = (() => {
 .part-block--vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 1px dashed var(--border-light);
 }
 
 .part-source {
@@ -125,75 +128,23 @@ const sourceLabel = (() => {
 }
 
 :deep(.ann-target) {
-  border-bottom: 2px solid var(--vermillion);
-  cursor: help;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  border-bottom-width: 2px;
+  border-bottom-style: solid;
 }
 :deep(.ann-target.ann-overlap) {
   border-bottom-width: 3px;
   border-bottom-style: double;
 }
-:deep(.ann-target:hover) {
-  background: rgba(194, 58, 43, 0.1);
-  box-shadow: 0 2px 8px rgba(194, 58, 43, 0.08);
-}
 :deep(.ann-num) {
   font-size: 10px;
-  color: var(--vermillion);
-  font-family: var(--sans);
-  font-weight: 600;
   vertical-align: super;
   margin-right: 1px;
-  letter-spacing: 0;
-}
-:deep(.ann-target.pronunciation) {
-  border-bottom-color: var(--jade);
-}
-:deep(.ann-target.pronunciation:hover) {
-  background: rgba(58, 107, 94, 0.1);
-  box-shadow: 0 2px 8px rgba(58, 107, 94, 0.08);
-}
-:deep(.ann-target.person) {
-  border-bottom-color: var(--ann-person);
-}
-:deep(.ann-target.place) {
-  border-bottom-color: var(--ann-place);
-}
-:deep(.ann-target.event) {
-  border-bottom-color: var(--ann-event);
-}
-:deep(.ann-target.date) {
-  border-bottom-color: var(--ann-date);
-}
-:deep(.ann-target.allusion) {
-  border-bottom-color: var(--ann-allusion);
-}
-:deep(.ann-target.person:hover) {
-  background: rgba(58, 90, 140, 0.1);
-  box-shadow: 0 2px 8px rgba(58, 90, 140, 0.08);
-}
-:deep(.ann-target.place:hover) {
-  background: rgba(139, 105, 20, 0.1);
-  box-shadow: 0 2px 8px rgba(139, 105, 20, 0.08);
-}
-:deep(.ann-target.event:hover) {
-  background: rgba(107, 76, 138, 0.1);
-  box-shadow: 0 2px 8px rgba(107, 76, 138, 0.08);
-}
-:deep(.ann-target.date:hover) {
-  background: rgba(42, 122, 122, 0.1);
-  box-shadow: 0 2px 8px rgba(42, 122, 122, 0.08);
-}
-:deep(.ann-target.allusion:hover) {
-  background: rgba(181, 101, 29, 0.1);
-  box-shadow: 0 2px 8px rgba(181, 101, 29, 0.08);
 }
 
 .part-block--vertical :deep(.ann-target) {
   border-bottom: none;
-  border-left: 2px solid var(--vermillion);
+  border-left-width: 2px;
+  border-left-style: solid;
   padding-left: 2px;
 }
 .part-block--vertical :deep(.ann-target.ann-overlap) {
@@ -201,59 +152,9 @@ const sourceLabel = (() => {
   border-left-style: double;
   padding-left: 3px;
 }
-.part-block--vertical :deep(.ann-target.pronunciation) {
-  border-left-color: var(--jade);
-}
-.part-block--vertical :deep(.ann-target.pronunciation.semantic) {
-  border-left-color: var(--gold);
-}
-.part-block--vertical :deep(.ann-target.person) {
-  border-left-color: var(--ann-person);
-}
-.part-block--vertical :deep(.ann-target.place) {
-  border-left-color: var(--ann-place);
-}
-.part-block--vertical :deep(.ann-target.event) {
-  border-left-color: var(--ann-event);
-}
-.part-block--vertical :deep(.ann-target.date) {
-  border-left-color: var(--ann-date);
-}
-.part-block--vertical :deep(.ann-target.allusion) {
-  border-left-color: var(--ann-allusion);
-}
-.part-block--vertical :deep(.ann-target:hover) {
-  background: rgba(194, 58, 43, 0.1);
-  box-shadow: 0 -2px 8px rgba(194, 58, 43, 0.08);
-}
-.part-block--vertical :deep(.ann-target.pronunciation:hover) {
-  background: rgba(58, 107, 94, 0.1);
-  box-shadow: 0 -2px 8px rgba(58, 107, 94, 0.08);
-}
-.part-block--vertical :deep(.ann-target.person:hover) {
-  background: rgba(58, 90, 140, 0.1);
-  box-shadow: 0 -2px 8px rgba(58, 90, 140, 0.08);
-}
-.part-block--vertical :deep(.ann-target.place:hover) {
-  background: rgba(139, 105, 20, 0.1);
-  box-shadow: 0 -2px 8px rgba(139, 105, 20, 0.08);
-}
-.part-block--vertical :deep(.ann-target.event:hover) {
-  background: rgba(107, 76, 138, 0.1);
-  box-shadow: 0 -2px 8px rgba(107, 76, 138, 0.08);
-}
-.part-block--vertical :deep(.ann-target.date:hover) {
-  background: rgba(42, 122, 122, 0.1);
-  box-shadow: 0 -2px 8px rgba(42, 122, 122, 0.08);
-}
-.part-block--vertical :deep(.ann-target.allusion:hover) {
-  background: rgba(181, 101, 29, 0.1);
-  box-shadow: 0 -2px 8px rgba(181, 101, 29, 0.08);
-}
 .part-block--vertical :deep(.ann-num) {
   font-size: 0.45em;
   text-align: end;
-  letter-spacing: 0;
   vertical-align: baseline;
 }
 

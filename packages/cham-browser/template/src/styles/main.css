@@ -1,3 +1,5 @@
+@import './annotation-targets.css';
+
 /* ===== THEME DEFINITIONS ===== */
 :root,
 [data-theme="light"] {

@@ -85,8 +85,8 @@ const preview = computed(() => {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   direction: ltr;
-  width: 180px;
-  min-height: 240px;
+  width: 140px;
+  min-height: 180px;
   flex-shrink: 0;
   align-self: start;
   justify-self: start;
@@ -121,13 +121,7 @@ const preview = computed(() => {
   display: block;
 }
 .pc-vertical .pc-preview {
-  margin-top: 0;
-  margin-left: 6px;
-  font-size: 12px;
-  letter-spacing: 1px;
-  line-height: 2;
-  display: block;
-  overflow: hidden;
+  display: none;
 }
 .pc-vertical .pc-accent {
   top: auto; left: 0; bottom: 0;

@@ -57,22 +57,18 @@ function onTap(event: MouseEvent) {
 
 <style scoped>
 .v-scroll {
+  --ann-shadow-y: -2px;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   height: calc(100vh - 100px);
-  overflow-x: auto; overflow-y: hidden;
   padding: 32px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.08);
   position: relative;
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
   animation: poemRevealV 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
 }
-.v-scroll::-webkit-scrollbar { height: 3px; }
-.v-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-scroll-title {
   font-size: 36px; font-weight: 900; color: var(--ink);
@@ -104,12 +100,9 @@ function onTap(event: MouseEvent) {
 }
 
 :deep(.ann-target) {
-  border-left: 2px solid var(--vermillion);
+  border-left-width: 2px;
+  border-left-style: solid;
   padding-left: 2px;
-  cursor: help;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
 }
 :deep(.ann-target.ann-overlap) {
   border-left-width: 3px;
@@ -118,63 +111,9 @@ function onTap(event: MouseEvent) {
 }
 :deep(.ann-num) {
   font-size: 0.45em;
-  font-family: var(--sans);
-  font-weight: 600;
-  color: var(--vermillion);
   text-align: end;
-  letter-spacing: 0;
 }
 :deep(.ann-num-long) {
   font-size: 0.38em;
-  letter-spacing: -1px;
-}
-:deep(.ann-target:hover) {
-  background: rgba(194, 58, 43, 0.1);
-  box-shadow: 0 -2px 8px rgba(194, 58, 43, 0.08);
-}
-:deep(.ann-target.pronunciation:hover) {
-  background: rgba(58, 107, 94, 0.1);
-  box-shadow: 0 -2px 8px rgba(58, 107, 94, 0.08);
-}
-:deep(.ann-target.pronunciation) {
-  border-left-color: var(--jade);
-}
-:deep(.ann-target.pronunciation.semantic) {
-  border-left-color: var(--gold);
-}
-:deep(.ann-target.person) {
-  border-left-color: var(--ann-person);
-}
-:deep(.ann-target.place) {
-  border-left-color: var(--ann-place);
-}
-:deep(.ann-target.event) {
-  border-left-color: var(--ann-event);
-}
-:deep(.ann-target.date) {
-  border-left-color: var(--ann-date);
-}
-:deep(.ann-target.allusion) {
-  border-left-color: var(--ann-allusion);
-}
-:deep(.ann-target.person:hover) {
-  background: rgba(58, 90, 140, 0.1);
-  box-shadow: 0 -2px 8px rgba(58, 90, 140, 0.08);
-}
-:deep(.ann-target.place:hover) {
-  background: rgba(139, 105, 20, 0.1);
-  box-shadow: 0 -2px 8px rgba(139, 105, 20, 0.08);
-}
-:deep(.ann-target.event:hover) {
-  background: rgba(107, 76, 138, 0.1);
-  box-shadow: 0 -2px 8px rgba(107, 76, 138, 0.08);
-}
-:deep(.ann-target.date:hover) {
-  background: rgba(42, 122, 122, 0.1);
-  box-shadow: 0 -2px 8px rgba(42, 122, 122, 0.08);
-}
-:deep(.ann-target.allusion:hover) {
-  background: rgba(181, 101, 29, 0.1);
-  box-shadow: 0 -2px 8px rgba(181, 101, 29, 0.08);
 }
 </style>

@@ -1,0 +1,58 @@
+/* ─── Annotation target base ─── */
+.ann-target {
+  cursor: help;
+  border-color: var(--vermillion);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* ─── Annotation kind border colors ─── */
+.ann-target.pronunciation { border-color: var(--jade); }
+.ann-target.pronunciation.semantic { border-color: var(--gold); }
+.ann-target.person { border-color: var(--ann-person); }
+.ann-target.place { border-color: var(--ann-place); }
+.ann-target.event { border-color: var(--ann-event); }
+.ann-target.date { border-color: var(--ann-date); }
+.ann-target.allusion { border-color: var(--ann-allusion); }
+
+/* ─── Annotation kind hover states ─── */
+.ann-target:hover {
+  background: rgba(194, 58, 43, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(194, 58, 43, 0.08);
+}
+.ann-target.pronunciation:hover {
+  background: rgba(58, 107, 94, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(58, 107, 94, 0.08);
+}
+.ann-target.person:hover {
+  background: rgba(58, 90, 140, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(58, 90, 140, 0.08);
+}
+.ann-target.place:hover {
+  background: rgba(139, 105, 20, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(139, 105, 20, 0.08);
+}
+.ann-target.event:hover {
+  background: rgba(107, 76, 138, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(107, 76, 138, 0.08);
+}
+.ann-target.date:hover {
+  background: rgba(42, 122, 122, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(42, 122, 122, 0.08);
+}
+.ann-target.allusion:hover {
+  background: rgba(181, 101, 29, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(181, 101, 29, 0.08);
+}
+
+/* ─── Annotation number ─── */
+.ann-num {
+  color: var(--vermillion);
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.ann-num-long {
+  letter-spacing: -1px;
+}

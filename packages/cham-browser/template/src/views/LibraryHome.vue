@@ -97,10 +97,11 @@ function openBook(bookId: string) {
               <span class="v-cat-label">{{ group.category }}</span>
             </div>
             <div
-              v-for="book in group.books"
+              v-for="(book, bi) in group.books"
               :key="book.id"
-              class="v-spine"
+              class="v-spine v-spine-anim"
               :class="'v-spine-' + bookCategory(book).replace(/\s/g, '-')"
+              :style="{ animationDelay: bi * 0.04 + 's' }"
               @click="openBook(book.id)"
             >
               <span class="v-spine-accent"></span>
@@ -259,6 +260,14 @@ function openBook(bookId: string) {
 }
 .v-spine:active {
   transform: scale(0.97);
+}
+
+.v-spine-anim {
+  animation: spineEnter 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+@keyframes spineEnter {
+  from { opacity: 0; transform: scaleX(0.6); }
+  to { opacity: 1; transform: scaleX(1); }
 }
 
 .v-spine-accent {

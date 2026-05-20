@@ -259,13 +259,11 @@ function scrollToCatalog() {
   flex-shrink: 0;
   display: grid;
   grid-auto-flow: column;
-  grid-template-rows: repeat(auto-fill, 240px);
-  gap: 12px;
+  grid-template-rows: repeat(auto-fill, 180px);
+  gap: 10px;
   padding: 24px 16px;
   height: 100vh;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
   direction: rtl;
   align-items: start;
 }

@@ -791,15 +791,8 @@ function tcy(n: number): string {
   gap: 0;
   height: 100vh;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
   padding: 20px 16px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
 }
-
-.v-multipart::-webkit-scrollbar { height: 3px; }
-.v-multipart::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
 .v-section {
   flex-shrink: 0;
