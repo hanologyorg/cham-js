@@ -13,7 +13,7 @@ function genreLabel(genre: string): string {
 </script>
 
 <template>
-  <div class="bc-root" role="button" tabindex="0" @click="router.push(`/${props.book.id}`)" @keydown.enter="router.push(`/${props.book.id}`)">
+  <div class="bc-root" role="button" tabindex="0" @click="router.push(`/${props.book.id}`)" @keydown.enter="router.push(`/${props.book.id}`)" @keydown.space.prevent="router.push(`/${props.book.id}`)">
     <div class="bc-accent"></div>
     <div class="bc-body">
       <h2 class="bc-title">{{ props.book.title }}</h2>
@@ -49,6 +49,7 @@ function genreLabel(genre: string): string {
   border-color: var(--gold-light);
 }
 .bc-root:hover .bc-accent { height: 100%; }
+.bc-root:active { transform: scale(0.98); }
 .bc-body { padding: 28px 24px; }
 .bc-title {
   font-size: 22px;

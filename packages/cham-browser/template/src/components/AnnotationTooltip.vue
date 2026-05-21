@@ -3,8 +3,11 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
+import { useI18n } from '../composables/useI18n'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   visible: boolean
@@ -109,9 +112,9 @@ onBeforeUnmount(() => {
       >
         <div v-if="headword" class="ann-card-head" :class="dominantKind()">
           <div class="ann-headword">{{ headword }}</div>
-          <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}注</div>
+          <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
         </div>
-        <button class="ann-card-close" @click="dismiss" aria-label="關閉">
+        <button class="ann-card-close" @click="dismiss" :aria-label="t('action.close')">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
         <div class="ann-card-scroll">
@@ -136,13 +139,13 @@ onBeforeUnmount(() => {
         class="ann-sheet"
         :class="{ vertical }"
       >
-        <button class="ann-sheet-handle" @click="dismiss">
+        <button class="ann-sheet-handle" @click="dismiss" :aria-label="t('action.close')">
           <span class="ann-handle-bar" />
         </button>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
             <div class="ann-headword">{{ headword }}</div>
-            <div class="ann-badge-count" v-if="annotations.length > 1">{{ toChineseNumber(annotations.length) }}注</div>
+            <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
           </div>
           <div class="ann-sheet-scroll">
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
@@ -158,7 +161,7 @@ onBeforeUnmount(() => {
           </div>
           <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind()">
             <span class="ann-sheet-v-word">{{ headword }}</span>
-            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ toChineseNumber(annotations.length) }}注</span>
+            <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</span>
           </div>
         </div>
       </div>

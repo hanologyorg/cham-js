@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from '../composables/useI18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   vertical?: boolean
@@ -58,7 +61,7 @@ onUnmounted(detach)
 
 <template>
   <Transition name="btt">
-    <button v-if="visible" class="btt" :class="{ 'btt-v': vertical }" @click="scrollToTop" aria-label="回到頂部">
+    <button v-if="visible" class="btt" :class="{ 'btt-v': vertical }" @click="scrollToTop" :aria-label="vertical ? t('action.backToStart') : t('action.backToStart')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 19V5M5 12l7-7 7 7"/>
       </svg>
@@ -93,29 +96,13 @@ onUnmounted(detach)
   right: auto;
   left: calc(var(--nav-width, 56px) + 12px);
 }
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--ink-light);
-  cursor: pointer;
-  z-index: 400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.1);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
 
 @media (max-width: 768px) {
   .btt { bottom: 88px; right: 16px; width: 36px; height: 36px; }
 }
 .btt:hover {
   background: var(--vermillion);
-  color: #fff;
+  color: var(--paper);
   border-color: var(--vermillion);
   transform: translateY(-3px);
   box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.15);

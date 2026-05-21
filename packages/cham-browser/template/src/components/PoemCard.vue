@@ -15,7 +15,7 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <div class="pc-root" :class="{ 'pc-vertical': vertical }" role="button" tabindex="0" @click="$emit('click')" @keydown.enter="$emit('click')">
+  <div class="pc-root" :class="{ 'pc-vertical': vertical }" role="button" tabindex="0" @click="$emit('click')" @keydown.enter="$emit('click')" @keydown.space.prevent="$emit('click')">
     <div class="pc-accent"></div>
     <div class="pc-body">
       <div class="pc-num">{{ String(poem.num).padStart(3, '0') }}</div>

@@ -25,7 +25,6 @@ const bodyRef = ref<HTMLElement | null>(null)
 
 const { t } = useI18n()
 const ww = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
-const isMobile = computed(() => ww.value < 768)
 function onResize() { ww.value = window.innerWidth }
 
 // ─── Resize ───
@@ -162,7 +161,7 @@ onBeforeUnmount(() => {
         <div class="ann-pane-header">
           <span class="ann-pane-title">{{ t('annotation.all') }}</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
-          <button class="ann-pane-close" @click="emit('close')" aria-label="關閉">
+          <button class="ann-pane-close" @click="emit('close')" :aria-label="t('action.close')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>

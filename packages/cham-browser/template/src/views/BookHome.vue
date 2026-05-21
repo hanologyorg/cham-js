@@ -22,7 +22,7 @@ useTitle(meta.value?.title || '')
 const { layout } = useReadingMode()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
-const vScroll = useHorizontalScroll(vPageRef)
+useHorizontalScroll(vPageRef)
 const { t } = useI18n()
 
 const filtered = computed(() => {
@@ -127,7 +127,7 @@ function scrollToCatalog() {
         <p v-if="meta?.publisher">{{ meta.publisher }}</p>
       </div>
       <div class="h-filter">
-        <input v-model="searchQuery" class="h-search" :placeholder="t('catalog.search')" />
+        <input v-model="searchQuery" class="h-search" :placeholder="t('catalog.search')" :aria-label="t('catalog.search')" />
       </div>
       <div class="h-grid">
         <PoemCard

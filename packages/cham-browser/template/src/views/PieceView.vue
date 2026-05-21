@@ -325,7 +325,7 @@ const contributorGroups = computed(() => {
   if (!c || c.length <= 1) return []
   const groups = new Map<string, string[]>()
   for (const x of c) {
-    const t = x.title || ROLE_LABELS[x.role] || '作者'
+    const t = x.title || ROLE_LABELS[x.role] || t('role.defaultAuthor')
     if (!groups.has(t)) groups.set(t, [])
     groups.get(t)!.push(x.name)
   }
@@ -411,7 +411,7 @@ function tcy(n: number): string {
             :title="''"
             :author="''"
             :verses="piece.verses"
-            :author-initial="piece.author?.charAt(0) || '詩'"
+            :author-initial="piece.author?.charAt(0) || t('piece.defaultAuthorInitial')"
             :annotations="mergedAnnotations"
             @annotation-hover="onAnnotationHover"
             @annotation-leave="onAnnotationLeave"
@@ -472,7 +472,7 @@ function tcy(n: number): string {
           class="v-section"
         />
 
-        <nav class="v-nav">
+        <nav class="v-nav" aria-label="piece navigation">
           <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)">
             <span class="v-nav-dir">▲</span>
             <span class="v-nav-title">{{ getPiece(adjacent.prev)?.title }}</span>
@@ -510,13 +510,13 @@ function tcy(n: number): string {
                   <span v-if="selectedAuthorWorkCount" class="v-pane-count">{{ t('stat.pieceCount', { count: selectedAuthorWorkCount }) }}</span>
                 </div>
                 <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="v-pane-names">
-                  <span v-if="selectedAuthorData?.courtesyName">字{{ selectedAuthorData.courtesyName }}</span>
-                  <span v-if="selectedAuthorData?.artName">號{{ selectedAuthorData.artName }}</span>
+                  <span v-if="selectedAuthorData?.courtesyName">{{ t('author.courtesyName', { name: selectedAuthorData.courtesyName }) }}</span>
+                  <span v-if="selectedAuthorData?.artName">{{ t('author.artName', { name: selectedAuthorData.artName }) }}</span>
                 </div>
               </div>
               <div class="v-pane-links">
                 <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="v-pane-link">CTEXT</a>
-                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">維基</a>
+                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">Wikipedia</a>
                 <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="v-pane-link">Wikipedia</a>
                 <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="v-pane-link">Wikidata</a>
               </div>
@@ -537,7 +537,7 @@ function tcy(n: number): string {
     <div v-else class="h-root">
       <ReadingProgress />
       <div class="h-page">
-        <nav class="h-nav">
+        <nav class="h-nav" aria-label="piece navigation">
           <div class="h-nav-inner">
             <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-nav-title-row">
@@ -677,18 +677,10 @@ function tcy(n: number): string {
                 </div>
               </div>
               <div class="h-pane-links">
-                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="h-pane-link">
-                  <span class="link-icon">文</span> CTEXT
-                </a>
-                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="h-pane-link">
-                  <span class="link-icon">維</span> 維基百科
-                </a>
-                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="h-pane-link">
-                  <span class="link-icon">W</span> Wikipedia
-                </a>
-                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="h-pane-link">
-                  <span class="link-icon">Q</span> Wikidata
-                </a>
+                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="h-pane-link">CTEXT</a>
+                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="h-pane-link">Wikipedia</a>
+                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="h-pane-link">Wikipedia EN</a>
+                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="h-pane-link">Wikidata</a>
               </div>
               <div v-if="selectedAuthorBio" class="h-pane-bio">
                 <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="h-pane-p">
@@ -901,7 +893,7 @@ function tcy(n: number): string {
   align-items: center;
   padding: 2px 8px;
   background: var(--vermillion);
-  color: #fff;
+  color: var(--paper);
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
@@ -1055,12 +1047,16 @@ function tcy(n: number): string {
 /* Overlay transition */
 .overlay-enter-active { transition: opacity var(--dur-mid, 0.25s) ease; }
 .overlay-enter-active .h-pane { transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
+.overlay-enter-active .v-author-pane { transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
 .overlay-leave-active { transition: opacity var(--dur-fast, 0.15s) ease; }
 .overlay-leave-active .h-pane { transition: transform var(--dur-fast, 0.15s) ease; }
+.overlay-leave-active .v-author-pane { transition: transform var(--dur-fast, 0.15s) ease; }
 .overlay-enter-from { opacity: 0; }
 .overlay-enter-from .h-pane { transform: translateX(100%); }
+.overlay-enter-from .v-author-pane { transform: translateX(-100%); }
 .overlay-leave-to { opacity: 0; }
 .overlay-leave-to .h-pane { transform: translateX(40px); }
+.overlay-leave-to .v-author-pane { transform: translateX(-40px); }
 .h-pane-close {
   display: block; margin-left: auto;
   width: 36px; height: 36px;
@@ -1087,7 +1083,7 @@ function tcy(n: number): string {
   display: inline-flex;
   padding: 2px 8px;
   background: var(--vermillion);
-  color: #fff;
+  color: var(--paper);
   font-family: var(--sans);
   font-size: 11px;
   font-weight: 700;
@@ -1330,10 +1326,6 @@ function tcy(n: number): string {
 /* ─── 注釋閃爍 ─── */
 :deep(.ann-flash) {
   animation: ann-flash-anim 1.5s ease-out;
-}
-@keyframes ann-flash-anim {
-  0% { background: rgba(194, 58, 43, 0.25); box-shadow: 0 0 12px rgba(194, 58, 43, 0.15); }
-  100% { background: transparent; box-shadow: none; }
 }
 
 /* ═══════ 行動裝置適配 ═══════ */

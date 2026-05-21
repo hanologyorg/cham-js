@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useReadingMode, THEMES, THEME_LABELS, FONT_SIZES } from '../composables/useReadingMode'
+import { useReadingMode, THEMES, FONT_SIZES } from '../composables/useReadingMode'
 import type { LayoutMode, FontSize } from '../composables/useReadingMode'
 import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
 
@@ -14,7 +14,7 @@ function close() { open.value = false }
 
 <template>
   <div class="rt" :class="{ open }">
-    <button class="rt-fab" @click="toggle" :aria-label="open ? '關閉設定' : '閱讀設定'">
+    <button class="rt-fab" @click="toggle" :aria-label="open ? t('settings.close') : t('settings.reading')">
       <span v-if="!open" class="rt-icon">設</span>
       <span v-else class="rt-icon">✕</span>
     </button>
@@ -73,7 +73,7 @@ function close() { open.value = false }
             class="rt-opt rt-theme"
             :class="{ active: theme === t, ['theme-' + t]: true }"
             @click="setTheme(t)"
-          >{{ THEME_LABELS[t] }}</button>
+          >{{ t('theme.' + t) }}</button>
         </div>
       </div>
       <div class="rt-group">
@@ -105,9 +105,9 @@ function close() { open.value = false }
         </div>
       </div>
       <div class="rt-shortcuts">
-        <div class="rt-sc"><kbd>V</kbd> 直/橫</div>
-        <div class="rt-sc"><kbd>T</kbd> 主題</div>
-        <div class="rt-sc"><kbd>Esc</kbd> 首頁</div>
+        <div class="rt-sc"><kbd>V</kbd> {{ t('shortcut.toggleLayout') }}</div>
+        <div class="rt-sc"><kbd>T</kbd> {{ t('shortcut.toggleTheme') }}</div>
+        <div class="rt-sc"><kbd>Esc</kbd> {{ t('shortcut.goHome') }}</div>
       </div>
     </div>
     <div v-if="open" class="rt-backdrop" @click="close" />

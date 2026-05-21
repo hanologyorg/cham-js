@@ -29,7 +29,7 @@ if (bookId) await load(bookId)
 const { layout } = useReadingMode()
 const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
-const vScroll = useHorizontalScroll(vPageRef)
+useHorizontalScroll(vPageRef)
 
 const authorName = computed(() => decodeURIComponent(String(route.params.name || '')))
 const author = computed(() => getAuthor(authorName.value))
@@ -69,7 +69,7 @@ function goHome() { router.push('/') }
           role="button"
           tabindex="0"
           @click="openPiece(piece)"
-          @keydown.enter="openPiece(piece)"
+          @keydown.enter="openPiece(piece)" @keydown.space.prevent="openPiece(piece)"
         >
           <div class="v-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
           <div class="v-work-title">{{ piece.title }}</div>
@@ -80,7 +80,7 @@ function goHome() { router.push('/') }
     <!-- ═══════ 橫排模式 ═══════ -->
     <div v-else class="h-root">
       <div class="h-page">
-        <nav class="h-nav">
+        <nav class="h-nav" aria-label="piece navigation">
           <div class="h-nav-inner">
             <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-breadcrumb">
@@ -122,7 +122,7 @@ function goHome() { router.push('/') }
                 role="button"
                 tabindex="0"
                 @click="openPiece(piece)"
-                @keydown.enter="openPiece(piece)"
+                @keydown.enter="openPiece(piece)" @keydown.space.prevent="openPiece(piece)"
               >
                 <div class="h-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
                 <div class="h-work-title">{{ piece.title }}</div>

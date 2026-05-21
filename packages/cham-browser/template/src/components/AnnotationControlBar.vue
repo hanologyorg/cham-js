@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { AnnotationLayer } from '../types'
+import { useI18n } from '../composables/useI18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   layers: AnnotationLayer[]
@@ -51,8 +54,8 @@ function toggleLayer(id: string) {
       class="ann-toggle"
       :class="{ on: annotationsVisible }"
       @click="toggleAnnotations"
-      :title="annotationsVisible ? '隱藏注釋' : '顯示注釋'"
-    >注</button>
+      :title="annotationsVisible ? t('annotation.hideAnnotations') : t('annotation.showAnnotations')"
+    >{{ t('annotation.notes').charAt(0) }}</button>
     <button
       v-for="layer in toggleableLayers"
       :key="layer.id"
@@ -90,7 +93,7 @@ function toggleLayer(id: string) {
 }
 
 .ann-toggle:hover {
-  box-shadow: 0 2px 8px rgba(194, 58, 43, 0.15);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.15);
 }
 
 .ann-toggle:active {
@@ -99,7 +102,7 @@ function toggleLayer(id: string) {
 
 .ann-toggle.on {
   background: var(--vermillion);
-  color: #fff;
+  color: var(--paper);
 }
 
 .ann-layer-btn {

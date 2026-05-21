@@ -107,8 +107,12 @@ function openBook(bookId: string) {
               :key="book.id"
               class="v-spine v-spine-anim"
               :data-cat="bookCategoryKey(book)"
+              role="button"
+              tabindex="0"
               :style="{ animationDelay: bi * 0.04 + 's' }"
               @click="openBook(book.id)"
+              @keydown.enter="openBook(book.id)"
+              @keydown.space.prevent="openBook(book.id)"
             >
               <span class="v-spine-accent"></span>
               <span class="v-spine-title">{{ book.title }}</span>
@@ -139,8 +143,12 @@ function openBook(bookId: string) {
             v-for="(book, bi) in group.books"
             :key="book.id"
             class="lib-card lib-card-anim"
+            role="button"
+            tabindex="0"
             :style="{ animationDelay: bi * 0.06 + 's' }"
             @click="openBook(book.id)"
+            @keydown.enter="openBook(book.id)"
+            @keydown.space.prevent="openBook(book.id)"
           >
             <div class="lib-card-accent"></div>
             <div class="lib-card-body">
