@@ -151,7 +151,7 @@ function goHome() { router.push('/') }
   flex-direction: row-reverse;
   overflow-x: auto;
   overflow-y: hidden;
-  margin-right: var(--nav-width, 56px);
+  margin-right: calc(var(--nav-width, 56px) + env(safe-area-inset-right, 0px));
   padding: 0 32px;
   background: var(--paper);
   scrollbar-width: thin;
@@ -349,6 +349,6 @@ function goHome() { router.push('/') }
   .h-hero { flex-direction: column; text-align: center; padding: 24px; }
   .h-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   .h-content { padding: 30px 20px; }
-  .v-page { padding: 0 16px; }
+  .v-page { padding: 0 16px; margin-right: calc(var(--nav-width, 44px) + env(safe-area-inset-right, 0px)); }
 }
 </style>

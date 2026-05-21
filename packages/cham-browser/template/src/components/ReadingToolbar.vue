@@ -68,12 +68,12 @@ function close() { open.value = false }
         <div class="rt-label">{{ t('settings.theme') }}</div>
         <div class="rt-options">
           <button
-            v-for="t in THEMES"
-            :key="t"
+            v-for="th in THEMES"
+            :key="th"
             class="rt-opt rt-theme"
-            :class="{ active: theme === t, ['theme-' + t]: true }"
-            @click="setTheme(t)"
-          >{{ t('theme.' + t) }}</button>
+            :class="{ active: theme === th, ['theme-' + th]: true }"
+            @click="setTheme(th)"
+          >{{ t('theme.' + th) }}</button>
         </div>
       </div>
       <div class="rt-group">

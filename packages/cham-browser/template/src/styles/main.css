@@ -321,7 +321,7 @@ button:focus-visible {
 /* ===== DARK MODE VERTICAL WARMTH ===== */
 [data-theme="dark"] .v-scroll,
 [data-theme="oled"] .v-scroll {
-  box-shadow: 0 0 40px rgba(194, 58, 43, 0.03), 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--vermillion) 3%, transparent), 0 4px 16px rgba(var(--shadow-rgb), 0.2);
 }
 
 [data-theme="dark"] .sb-vertical,

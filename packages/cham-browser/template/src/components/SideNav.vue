@@ -78,12 +78,12 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
           <div class="ss-label">{{ t('settings.theme') }}</div>
           <div class="ss-options">
             <button
-              v-for="t in THEMES"
-              :key="t"
+              v-for="th in THEMES"
+              :key="th"
               class="ss-opt"
-              :class="{ active: theme === t }"
-              @click="setTheme(t)"
-            >{{ t('theme.' + t) }}</button>
+              :class="{ active: theme === th }"
+              @click="setTheme(th)"
+            >{{ t('theme.' + th) }}</button>
           </div>
         </div>
         <div class="ss-group">
