@@ -1,15 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PronSegment } from '../types'
+import { useI18n } from '../composables/useI18n'
 
-defineProps<{
+const { t } = useI18n()
+
+const props = defineProps<{
   segment: PronSegment
 }>()
+
+const label = computed(() => {
+  if (props.segment.lang === 'yue') return t('pron.yue')
+  if (props.segment.lang === 'cmn') return t('pron.cmn')
+  return props.segment.label
+})
 </script>
 
 <template>
   <span class="pron-group">
     <span class="pron-badge" :class="segment.lang === 'yue' ? 'pron-yue' : 'pron-cmn'">
-      {{ segment.label }}
+      {{ label }}
     </span>
     <span class="pron-text">{{ segment.parts.join(' ') }}</span>
   </span>

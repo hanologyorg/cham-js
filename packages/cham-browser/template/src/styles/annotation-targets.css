@@ -18,44 +18,44 @@
 
 /* ─── Annotation kind hover states ─── */
 .ann-target:hover {
-  background: rgba(194, 58, 43, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(194, 58, 43, 0.08);
+  background: color-mix(in srgb, var(--vermillion) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--vermillion) 8%, transparent);
 }
 .ann-target.pronunciation:hover {
-  background: rgba(58, 107, 94, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(58, 107, 94, 0.08);
+  background: color-mix(in srgb, var(--jade) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--jade) 8%, transparent);
 }
 .ann-target.person:hover {
-  background: rgba(58, 90, 140, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(58, 90, 140, 0.08);
+  background: color-mix(in srgb, var(--ann-person) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-person) 8%, transparent);
 }
 .ann-target.place:hover {
-  background: rgba(139, 105, 20, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(139, 105, 20, 0.08);
+  background: color-mix(in srgb, var(--ann-place) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-place) 8%, transparent);
 }
 .ann-target.event:hover {
-  background: rgba(107, 76, 138, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(107, 76, 138, 0.08);
+  background: color-mix(in srgb, var(--ann-event) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-event) 8%, transparent);
 }
 .ann-target.date:hover {
-  background: rgba(42, 122, 122, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(42, 122, 122, 0.08);
+  background: color-mix(in srgb, var(--ann-date) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-date) 8%, transparent);
 }
 .ann-target.allusion:hover {
-  background: rgba(181, 101, 29, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(181, 101, 29, 0.08);
+  background: color-mix(in srgb, var(--ann-allusion) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-allusion) 8%, transparent);
 }
 .ann-target.etymology:hover {
-  background: rgba(107, 91, 149, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(107, 91, 149, 0.08);
+  background: color-mix(in srgb, var(--ann-etymology) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-etymology) 8%, transparent);
 }
 .ann-target.commentary:hover {
-  background: rgba(192, 57, 43, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(192, 57, 43, 0.08);
+  background: color-mix(in srgb, var(--ann-commentary) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-commentary) 8%, transparent);
 }
 .ann-target.translation:hover {
-  background: rgba(44, 110, 73, 0.1);
-  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(44, 110, 73, 0.08);
+  background: color-mix(in srgb, var(--ann-translation) 10%, transparent);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-translation) 8%, transparent);
 }
 
 /* ─── Annotation number ─── */

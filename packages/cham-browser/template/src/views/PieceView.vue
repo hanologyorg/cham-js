@@ -1332,7 +1332,7 @@ function tcy(n: number): string {
 
 @media (max-width: 768px) {
   /* ─── 直排模式 ─── */
-  .v-page { margin-right: var(--nav-width, 44px); }
+  .v-page { margin-right: calc(var(--nav-width, 44px) + env(safe-area-inset-right, 0px)); }
   .v-title-col { padding: 20px 12px; }
   .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
   .v-poem-author { font-size: 18px; letter-spacing: 4px; }

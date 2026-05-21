@@ -72,7 +72,7 @@ onUnmounted(detach)
 <style scoped>
 .btt {
   position: fixed;
-  bottom: 80px;
+  bottom: max(80px, calc(72px + env(safe-area-inset-bottom, 0px)));
   right: 24px;
   width: 40px;
   height: 40px;
@@ -98,7 +98,7 @@ onUnmounted(detach)
 }
 
 @media (max-width: 768px) {
-  .btt { bottom: 88px; right: 16px; width: 36px; height: 36px; }
+  .btt { bottom: max(88px, calc(80px + env(safe-area-inset-bottom, 0px))); right: 16px; width: 36px; height: 36px; }
 }
 .btt:hover {
   background: var(--vermillion);

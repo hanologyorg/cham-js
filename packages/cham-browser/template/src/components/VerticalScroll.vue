@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Annotation, VerseLine } from '../types'
-import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations, countVerseSpans } from '../composables/useAnnotationRenderer'
+import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations } from '../composables/useAnnotationRenderer'
 
 const props = defineProps<{
   title: string
@@ -17,11 +18,23 @@ const emit = defineEmits<{
   openAuthor: [name: string]
 }>()
 
+const allVerseSpans = computed(() =>
+  props.verses.map((_, i) => buildVerseAnnotations(props.annotations, i))
+)
+
+const verseOffsets = computed(() => {
+  const offsets: number[] = []
+  let acc = 0
+  for (const spans of allVerseSpans.value) {
+    offsets.push(acc)
+    acc += spans.length
+  }
+  return offsets
+})
+
 function verseHtml(index: number): string {
-  let offset = 0
-  for (let i = 0; i < index; i++) offset += countVerseSpans(props.annotations, i)
-  const spans = buildVerseAnnotations(props.annotations, index)
-  return renderAnnotatedText(props.verses[index].text, spans, true, offset)
+  const spans = allVerseSpans.value[index]
+  return renderAnnotatedText(props.verses[index].text, spans, true, verseOffsets.value[index])
 }
 
 function onHover(event: MouseEvent) {
@@ -60,7 +73,7 @@ function onTap(event: MouseEvent) {
   --ann-shadow-y: -2px;
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: calc(100vh - 100px);
+  height: calc(100vh - var(--nav-width, 56px));
   padding: 32px 24px;
   background: var(--surface);
   border: 1px solid var(--border);

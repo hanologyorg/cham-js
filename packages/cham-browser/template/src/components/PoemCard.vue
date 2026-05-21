@@ -97,8 +97,8 @@ const preview = computed(() => {
   box-sizing: border-box;
   overflow: hidden;
   height: auto;
-  -webkit-mask-image: linear-gradient(to left, black 60%, transparent);
-  mask-image: linear-gradient(to left, black 60%, transparent);
+  -webkit-mask-image: linear-gradient(to left, black 80%, transparent);
+  mask-image: linear-gradient(to left, black 80%, transparent);
 }
 .pc-vertical .pc-num {
   font-size: 11px;

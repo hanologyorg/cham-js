@@ -117,13 +117,13 @@ function close() { open.value = false }
 <style scoped>
 .rt {
   position: fixed;
-  bottom: 24px;
+  bottom: max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
   right: 24px;
   z-index: 500;
 }
 
 @media (max-width: 768px) {
-  .rt { bottom: 16px; right: 16px; }
+  .rt { bottom: max(16px, calc(12px + env(safe-area-inset-bottom, 0px))); right: 16px; }
   .rt-panel {
     position: fixed;
     bottom: 0;
@@ -134,6 +134,7 @@ function close() { open.value = false }
     max-height: 60vh;
     overflow-y: auto;
     overscroll-behavior: contain;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     animation: slideUpMobile 0.3s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
   }
   @keyframes slideUpMobile {

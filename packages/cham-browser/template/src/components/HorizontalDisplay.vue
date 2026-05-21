@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Annotation, VerseLine } from '../types'
-import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations, countVerseSpans } from '../composables/useAnnotationRenderer'
+import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations } from '../composables/useAnnotationRenderer'
 
 const props = defineProps<{
   title: string
@@ -15,11 +16,23 @@ const emit = defineEmits<{
   annotationTap: [event: MouseEvent, annotations: Annotation[]]
 }>()
 
+const allVerseSpans = computed(() =>
+  props.verses.map((_, i) => buildVerseAnnotations(props.annotations, i))
+)
+
+const verseOffsets = computed(() => {
+  const offsets: number[] = []
+  let acc = 0
+  for (const spans of allVerseSpans.value) {
+    offsets.push(acc)
+    acc += spans.length
+  }
+  return offsets
+})
+
 function verseHtml(index: number): string {
-  let offset = 0
-  for (let i = 0; i < index; i++) offset += countVerseSpans(props.annotations, i)
-  const spans = buildVerseAnnotations(props.annotations, index)
-  return renderAnnotatedText(props.verses[index].text, spans, false, offset)
+  const spans = allVerseSpans.value[index]
+  return renderAnnotatedText(props.verses[index].text, spans, false, verseOffsets.value[index])
 }
 
 function onHover(event: MouseEvent) {

@@ -364,7 +364,7 @@ onBeforeUnmount(() => {
 }
 
 .ann-sheet-scroll {
-  padding: 4px 16px 24px;
+  padding: 4px 16px max(24px, env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
   flex: 1;
@@ -384,45 +384,45 @@ onBeforeUnmount(() => {
 
 /* ─── Active annotation on page ─── */
 :global(.ann-target.ann-active) {
-  background: rgba(194, 58, 43, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(194, 58, 43, 0.15);
+  background: color-mix(in srgb, var(--vermillion) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--vermillion) 15%, transparent);
   border-radius: 2px;
 }
 :global(.ann-target.ann-active.pronunciation) {
-  background: rgba(58, 107, 94, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(58, 107, 94, 0.15);
+  background: color-mix(in srgb, var(--jade) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--jade) 15%, transparent);
 }
 :global(.ann-target.ann-active.person) {
-  background: rgba(58, 90, 140, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(58, 90, 140, 0.15);
+  background: color-mix(in srgb, var(--ann-person) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-person) 15%, transparent);
 }
 :global(.ann-target.ann-active.place) {
-  background: rgba(139, 105, 20, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.15);
+  background: color-mix(in srgb, var(--ann-place) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-place) 15%, transparent);
 }
 :global(.ann-target.ann-active.event) {
-  background: rgba(107, 76, 138, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(107, 76, 138, 0.15);
+  background: color-mix(in srgb, var(--ann-event) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-event) 15%, transparent);
 }
 :global(.ann-target.ann-active.date) {
-  background: rgba(42, 122, 122, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(42, 122, 122, 0.15);
+  background: color-mix(in srgb, var(--ann-date) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-date) 15%, transparent);
 }
 :global(.ann-target.ann-active.allusion) {
-  background: rgba(181, 101, 29, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(181, 101, 29, 0.15);
+  background: color-mix(in srgb, var(--ann-allusion) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-allusion) 15%, transparent);
 }
 :global(.ann-target.ann-active.etymology) {
-  background: rgba(107, 91, 149, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(107, 91, 149, 0.15);
+  background: color-mix(in srgb, var(--ann-etymology) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-etymology) 15%, transparent);
 }
 :global(.ann-target.ann-active.commentary) {
-  background: rgba(192, 57, 43, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+  background: color-mix(in srgb, var(--ann-commentary) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-commentary) 15%, transparent);
 }
 :global(.ann-target.ann-active.translation) {
-  background: rgba(44, 110, 73, 0.12) !important;
-  box-shadow: 0 0 0 2px rgba(44, 110, 73, 0.15);
+  background: color-mix(in srgb, var(--ann-translation) 12%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ann-translation) 15%, transparent);
 }
 
 @media (min-width: 768px) {

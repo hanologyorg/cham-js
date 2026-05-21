@@ -135,7 +135,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   border-left: 1px solid var(--border);
   display: flex; flex-direction: column;
   align-items: center;
-  padding: 12px 0;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 0 max(12px, env(safe-area-inset-bottom, 0px));
   z-index: 200;
   gap: 8px;
 }
@@ -347,11 +347,11 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 }
 
 @media (max-width: 768px) {
-  .sidenav { width: 44px; padding: 8px 0; gap: 5px; }
+  .sidenav { width: 44px; padding: max(8px, env(safe-area-inset-top, 0px)) 0 max(8px, env(safe-area-inset-bottom, 0px)); gap: 5px; }
   .sn-brand { width: 30px; height: 36px; margin-bottom: 2px; }
   .sn-seal { font-size: 14px; }
-  .sn-btn { width: 28px; height: 28px; }
-  .sn-btn svg { width: 15px; height: 15px; }
+  .sn-btn { width: 32px; height: 32px; }
+  .sn-btn svg { width: 16px; height: 16px; }
   .sn-context { font-size: 10px; max-height: 70px; }
   .sn-settings { width: 180px; right: 52px; padding: 12px; }
   .sn-layout-tag { width: 20px; height: 20px; font-size: 10px; }

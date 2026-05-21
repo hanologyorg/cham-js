@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { parseAnnotationBlock } from '../utils/annotationParser'
+import { useI18n } from '../composables/useI18n'
 import PronunciationGroup from './PronunciationGroup.vue'
+
+const { locale } = useI18n()
 
 const props = defineProps<{
   num: string
@@ -49,6 +52,12 @@ const displayNum = computed(() => {
   return props.num
 })
 
+const displayLabel = computed(() => {
+  if (!props.special) return props.label
+  if (locale.value === 'en') return props.label
+  return '【' + props.label + '】'
+})
+
 const entries = computed(() =>
   props.isAnnotations ? parseAnnotationBlock(props.text) : []
 )
@@ -64,7 +73,7 @@ const paragraphsHtml = computed(() => {
   <div v-if="text" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
     <div class="sb-header">
       <span v-if="displayNum" class="sb-num" :class="{ special }">{{ displayNum }}</span>
-      <h3>{{ special ? '【' + label + '】' : label }}</h3>
+      <h3>{{ displayLabel }}</h3>
     </div>
     <div v-if="isAnnotations" class="sb-text sb-ann-list">
       <div v-for="entry in entries" :key="entry.num" class="sb-ann-entry">

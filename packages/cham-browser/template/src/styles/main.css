@@ -167,7 +167,7 @@ button:focus-visible {
 
 /* ===== ACTIVE ANNOTATION FLASH ===== */
 @keyframes ann-flash-anim {
-  0% { background: rgba(194, 58, 43, 0.25); box-shadow: 0 0 12px rgba(194, 58, 43, 0.15); }
+  0% { background: color-mix(in srgb, var(--vermillion) 25%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--vermillion) 15%, transparent); }
   100% { background: transparent; box-shadow: none; }
 }
 
@@ -251,7 +251,7 @@ button:focus-visible {
   flex-direction: row-reverse;
   overflow-x: auto;
   overflow-y: hidden;
-  margin-right: var(--nav-width, 56px);
+  margin-right: calc(var(--nav-width, 56px) + env(safe-area-inset-right, 0px));
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
   scroll-snap-type: x proximity;
