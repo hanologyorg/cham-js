@@ -146,7 +146,7 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <Transition name="ann-dim">
       <div
-        v-if="visible && annotations.length && vertical && isMobile"
+        v-if="visible && annotations.length && vertical && ww < 768"
         class="ann-pane-dim"
         @click="emit('close')"
       />
@@ -341,18 +341,18 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
-.ann-pane-kind.pronunciation { background: var(--jade); color: #fff; }
-.ann-pane-kind.semantic { background: var(--vermillion); color: #fff; }
-.ann-pane-kind.etymology { background: var(--ann-etymology); color: #fff; }
+.ann-pane-kind.pronunciation { background: var(--jade); color: var(--paper); }
+.ann-pane-kind.semantic { background: var(--vermillion); color: var(--paper); }
+.ann-pane-kind.etymology { background: var(--ann-etymology); color: var(--paper); }
 .ann-pane-kind.note,
 .ann-pane-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-pane-kind.commentary { background: var(--ann-commentary); color: #fff; }
-.ann-pane-kind.translation { background: var(--ann-translation); color: #fff; }
-.ann-pane-kind.person { background: var(--ann-person); color: #fff; }
-.ann-pane-kind.place { background: var(--ann-place); color: #fff; }
-.ann-pane-kind.event { background: var(--ann-event); color: #fff; }
-.ann-pane-kind.date { background: var(--ann-date); color: #fff; }
-.ann-pane-kind.allusion { background: var(--ann-allusion); color: #fff; }
+.ann-pane-kind.commentary { background: var(--ann-commentary); color: var(--paper); }
+.ann-pane-kind.translation { background: var(--ann-translation); color: var(--paper); }
+.ann-pane-kind.person { background: var(--ann-person); color: var(--paper); }
+.ann-pane-kind.place { background: var(--ann-place); color: var(--paper); }
+.ann-pane-kind.event { background: var(--ann-event); color: var(--paper); }
+.ann-pane-kind.date { background: var(--ann-date); color: var(--paper); }
+.ann-pane-kind.allusion { background: var(--ann-allusion); color: var(--paper); }
 
 .ann-pane-layer {
   font-size: 10px;

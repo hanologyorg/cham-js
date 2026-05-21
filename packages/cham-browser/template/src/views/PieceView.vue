@@ -312,20 +312,20 @@ function navigate(delta: number) {
   if (target !== null) router.push(`/${props.bookId}/${target}`)
 }
 
-const ROLE_LABELS: Record<string, string> = {
+const ROLE_LABELS = computed(() => ({
   author: t('role.author'),
   commentator: t('role.commentator'),
   editor: t('role.editor'),
   translator: t('role.translator'),
   annotator: t('role.annotator'),
-}
+}))
 
 const contributorGroups = computed(() => {
   const c = piece.value?.contributors
   if (!c || c.length <= 1) return []
   const groups = new Map<string, string[]>()
   for (const x of c) {
-    const t = x.title || ROLE_LABELS[x.role] || t('role.defaultAuthor')
+    const t = x.title || ROLE_LABELS.value[x.role] || t('role.defaultAuthor')
     if (!groups.has(t)) groups.set(t, [])
     groups.get(t)!.push(x.name)
   }
@@ -516,8 +516,8 @@ function tcy(n: number): string {
               </div>
               <div class="v-pane-links">
                 <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="v-pane-link">CTEXT</a>
-                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">Wikipedia</a>
-                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="v-pane-link">Wikipedia</a>
+                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">Wikipedia ZH</a>
+                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="v-pane-link">Wikipedia EN</a>
                 <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="v-pane-link">Wikidata</a>
               </div>
               <div v-if="selectedAuthorBio" class="v-pane-bio">
@@ -671,8 +671,8 @@ function tcy(n: number): string {
                     <span v-if="selectedAuthorWorkCount" class="h-pane-count">{{ t('piece.collected', { count: selectedAuthorWorkCount }) }}</span>
                   </div>
                   <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="h-pane-alt-names">
-                    <span v-if="selectedAuthorData?.courtesyName">字 {{ selectedAuthorData.courtesyName }}</span>
-                    <span v-if="selectedAuthorData?.artName">號 {{ selectedAuthorData.artName }}</span>
+                    <span v-if="selectedAuthorData?.courtesyName">{{ t('author.courtesyName', { name: selectedAuthorData.courtesyName }) }}</span>
+                    <span v-if="selectedAuthorData?.artName">{{ t('author.artName', { name: selectedAuthorData.artName }) }}</span>
                   </div>
                 </div>
               </div>
@@ -857,7 +857,7 @@ function tcy(n: number): string {
 .h-page { min-height: 100vh; }
 .h-nav {
   position: sticky; top: 0; z-index: 100;
-  background: var(--paper); opacity: 0.97;
+  background: var(--paper);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-light);
   padding: 0 40px;

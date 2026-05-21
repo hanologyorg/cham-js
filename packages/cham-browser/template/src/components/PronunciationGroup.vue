@@ -39,7 +39,7 @@ defineProps<{
 }
 .pron-yue {
   background: var(--jade);
-  color: #fff;
+  color: var(--paper);
 }
 .pron-cmn {
   background: var(--ink);

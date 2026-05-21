@@ -1,6 +1,8 @@
 import type { Annotation } from '../types'
 import { useI18n } from '../composables/useI18n'
 
+const { t } = useI18n()
+
 const KIND_I18N_KEYS: Record<string, string> = {
   pronunciation: 'annotation.kind.pronunciation',
   semantic: 'annotation.kind.semantic',
@@ -18,9 +20,5 @@ const KIND_I18N_KEYS: Record<string, string> = {
 
 export function kindLabel(ann: Annotation): string {
   const key = KIND_I18N_KEYS[ann.kind]
-  if (key) {
-    const { t } = useI18n()
-    return t(key)
-  }
-  return ann.kind
+  return key ? t(key) : ann.kind
 }

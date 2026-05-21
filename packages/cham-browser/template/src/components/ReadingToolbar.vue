@@ -15,7 +15,7 @@ function close() { open.value = false }
 <template>
   <div class="rt" :class="{ open }">
     <button class="rt-fab" @click="toggle" :aria-label="open ? t('settings.close') : t('settings.reading')">
-      <span v-if="!open" class="rt-icon">設</span>
+      <span v-if="!open" class="rt-icon">{{ t('settings.shortTitle').charAt(0) }}</span>
       <span v-else class="rt-icon">✕</span>
     </button>
     <div v-if="open" class="rt-panel" @click.stop>

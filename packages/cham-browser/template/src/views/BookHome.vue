@@ -78,7 +78,7 @@ function scrollToCatalog() {
         <span class="v-ch-line"> </span>
         <span class="v-count">{{ t('catalog.total', { count: filtered.length }) }}</span>
         <span class="v-search-wrap">
-          <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" aria-label="search" />
+          <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" :aria-label="t('catalog.search')" />
         </span>
       </section>
 
@@ -91,6 +91,9 @@ function scrollToCatalog() {
           class="v-card"
           @click="openPiece(piece.num)"
         />
+      </div>
+      <div v-if="searchQuery && filtered.length === 0" class="v-empty">
+        <span class="v-empty-text">{{ t('catalog.noResults', { query: searchQuery }) }}</span>
       </div>
     </div>
   </div>
@@ -377,6 +380,23 @@ function scrollToCatalog() {
   font-size: 40px;
   margin-bottom: 16px;
   opacity: 0.5;
+}
+
+.v-empty {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  flex-shrink: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+.v-empty-text {
+  font-size: 14px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+  font-family: var(--sans);
 }
 
 @media (max-width: 768px) {

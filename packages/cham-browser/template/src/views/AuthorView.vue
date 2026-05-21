@@ -177,8 +177,7 @@ function goHome() { router.push('/') }
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; font-weight: 900;
   color: var(--vermillion);
-  margin-left: 24px; padding-left: 20px;
-  border-left: 3px solid var(--vermillion);
+  margin-left: 24px;
 }
 .v-name {
   font-size: 48px; font-weight: 900;
@@ -251,7 +250,7 @@ function goHome() { router.push('/') }
 .h-page { min-height: 100vh; }
 .h-nav {
   position: sticky; top: 0; z-index: 100;
-  background: var(--paper); opacity: 0.97;
+  background: var(--paper);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-light);
   padding: 0 40px;

@@ -104,7 +104,7 @@ const paragraphsHtml = computed(() => {
 .sb-num {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--vermillion); color: #fff;
+  background: var(--vermillion); color: var(--paper);
   font-family: var(--sans); font-size: 13px; font-weight: 700;
   flex-shrink: 0;
 }
@@ -142,7 +142,7 @@ const paragraphsHtml = computed(() => {
   height: 22px;
   border-radius: 4px;
   background: var(--vermillion);
-  color: #fff;
+  color: var(--paper);
   font-family: var(--sans);
   font-size: 12px;
   font-weight: 700;

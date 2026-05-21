@@ -168,4 +168,11 @@ function onKey(event: KeyboardEvent) {
   color: var(--ink-faint);
   letter-spacing: 1px;
 }
+
+.route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
 </style>

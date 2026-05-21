@@ -5,13 +5,6 @@ export type LayoutMode = 'horizontal' | 'vertical'
 
 export const THEMES: Theme[] = ['light', 'sepia', 'dark', 'oled']
 
-export const THEME_LABELS: Record<Theme, string> = {
-  light: '亮',
-  sepia: '暖',
-  dark: '暗',
-  oled: '黑',
-}
-
 export const FONT_SIZES = [12, 14, 16, 18, 20, 22, 24, 28, 32] as const
 export type FontSize = typeof FONT_SIZES[number]
 

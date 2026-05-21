@@ -61,7 +61,7 @@ onUnmounted(detach)
 
 <template>
   <Transition name="btt">
-    <button v-if="visible" class="btt" :class="{ 'btt-v': vertical }" @click="scrollToTop" :aria-label="vertical ? t('action.backToStart') : t('action.backToStart')">
+    <button v-if="visible" class="btt" :class="{ 'btt-v': vertical }" @click="scrollToTop" :aria-label="vertical ? t('action.backToStart') : t('action.backToTop')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 19V5M5 12l7-7 7 7"/>
       </svg>

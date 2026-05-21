@@ -231,18 +231,18 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
   line-height: 1.5;
 }
-.ann-kind.pronunciation { background: var(--jade); color: #fff; }
-.ann-kind.semantic { background: var(--vermillion); color: #fff; }
-.ann-kind.etymology { background: var(--ann-etymology); color: #fff; }
+.ann-kind.pronunciation { background: var(--jade); color: var(--paper); }
+.ann-kind.semantic { background: var(--vermillion); color: var(--paper); }
+.ann-kind.etymology { background: var(--ann-etymology); color: var(--paper); }
 .ann-kind.note,
 .ann-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-kind.commentary { background: var(--ann-commentary); color: #fff; }
-.ann-kind.translation { background: var(--ann-translation); color: #fff; }
-.ann-kind.person { background: var(--ann-person); color: #fff; }
-.ann-kind.place { background: var(--ann-place); color: #fff; }
-.ann-kind.event { background: var(--ann-event); color: #fff; }
-.ann-kind.date { background: var(--ann-date); color: #fff; }
-.ann-kind.allusion { background: var(--ann-allusion); color: #fff; }
+.ann-kind.commentary { background: var(--ann-commentary); color: var(--paper); }
+.ann-kind.translation { background: var(--ann-translation); color: var(--paper); }
+.ann-kind.person { background: var(--ann-person); color: var(--paper); }
+.ann-kind.place { background: var(--ann-place); color: var(--paper); }
+.ann-kind.event { background: var(--ann-event); color: var(--paper); }
+.ann-kind.date { background: var(--ann-date); color: var(--paper); }
+.ann-kind.allusion { background: var(--ann-allusion); color: var(--paper); }
 
 .ann-layer {
   font-size: 10px;
@@ -395,6 +395,34 @@ onBeforeUnmount(() => {
 :global(.ann-target.ann-active.person) {
   background: rgba(58, 90, 140, 0.12) !important;
   box-shadow: 0 0 0 2px rgba(58, 90, 140, 0.15);
+}
+:global(.ann-target.ann-active.place) {
+  background: rgba(139, 105, 20, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.15);
+}
+:global(.ann-target.ann-active.event) {
+  background: rgba(107, 76, 138, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(107, 76, 138, 0.15);
+}
+:global(.ann-target.ann-active.date) {
+  background: rgba(42, 122, 122, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(42, 122, 122, 0.15);
+}
+:global(.ann-target.ann-active.allusion) {
+  background: rgba(181, 101, 29, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(181, 101, 29, 0.15);
+}
+:global(.ann-target.ann-active.etymology) {
+  background: rgba(107, 91, 149, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(107, 91, 149, 0.15);
+}
+:global(.ann-target.ann-active.commentary) {
+  background: rgba(192, 57, 43, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+}
+:global(.ann-target.ann-active.translation) {
+  background: rgba(44, 110, 73, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(44, 110, 73, 0.15);
 }
 
 @media (min-width: 768px) {

@@ -45,6 +45,18 @@
   background: rgba(181, 101, 29, 0.1);
   box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(181, 101, 29, 0.08);
 }
+.ann-target.etymology:hover {
+  background: rgba(107, 91, 149, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(107, 91, 149, 0.08);
+}
+.ann-target.commentary:hover {
+  background: rgba(192, 57, 43, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(192, 57, 43, 0.08);
+}
+.ann-target.translation:hover {
+  background: rgba(44, 110, 73, 0.1);
+  box-shadow: 0 var(--ann-shadow-y, 2px) 8px rgba(44, 110, 73, 0.08);
+}
 
 /* ─── Annotation number ─── */
 .ann-num {
