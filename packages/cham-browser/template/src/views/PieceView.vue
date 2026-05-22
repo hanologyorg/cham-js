@@ -364,13 +364,13 @@ function tcy(n: number): string {
           <template v-if="piece.contributors && piece.contributors.length > 1">
             <div v-for="group in contributorGroups" :key="group.title" class="v-author-group">
               <span class="v-author-role">{{ group.title }}</span>
-              <span v-for="name in group.names" :key="name" class="v-poem-author" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
+              <span v-for="name in group.names" :key="name" class="v-poem-author" role="button" tabindex="0" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
             </div>
           </template>
-          <span v-else class="v-poem-author" @click="openAuthorPane">{{ piece.author }}</span>
-          <div v-if="piece.source?.textRef" class="v-source-link" @click="router.push(`/${piece.source.textRef}`)">
+          <span v-else class="v-poem-author" role="button" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</span>
+          <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="v-source-link">
             ← {{ meta?.title }}
-          </div>
+          </router-link>
           <div class="v-poem-meta">
             <template v-if="isMultiPart">
               <span class="v-meta-item" v-html="tcy(piece.parts!.length) + ' ' + t('piece.stanzas')" />
@@ -543,9 +543,9 @@ function tcy(n: number): string {
             <div class="h-nav-title-row">
               <span v-if="piece.era" class="h-era">{{ piece.era }}</span>
               <span class="h-breadcrumb">
-                <span v-if="piece.source?.textRef" class="h-source-link" @click="router.push(`/${piece.source.textRef}`)">
+                <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="h-source-link">
                   {{ meta?.title }} →
-                </span>
+                </router-link>
                 <span class="h-sep">{{ piece.num }}.</span>
                 {{ piece.title }}
               </span>
@@ -553,10 +553,10 @@ function tcy(n: number): string {
                 <template v-for="(group, gi) in contributorGroups" :key="group.title">
                   <span v-if="gi > 0" class="h-sep">|</span>
                   <span class="h-author-role">{{ group.title }}</span>
-                  <span v-for="name in group.names" :key="name" class="h-author-link" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
+                  <span v-for="name in group.names" :key="name" class="h-author-link" role="button" tabindex="0" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
                 </template>
               </template>
-              <span v-else class="h-author-link" @click="openAuthorPane">{{ piece.author }}</span>
+              <span v-else class="h-author-link" role="button" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</span>
             </div>
             <div class="h-controls">
               <span class="h-tag h-tag-pager">{{ piece.num }} / {{ pieces.length }}</span>

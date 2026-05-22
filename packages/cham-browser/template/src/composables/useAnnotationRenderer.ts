@@ -51,10 +51,6 @@ export function buildVerseAnnotations(annotations: Annotation[], verseIndex: num
   return segments
 }
 
-export function countVerseSpans(annotations: Annotation[], verseIndex: number): number {
-  return buildVerseAnnotations(annotations, verseIndex).length
-}
-
 export function renderAnnotatedText(text: string, spans: AnnSpan[], useRuby = false, startNum = 0): string {
   if (!spans.length) return esc(text)
 

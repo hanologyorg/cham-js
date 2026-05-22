@@ -56,7 +56,9 @@ function onKey(event: KeyboardEvent) {
         <Suspense :key="route.fullPath">
           <component :is="Component" />
           <template #fallback>
-            <div class="route-loading"></div>
+            <div class="route-loading">
+              <div class="route-loading-seal">文</div>
+            </div>
           </template>
         </Suspense>
       </Transition>
@@ -174,5 +176,18 @@ function onKey(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+}
+.route-loading-seal {
+  width: 56px; height: 56px;
+  border: 2px solid var(--vermillion);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 900;
+  color: var(--vermillion);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
 }
 </style>
