@@ -17,15 +17,12 @@ describe('App.vue structure', () => {
     expect(appVue).toContain('route-loading')
   })
 
-  it('Suspense keys on route.fullPath', () => {
-    // router-view must destructure both Component and route
-    expect(appVue).toMatch(/v-slot="\{ Component,\s*route \}"/)
+  it('component uses route.fullPath as key', () => {
     expect(appVue).toMatch(/:key="route\.fullPath"/)
   })
 
-  it('has page-fade Transition wrapping Suspense', () => {
-    expect(appVue).toContain('page-fade')
-    expect(appVue).toMatch(/<Transition[^>]*name="page-fade"/)
+  it('renders <component :is="Component" /> inside Suspense', () => {
+    expect(appVue).toContain(':is="Component"')
   })
 
   it('has page-fade CSS transition classes', () => {
@@ -33,8 +30,8 @@ describe('App.vue structure', () => {
     expect(appVue).toContain('.page-fade-leave-active')
   })
 
-  it('renders <component :is="Component" /> inside Suspense', () => {
-    // Check that Component is used as a dynamic component
-    expect(appVue).toContain(':is="Component"')
+  it('does NOT wrap Suspense in Transition (causes async nav failures)', () => {
+    // Transition + Suspense combination breaks async component navigation
+    expect(appVue).not.toMatch(/<Transition[^>]*>[\s\S]*<Suspense/)
   })
 })
