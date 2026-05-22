@@ -26,21 +26,60 @@
   border-bottom-style: double;
 }
 
-/* ─── Vertical mode: border-left ─── */
+/* ─── Vertical mode: background line on right ─── */
 [data-layout="vertical"] .ann-target,
 .v-scroll .ann-target,
 .part-block--vertical .ann-target {
   border-bottom: none;
-  border-left-width: 2px;
-  border-left-style: solid;
-  padding-left: 2px;
+  border-right: none;
+  padding-right: 3px;
+  background-image: linear-gradient(to bottom, var(--vermillion), var(--vermillion));
+  background-size: 2px 100%;
+  background-position: right center;
+  background-repeat: no-repeat;
 }
 [data-layout="vertical"] .ann-target.ann-overlap,
 .v-scroll .ann-target.ann-overlap,
 .part-block--vertical .ann-target.ann-overlap {
-  border-left-width: 3px;
-  border-left-style: double;
-  padding-left: 3px;
+  padding-right: 4px;
+  background-size: 3px 100%;
+}
+
+/* ─── Vertical mode: per-kind colors ─── */
+.v-scroll .ann-target.pronunciation,
+[data-layout="vertical"] .ann-target.pronunciation,
+.part-block--vertical .ann-target.pronunciation {
+  background-image: linear-gradient(to bottom, var(--jade), var(--jade));
+}
+.v-scroll .ann-target.pronunciation.semantic,
+[data-layout="vertical"] .ann-target.pronunciation.semantic,
+.part-block--vertical .ann-target.pronunciation.semantic {
+  background-image: linear-gradient(to bottom, var(--gold), var(--gold));
+}
+.v-scroll .ann-target.person,
+[data-layout="vertical"] .ann-target.person,
+.part-block--vertical .ann-target.person {
+  background-image: linear-gradient(to bottom, var(--ann-person), var(--ann-person));
+}
+.v-scroll .ann-target.place,
+[data-layout="vertical"] .ann-target.place,
+.part-block--vertical .ann-target.place {
+  background-image: linear-gradient(to bottom, var(--ann-place), var(--ann-place));
+}
+.v-scroll .ann-target.event,
+[data-layout="vertical"] .ann-target.event,
+.part-block--vertical .ann-target.event {
+  background-image: linear-gradient(to bottom, var(--ann-event), var(--ann-event));
+}
+.v-scroll .ann-target.date,
+[data-layout="vertical"] .ann-target.date,
+.part-block--vertical .ann-target.date {
+  background-image: linear-gradient(to bottom, var(--ann-date), var(--ann-date));
+}
+.v-scroll .ann-target.allusion,
+[data-layout="vertical"] .ann-target.allusion,
+.part-block--vertical .ann-target.allusion {
+  background-image: linear-gradient(to bottom, var(--ann-allusion), var(--ann-allusion));
 }
 
 /* ─── Annotation kind hover states ─── */

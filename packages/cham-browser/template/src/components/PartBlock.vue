@@ -236,14 +236,16 @@ const annotationEntries = computed(() =>
 
 .part-block--vertical :deep(.ann-target) {
   border-bottom: none;
-  border-left-width: 2px;
-  border-left-style: solid;
-  padding-left: 2px;
+  border-right: none;
+  padding-right: 3px;
+  background-image: linear-gradient(to bottom, var(--vermillion), var(--vermillion));
+  background-size: 2px 100%;
+  background-position: right center;
+  background-repeat: no-repeat;
 }
 .part-block--vertical :deep(.ann-target.ann-overlap) {
-  border-left-width: 3px;
-  border-left-style: double;
-  padding-left: 3px;
+  padding-right: 4px;
+  background-size: 3px 100%;
 }
 .part-block--vertical :deep(.ann-num) {
   font-size: 0.45em;
