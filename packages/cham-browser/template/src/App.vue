@@ -57,7 +57,8 @@ function onKey(event: KeyboardEvent) {
           <component :is="Component" />
           <template #fallback>
             <div class="route-loading">
-              <div class="route-loading-seal">文</div>
+              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo" />
+              <div v-else class="route-loading-seal">文</div>
             </div>
           </template>
         </Suspense>
@@ -176,6 +177,11 @@ function onKey(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+}
+.route-loading-logo {
+  width: 56px; height: auto;
+  object-fit: contain;
+  animation: pulse 1.2s ease-in-out infinite;
 }
 .route-loading-seal {
   width: 56px; height: 56px;
