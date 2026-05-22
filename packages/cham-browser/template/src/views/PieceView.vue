@@ -727,7 +727,7 @@ function tcy(n: number): string {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -781,7 +781,7 @@ function tcy(n: number): string {
   flex-direction: row-reverse;
   align-items: stretch;
   gap: 0;
-  height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   padding: 20px 16px;
 }
@@ -810,7 +810,7 @@ function tcy(n: number): string {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -854,7 +854,7 @@ function tcy(n: number): string {
 
 /* ═══════ 橫排模式 ═══════ */
 
-.h-page { min-height: 100vh; }
+.h-page { min-height: 100dvh; }
 .h-nav {
   position: sticky; top: 0; z-index: 100;
   background: var(--paper);
@@ -1037,7 +1037,7 @@ function tcy(n: number): string {
 }
 .h-pane {
   width: min(420px, 90vw);
-  height: 100vh;
+  height: 100dvh;
   background: var(--paper);
   padding: 32px;
   overflow-y: auto;
@@ -1173,7 +1173,7 @@ function tcy(n: number): string {
 .v-author-pane {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: 100vh;
+  height: 100dvh;
   background: var(--paper);
   padding: 32px 24px;
   overflow-x: auto;
@@ -1290,7 +1290,7 @@ function tcy(n: number): string {
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   align-items: center;
   justify-content: center;
   padding: 0 6px;

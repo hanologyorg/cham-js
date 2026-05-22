@@ -5,6 +5,13 @@
   transition: background 0.2s ease, box-shadow 0.2s ease;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+  text-decoration: none;
+}
+ruby.ann-target {
+  text-decoration: none;
+}
+rt.ann-num, sup.ann-num {
+  text-decoration: none;
 }
 
 /* ─── Annotation kind border colors ─── */

@@ -146,7 +146,7 @@ function goHome() { router.push('/') }
 /* ═══════ 直排模式 ═══════ */
 
 .v-page {
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: row-reverse;
   overflow-x: auto;
@@ -164,7 +164,7 @@ function goHome() { router.push('/') }
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -198,7 +198,7 @@ function goHome() { router.push('/') }
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   padding: 40px 16px;
   border-right: 1px solid var(--border);
 }
@@ -247,7 +247,7 @@ function goHome() { router.push('/') }
 
 /* ═══════ 橫排模式 ═══════ */
 
-.h-page { min-height: 100vh; }
+.h-page { min-height: 100dvh; }
 .h-nav {
   position: sticky; top: 0; z-index: 100;
   background: var(--paper);

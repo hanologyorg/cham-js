@@ -210,7 +210,7 @@ onBeforeUnmount(() => {
   position: fixed;
   left: 0;
   top: 0;
-  height: 100vh;
+  height: 100dvh;
   background: var(--surface-warm);
   border-right: 1px solid var(--border);
   z-index: 300;
@@ -568,7 +568,7 @@ onBeforeUnmount(() => {
     width: auto !important;
     max-width: 65vw !important;
     min-width: 180px;
-    height: 100vh !important;
+    height: 100dvh !important;
     max-height: none !important;
     top: 0 !important;
     bottom: auto !important;

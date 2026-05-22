@@ -130,7 +130,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 .sidenav {
   position: fixed;
   top: 0; right: 0;
-  width: 56px; height: 100vh;
+  width: 56px; height: 100dvh;
   background: var(--paper);
   border-left: 1px solid var(--border);
   display: flex; flex-direction: column;

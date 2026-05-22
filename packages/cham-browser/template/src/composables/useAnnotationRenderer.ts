@@ -69,7 +69,10 @@ export function renderAnnotatedText(text: string, spans: AnnSpan[], useRuby = fa
     const body = esc(text.slice(span.start, span.end))
     if (useRuby) {
       const rtCls = numText.length > 1 ? 'ann-num ann-num-long' : 'ann-num'
-      html += `<ruby class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${body}<rp></rp><rt class="${rtCls}">${numText}</rt><rp></rp></ruby>`
+      const chars = [...body]
+      html += chars.map((ch, i) =>
+        `<ruby class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${ch}<rp></rp>${i === 0 ? `<rt class="${rtCls}">${numText}</rt>` : ''}<rp></rp></ruby>`
+      ).join('')
     } else {
       html += `<span class="ann-target${overlapCls} ${kinds}" data-ann-ids="${ids}">${body}<sup class="ann-num">${numText}</sup></span>`
     }

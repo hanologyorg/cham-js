@@ -179,7 +179,7 @@ const paragraphsHtml = computed(() => {
 .sb-vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: 100vh;
+  height: 100dvh;
   flex-shrink: 0;
   padding: 32px 24px;
   border-right: 1px solid var(--border);

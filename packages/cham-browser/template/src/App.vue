@@ -144,7 +144,7 @@ function onKey(event: KeyboardEvent) {
 .about-pane-v {
   writing-mode: vertical-rl; text-orientation: mixed;
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   background: var(--paper);
   padding: 32px 28px;
   overflow-x: auto;
@@ -174,7 +174,7 @@ function onKey(event: KeyboardEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 .route-loading-logo {
   width: 56px; height: auto;

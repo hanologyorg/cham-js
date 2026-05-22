@@ -182,7 +182,7 @@ function openBook(bookId: string) {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -213,7 +213,7 @@ function openBook(bookId: string) {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
@@ -257,7 +257,7 @@ function openBook(bookId: string) {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100vh;
+  height: 100dvh;
   width: 44px;
   padding: 16px 0;
   border-left: 1px solid var(--border-light);

@@ -165,7 +165,7 @@ function scrollToCatalog() {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -211,7 +211,7 @@ function scrollToCatalog() {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   padding: 40px 16px;
   border-right: 1px solid var(--border);
   display: flex;
@@ -265,7 +265,7 @@ function scrollToCatalog() {
   grid-template-rows: repeat(auto-fill, 180px);
   gap: 10px;
   padding: 24px 16px;
-  height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   direction: rtl;
   align-items: start;
@@ -279,7 +279,7 @@ function scrollToCatalog() {
 
 .h-hero {
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   background: linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 100%);
@@ -386,7 +386,7 @@ function scrollToCatalog() {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;

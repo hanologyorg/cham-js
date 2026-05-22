@@ -73,7 +73,7 @@ function onTap(event: MouseEvent) {
   --ann-shadow-y: -2px;
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  height: calc(100vh - var(--nav-width, 56px));
+  height: calc(100dvh - var(--nav-width, 56px));
   padding: 32px 24px;
   background: var(--surface);
   border: 1px solid var(--border);

@@ -437,7 +437,7 @@ onBeforeUnmount(() => {
   top: 0;
   width: 85vw;
   max-height: none;
-  height: 100vh;
+  height: 100dvh;
   border-top: none;
   border-radius: 0;
   border-right: 1px solid var(--border);
