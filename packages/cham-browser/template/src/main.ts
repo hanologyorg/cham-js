@@ -15,7 +15,8 @@ export async function createApp() {
 }
 
 if (!import.meta.env.SSR) {
-  createApp().then(({ app, router }) => {
+  createApp().then(async ({ app, router }) => {
+    await router.isReady()
     app.mount('#app')
     const loader = document.getElementById('app-loading')
     if (loader) {
