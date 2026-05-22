@@ -169,6 +169,10 @@ const sourceLabel = (() => {
   font-size: 0.45em;
   text-align: end;
   vertical-align: baseline;
+  ruby-position: under;
+}
+.part-block--vertical :deep(.ann-num-long) {
+  font-size: 0.38em;
 }
 
 .part-block--vertical .part-source {

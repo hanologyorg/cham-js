@@ -57,6 +57,8 @@ const emit = defineEmits<{
 .part-group--vertical {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  margin-bottom: 0;
+  height: 100%;
 }
 
 .part-group--vertical .part-group-label {

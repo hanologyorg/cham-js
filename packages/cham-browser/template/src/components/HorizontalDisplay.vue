@@ -113,6 +113,9 @@ function onTap(event: MouseEvent) {
   vertical-align: super;
   margin-right: 1px;
 }
+:deep(.ann-num-long) {
+  letter-spacing: -1px;
+}
 
 @media (max-width: 768px) {
   .h-display {

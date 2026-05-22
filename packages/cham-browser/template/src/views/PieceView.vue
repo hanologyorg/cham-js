@@ -779,7 +779,7 @@ function tcy(n: number): string {
 .v-multipart {
   display: flex;
   flex-direction: row-reverse;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 0;
   height: 100vh;
   box-sizing: border-box;

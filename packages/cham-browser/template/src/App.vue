@@ -51,18 +51,8 @@ function onKey(event: KeyboardEvent) {
 
 <template>
   <div @keydown="onKey">
-    <router-view v-slot="{ Component, route }">
-      <Transition name="page-fade" mode="out-in">
-        <Suspense :key="route.fullPath">
-          <component :is="Component" />
-          <template #fallback>
-            <div class="route-loading">
-              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo" />
-              <div v-else class="route-loading-seal">文</div>
-            </div>
-          </template>
-        </Suspense>
-      </Transition>
+    <router-view v-slot="{ Component }">
+      <component :is="Component" />
     </router-view>
     <!-- 橫排模式才顯示浮動設定鈕 -->
     <ReadingToolbar v-if="!isVertical" />

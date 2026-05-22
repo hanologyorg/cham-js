@@ -44,10 +44,12 @@ if (!import.meta.env.SSR) {
     localStorage.setItem('theme', t)
   }, { immediate: true })
 
+  // Layout watch must NOT be immediate — it would overwrite localStorage
+  // with the default 'vertical' before nextTick restores the saved value
   watch(layout, l => {
     document.documentElement.setAttribute('data-layout', l)
     localStorage.setItem('layout', l)
-  }, { immediate: true })
+  })
 
   watch(mainFontSize, s => {
     document.documentElement.style.setProperty('--main-font-size', s + 'px')

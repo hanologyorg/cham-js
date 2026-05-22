@@ -113,6 +113,7 @@ function onTap(event: MouseEvent) {
 }
 
 :deep(.ann-target) {
+  border-bottom: none;
   border-left-width: 2px;
   border-left-style: solid;
   padding-left: 2px;
@@ -125,6 +126,7 @@ function onTap(event: MouseEvent) {
 :deep(.ann-num) {
   font-size: 0.45em;
   text-align: end;
+  ruby-position: under;
 }
 :deep(.ann-num-long) {
   font-size: 0.38em;
