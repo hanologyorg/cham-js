@@ -64,8 +64,9 @@ const annotationEntries = computed(() =>
 
 <template>
   <div class="part-block" :class="{ 'part-block--vertical': vertical }">
-    <div v-if="sourceLabel" class="part-source">
-      {{ sourceLabel }}
+    <div v-if="sourceLabel" class="part-header">
+      <span class="part-header-num">{{ num }}</span>
+      <h3>{{ sourceLabel }}</h3>
     </div>
     <div class="part-text" @mouseover="onHover" @mouseleave="onLeave" @click="onTap">
       <span
@@ -114,17 +115,22 @@ const annotationEntries = computed(() =>
   border-left: 1px dashed var(--border-light);
 }
 
-.part-source {
-  font-family: var(--sans);
-  font-size: 12px;
-  letter-spacing: 1px;
-  color: var(--ink-faint);
-  background: var(--surface);
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 3px;
-  margin-bottom: 12px;
-  border: 1px solid var(--border-light);
+.part-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.part-header-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--vermillion); color: var(--paper);
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+.part-header h3 {
+  font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--ink);
 }
 
 .part-text {
@@ -249,9 +255,28 @@ const annotationEntries = computed(() =>
   font-size: 0.38em;
 }
 
-.part-block--vertical .part-source {
+.part-block--vertical .part-header {
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: 0;
-  margin-left: 8px;
+  margin-left: 20px;
+  padding-bottom: 0;
+  border-bottom: none;
+  padding-left: 16px;
+  border-left: 2px solid var(--vermillion);
+}
+
+.part-block--vertical .part-header-num {
+  width: auto; height: auto;
+  border-radius: 0;
+  background: none;
+  color: var(--vermillion);
+  font-size: 16px;
+}
+
+.part-block--vertical .part-header h3 {
+  font-size: 20px;
+  letter-spacing: 6px;
 }
 
 .part-block--vertical .part-annotations {
