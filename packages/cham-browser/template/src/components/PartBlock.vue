@@ -249,7 +249,7 @@ const annotationEntries = computed(() =>
 }
 .part-block--vertical :deep(.ann-num) {
   font-size: 0.45em;
-  text-align: end;
+  text-align: start;
   vertical-align: baseline;
   ruby-position: under;
 }
