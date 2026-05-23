@@ -485,21 +485,24 @@ onBeforeUnmount(() => {
   overflow-x: auto;
   flex: 1;
   min-width: 0;
+  align-items: stretch;
 }
 
 .ann-card.vertical .ann-entry {
-  flex-shrink: 0;
-  border-bottom: none;
-  margin: 0 3px;
-  border-right: 1px solid var(--border-light);
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  flex-shrink: 0;
+  padding: 0 6px;
+  margin: 0;
+  border-bottom: none;
+  border-right: 1px solid var(--border-light);
 }
 
 .ann-card.vertical .ann-entry:first-child {
+  padding: 0 6px;
   border-right: none;
 }
 
@@ -514,21 +517,22 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.ann-card.vertical .ann-pron-h {
-  writing-mode: vertical-lr;
+.ann-card.vertical .ann-entry-header {
+  gap: 4px;
+  margin-bottom: 4px;
 }
 
 .ann-card.vertical .ann-entry-body {
-  padding-left: 0;
+  padding: 0;
+}
+
+.ann-card.vertical .ann-pron-h {
+  writing-mode: vertical-lr;
 }
 
 .ann-card.vertical .ann-text {
   white-space: pre-line;
   line-height: 2;
-}
-
-.ann-card.vertical .ann-entry-header {
-  gap: 4px;
 }
 
 .ann-card.vertical .ann-entry:last-child {
