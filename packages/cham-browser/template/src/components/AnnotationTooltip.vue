@@ -509,7 +509,7 @@ onBeforeUnmount(() => {
 }
 
 .ann-card.vertical .ann-pron-h {
-  writing-mode: horizontal-tb;
+  writing-mode: vertical-lr;
 }
 
 .ann-card.vertical .ann-entry-body {
