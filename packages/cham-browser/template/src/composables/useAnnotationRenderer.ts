@@ -139,12 +139,17 @@ export function useAnnotationTooltip() {
     const el = (event.target as HTMLElement).closest('.ann-target') as HTMLElement | null
     const rect = (el ?? event.target as HTMLElement).getBoundingClientRect()
 
-    // Extract headword text (strip the annotation number)
+    // Extract headword text from all .ann-target elements sharing the same data-ann-ids
     if (el) {
-      const clone = el.cloneNode(true) as HTMLElement
-      const nums = clone.querySelectorAll('.ann-num, sup')
-      nums.forEach(n => n.remove())
-      headword.value = clone.textContent?.trim() || ''
+      const ids = el.getAttribute('data-ann-ids') || ''
+      const container = el.closest('.v-scroll-line, .v-scroll-body, .sb-text, .part-block, [class*="section"]') || el.parentElement
+      const allTargets = container ? container.querySelectorAll(`.ann-target[data-ann-ids="${ids}"]`) : [el]
+      const text = [...allTargets].map(t => {
+        const clone = t.cloneNode(true) as HTMLElement
+        clone.querySelectorAll('.ann-num, sup, rt, rp').forEach(n => n.remove())
+        return clone.textContent?.trim() || ''
+      }).join('')
+      headword.value = text || el.textContent?.trim() || ''
     } else {
       headword.value = ''
     }
