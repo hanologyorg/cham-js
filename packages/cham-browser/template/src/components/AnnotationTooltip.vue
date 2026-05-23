@@ -496,6 +496,7 @@ onBeforeUnmount(() => {
   text-orientation: mixed;
   display: flex;
   flex-direction: row;
+  align-items: flex-start;
 }
 
 .ann-card.vertical .ann-entry:first-child {
@@ -504,8 +505,13 @@ onBeforeUnmount(() => {
 
 .ann-card.vertical .ann-card-close {
   writing-mode: horizontal-tb;
-  top: 4px;
-  left: 4px;
+  position: relative;
+  top: auto;
+  left: auto;
+  align-self: flex-start;
+  opacity: 0.5;
+  margin: 4px;
+  flex-shrink: 0;
 }
 
 .ann-card.vertical .ann-pron-h {
