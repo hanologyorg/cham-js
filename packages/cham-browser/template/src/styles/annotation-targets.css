@@ -39,7 +39,7 @@ rt.ann-num, sup.ann-num {
 .part-block--vertical .ann-target {
   border-bottom: none;
   border-right: none;
-  padding-right: 3px;
+  padding-right: 0px;
   background-image: linear-gradient(to bottom, var(--vermillion), var(--vermillion));
   background-size: 2px 100%;
   background-position: right center;
@@ -48,7 +48,7 @@ rt.ann-num, sup.ann-num {
 [data-layout="vertical"] .ann-target.ann-overlap,
 .v-scroll .ann-target.ann-overlap,
 .part-block--vertical .ann-target.ann-overlap {
-  padding-right: 4px;
+  padding-right: 0px;
   background-size: 3px 100%;
 }
 
@@ -147,7 +147,7 @@ rt.ann-num, sup.ann-num {
 .v-scroll .ann-num,
 .part-block--vertical .ann-num {
   font-size: 0.45em;
-  text-align: start;
+  text-align: left;
   vertical-align: baseline;
   ruby-position: under;
 }
