@@ -30,6 +30,10 @@ const isMobile = computed(() => ww.value < 768)
 function onResize() { ww.value = window.innerWidth }
 
 const stickyVisible = ref(false)
+const sheetRef = ref<HTMLElement | null>(null)
+const dragStartX = ref(0)
+const dragDeltaX = ref(0)
+const isDragging = ref(false)
 
 watch(() => props.visible, (v) => {
   if (v) stickyVisible.value = true
@@ -38,6 +42,38 @@ watch(() => props.visible, (v) => {
 function dismiss() {
   stickyVisible.value = false
   emit('close')
+}
+
+function onSheetTouchStart(e: TouchEvent) {
+  if (!props.vertical) return
+  dragStartX.value = e.touches[0].clientX
+  dragDeltaX.value = 0
+  isDragging.value = true
+}
+
+function onSheetTouchMove(e: TouchEvent) {
+  if (!isDragging.value || !props.vertical) return
+  const dx = e.touches[0].clientX - dragStartX.value
+  if (dx > 0) {
+    dragDeltaX.value = dx
+    if (sheetRef.value) {
+      sheetRef.value.style.transform = `translateX(${dx}px)`
+      sheetRef.value.style.transition = 'none'
+    }
+  }
+}
+
+function onSheetTouchEnd() {
+  if (!isDragging.value || !props.vertical) return
+  isDragging.value = false
+  if (sheetRef.value) {
+    sheetRef.value.style.transition = ''
+    sheetRef.value.style.transform = ''
+  }
+  if (dragDeltaX.value > 80) {
+    dismiss()
+  }
+  dragDeltaX.value = 0
 }
 
 function getSegment(ann: Annotation) {
@@ -138,12 +174,20 @@ onBeforeUnmount(() => {
     <Transition name="ann-sheet">
       <div
         v-if="isMobile && stickyVisible && annotations.length"
+        ref="sheetRef"
         class="ann-sheet"
         :class="{ vertical }"
+        @touchstart="onSheetTouchStart"
+        @touchmove.prevent="onSheetTouchMove"
+        @touchend="onSheetTouchEnd"
       >
-        <button class="ann-sheet-handle" @click="dismiss" :aria-label="t('action.close')">
+        <button v-if="!vertical" class="ann-sheet-handle" @click="dismiss" :aria-label="t('action.close')">
           <span class="ann-handle-bar" />
         </button>
+        <div v-if="vertical" class="ann-sheet-drag-bar" @click="dismiss">
+          <span class="ann-drag-grip" />
+          <span class="ann-drag-hint">{{ t('action.close') }}</span>
+        </div>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
             <div class="ann-headword">{{ headword }}</div>
@@ -185,7 +229,7 @@ onBeforeUnmount(() => {
 
 .ann-headword {
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 900;
   letter-spacing: 4px;
   color: var(--ink);
@@ -204,11 +248,11 @@ onBeforeUnmount(() => {
 /* ─── Annotation entry ─── */
 .ann-entry {
   border-bottom: 1px solid var(--border-light);
-  padding: 8px 0;
-  font-size: 14px;
+  padding: 10px 0;
+  font-size: 16px;
   color: var(--ink-mid);
   letter-spacing: 1.5px;
-  line-height: 1.8;
+  line-height: 2;
 }
 .ann-entry:last-child { border-bottom: none; padding-bottom: 0; }
 .ann-entry:first-child { padding-top: 0; }
@@ -225,9 +269,9 @@ onBeforeUnmount(() => {
 
 .ann-kind {
   display: inline-block;
-  padding: 1px 7px;
+  padding: 2px 8px;
   border-radius: 3px;
-  font-size: 10px;
+  font-size: 11px;
   font-family: var(--sans);
   font-weight: 700;
   letter-spacing: 1px;
@@ -258,7 +302,7 @@ onBeforeUnmount(() => {
 
 .ann-text {
   white-space: pre-line;
-  line-height: 1.8;
+  line-height: 2;
   padding-top: 5px;
 }
 
@@ -450,6 +494,40 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+.ann-sheet-drag-bar {
+  display: none;
+}
+
+.ann-sheet.vertical .ann-sheet-drag-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 100dvh;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-light);
+  background: var(--surface);
+  cursor: pointer;
+  gap: 8px;
+  writing-mode: horizontal-tb;
+}
+
+.ann-drag-grip {
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.ann-drag-hint {
+  writing-mode: vertical-rl;
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 3px;
+}
+
 .ann-sheet.vertical.ann-sheet-enter-from,
 .ann-sheet.vertical.ann-sheet-leave-to {
   transform: translateX(-100%);
@@ -534,7 +612,8 @@ onBeforeUnmount(() => {
 
 .ann-card.vertical .ann-text {
   white-space: pre-line;
-  line-height: 2;
+  line-height: 2.2;
+  letter-spacing: 2px;
 }
 
 .ann-card.vertical .ann-entry:last-child {
@@ -610,8 +689,8 @@ onBeforeUnmount(() => {
 
 .ann-sheet-body.vertical .ann-text {
   white-space: pre-line;
-  line-height: 2;
-  letter-spacing: 1px;
+  line-height: 2.2;
+  letter-spacing: 2px;
 }
 
 .ann-sheet-body.vertical .ann-entry {

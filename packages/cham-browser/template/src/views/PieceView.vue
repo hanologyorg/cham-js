@@ -3,7 +3,7 @@ import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
-import { useReadingMode } from '../composables/useReadingMode'
+import { useReadingMode, FONT_SIZES } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
 import { useData } from '../composables/useData'
@@ -25,7 +25,7 @@ const router = useRouter()
 const { getPiece, pieces, meta, load, getAdjacentNums } = useBook()
 await load(props.bookId)
 
-const { layout, annotationsVisible: prefAnnotationsVisible, annotationPane } = useReadingMode()
+const { layout, annotationsVisible: prefAnnotationsVisible, annotationPane, mainFontSize, setMainFontSize } = useReadingMode()
 const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
 const { t } = useI18n()
@@ -240,6 +240,40 @@ const SECTION_META: Record<string, { special: boolean }> = {
   think_questions: { special: true },
 }
 
+const sectionNavItems = computed(() => {
+  const items: { key: string; short: string; label: string }[] = []
+  const hasAnn = piece.value?.annotations.length > 0 || piece.value?.sections.annotations || hasLayers.value
+  if (hasAnn) {
+    items.push({ key: 'annotations', short: t('section.short.annotations'), label: t('annotation.notes') })
+  }
+  for (const sec of proseSections.value) {
+    items.push({ key: sec.key, short: t('section.short.' + sec.key) || sec.title.charAt(0), label: sec.title })
+  }
+  return items
+})
+
+function scrollToSection(key: string) {
+  const container = isVertical.value ? vPageRef.value : document.documentElement
+  if (!container) return
+  let el: Element | null
+  if (key === 'annotations') {
+    el = container.querySelector('.h-ann-section, .v-layers-inline')
+  } else {
+    const blocks = container.querySelectorAll('[data-section-key]')
+    el = [...blocks].find(b => b.getAttribute('data-section-key') === key) || null
+  }
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'start' })
+}
+
+function fontSizeUp() {
+  const idx = FONT_SIZES.indexOf(mainFontSize.value)
+  if (idx < FONT_SIZES.length - 1) setMainFontSize(FONT_SIZES[idx + 1])
+}
+function fontSizeDown() {
+  const idx = FONT_SIZES.indexOf(mainFontSize.value)
+  if (idx > 0) setMainFontSize(FONT_SIZES[idx - 1])
+}
+
 const proseSections = computed(() => {
   const ss = piece.value?.structuredSections
   if (ss && ss.length > 0) {
@@ -388,6 +422,22 @@ function tcy(n: number): string {
             ▲
           </button>
           <span v-else class="v-inav-spacer" />
+          <div class="v-inav-sep" />
+          <div class="v-sec-nav-v">
+            <button
+              v-for="item in sectionNavItems"
+              :key="item.key"
+              class="v-sec-btn"
+              @click="scrollToSection(item.key)"
+              :title="item.label"
+            >{{ item.short }}</button>
+          </div>
+          <div class="v-inav-sep" />
+          <div class="v-font-nav-v">
+            <button class="v-inav v-inav-font" @click="fontSizeUp" :title="t('nav.fontSizeUp')">大</button>
+            <button class="v-inav v-inav-font" @click="fontSizeDown" :title="t('nav.fontSizeDown')">小</button>
+          </div>
+          <div class="v-inav-sep" />
           <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
             ▼
           </button>
@@ -463,6 +513,7 @@ function tcy(n: number): string {
         <SectionBlock
           v-for="(sec, idx) in proseSections"
           :key="sec.key"
+          :data-section-key="sec.key"
           :num="String(idx + 1).padStart(2, '0')"
           :label="sec.title"
           :special="SECTION_META[sec.key]?.special ?? false"
@@ -559,6 +610,19 @@ function tcy(n: number): string {
               <span v-else class="h-author-link" role="button" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</span>
             </div>
             <div class="h-controls">
+              <div class="h-section-nav">
+                <button
+                  v-for="item in sectionNavItems"
+                  :key="item.key"
+                  class="h-sec-btn"
+                  @click="scrollToSection(item.key)"
+                  :title="item.label"
+                >{{ item.short }}</button>
+              </div>
+              <div class="h-font-btns">
+                <button class="h-font-btn" @click="fontSizeDown" :title="t('nav.fontSizeDown')">A</button>
+                <button class="h-font-btn h-font-btn-lg" @click="fontSizeUp" :title="t('nav.fontSizeUp')">A</button>
+              </div>
               <span class="h-tag h-tag-pager">{{ piece.num }} / {{ pieces.length }}</span>
               <template v-if="isMultiPart">
                 <span class="h-tag">{{ piece.parts!.length }} {{ t('piece.stanzas') }}</span>
@@ -632,6 +696,7 @@ function tcy(n: number): string {
             <SectionBlock
               v-for="(sec, idx) in proseSections"
               :key="sec.key"
+              :data-section-key="sec.key"
               :num="String(idx + 1).padStart(2, '0')"
               :label="sec.title"
               :special="SECTION_META[sec.key]?.special ?? false"
@@ -920,7 +985,49 @@ function tcy(n: number): string {
   font-family: var(--sans); letter-spacing: 1px;
   margin-right: 4px;
 }
-.h-controls { margin-left: auto; display: flex; gap: 6px; }
+.h-controls { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.h-section-nav {
+  display: flex;
+  gap: 3px;
+}
+.h-sec-btn {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0;
+}
+.h-sec-btn:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+}
+.h-font-btns {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.h-font-btn {
+  background: none;
+  border: none;
+  font-family: var(--serif);
+  font-weight: 700;
+  color: var(--ink-light);
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+.h-font-btn:hover { color: var(--vermillion); }
+.h-font-btn-lg { font-size: 15px; }
+.h-font-btn:not(.h-font-btn-lg) { font-size: 11px; }
 .h-tag {
   padding: 4px 12px; border: 1px solid var(--border);
   border-radius: 2px; font-family: var(--sans);
@@ -1288,7 +1395,7 @@ function tcy(n: number): string {
   writing-mode: horizontal-tb;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
   height: 100dvh;
   align-items: center;
@@ -1322,6 +1429,50 @@ function tcy(n: number): string {
   width: 30px;
   height: 44px;
 }
+.v-inav-sep {
+  width: 20px;
+  height: 1px;
+  background: var(--border-light);
+  margin: 2px 0;
+}
+.v-sec-nav-v {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v-sec-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--surface);
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+}
+.v-sec-btn:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+  background: var(--surface-warm);
+}
+.v-font-nav-v {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.v-inav-font {
+  height: 30px;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 700;
+}
 
 /* ─── 注釋閃爍 ─── */
 :deep(.ann-flash) {
@@ -1337,9 +1488,12 @@ function tcy(n: number): string {
   .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
   .v-poem-author { font-size: 18px; letter-spacing: 4px; }
   .v-poem-col { padding: 12px 8px; }
-  .v-inline-nav { padding: 0 4px; }
+  .v-inline-nav { padding: 0 4px; gap: 4px; }
   .v-inav { width: 26px; height: 36px; font-size: 12px; }
   .v-inav-spacer { width: 26px; height: 36px; }
+  .v-sec-btn { width: 26px; height: 26px; font-size: 12px; }
+  .v-inav-font { height: 26px; font-size: 12px; }
+  .v-inav-sep { width: 16px; }
   .v-nav { padding: 16px 8px; gap: 20px; }
   .v-nav-btn { padding: 14px 10px; }
   .v-nav-title { font-size: 16px; letter-spacing: 2px; }
@@ -1373,7 +1527,14 @@ function tcy(n: number): string {
   .h-controls {
     margin-left: 0;
     gap: 4px;
+    flex-wrap: wrap;
   }
+  .h-section-nav {
+    order: 10;
+    width: 100%;
+    justify-content: center;
+  }
+  .h-font-btns { display: none; }
   .h-tag {
     padding: 3px 8px;
     font-size: 11px;
