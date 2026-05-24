@@ -177,14 +177,16 @@ onBeforeUnmount(() => {
         ref="sheetRef"
         class="ann-sheet"
         :class="{ vertical }"
-        @touchstart="onSheetTouchStart"
-        @touchmove.prevent="onSheetTouchMove"
-        @touchend="onSheetTouchEnd"
       >
         <button v-if="!vertical" class="ann-sheet-handle" @click="dismiss" :aria-label="t('action.close')">
           <span class="ann-handle-bar" />
         </button>
-        <div v-if="vertical" class="ann-sheet-drag-bar" @click="dismiss">
+        <div v-if="vertical" class="ann-sheet-drag-bar"
+          @click="dismiss"
+          @touchstart="onSheetTouchStart"
+          @touchmove.prevent="onSheetTouchMove"
+          @touchend="onSheetTouchEnd"
+        >
           <span class="ann-drag-grip" />
           <span class="ann-drag-hint">{{ t('action.close') }}</span>
         </div>
