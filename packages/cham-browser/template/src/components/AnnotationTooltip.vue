@@ -54,7 +54,7 @@ function onSheetTouchStart(e: TouchEvent) {
 function onSheetTouchMove(e: TouchEvent) {
   if (!isDragging.value || !props.vertical) return
   const dx = e.touches[0].clientX - dragStartX.value
-  if (dx > 0) {
+  if (dx < 0) {
     dragDeltaX.value = dx
     if (sheetRef.value) {
       sheetRef.value.style.transform = `translateX(${dx}px)`
@@ -70,7 +70,7 @@ function onSheetTouchEnd() {
     sheetRef.value.style.transition = ''
     sheetRef.value.style.transform = ''
   }
-  if (dragDeltaX.value > 80) {
+  if (dragDeltaX.value < -80) {
     dismiss()
   }
   dragDeltaX.value = 0
@@ -181,15 +181,6 @@ onBeforeUnmount(() => {
         <button v-if="!vertical" class="ann-sheet-handle" @click="dismiss" :aria-label="t('action.close')">
           <span class="ann-handle-bar" />
         </button>
-        <div v-if="vertical" class="ann-sheet-drag-bar"
-          @click="dismiss"
-          @touchstart="onSheetTouchStart"
-          @touchmove.prevent="onSheetTouchMove"
-          @touchend="onSheetTouchEnd"
-        >
-          <span class="ann-drag-grip" />
-          <span class="ann-drag-hint">{{ t('action.close') }}</span>
-        </div>
         <div class="ann-sheet-body" :class="{ vertical }">
           <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
             <div class="ann-headword">{{ headword }}</div>
@@ -211,6 +202,15 @@ onBeforeUnmount(() => {
             <span class="ann-sheet-v-word">{{ headword }}</span>
             <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</span>
           </div>
+        </div>
+        <div v-if="vertical" class="ann-sheet-drag-bar"
+          @click="dismiss"
+          @touchstart="onSheetTouchStart"
+          @touchmove.prevent="onSheetTouchMove"
+          @touchend="onSheetTouchEnd"
+        >
+          <span class="ann-drag-grip" />
+          <span class="ann-drag-hint">{{ t('action.close') }}</span>
         </div>
       </div>
     </Transition>
@@ -509,7 +509,7 @@ onBeforeUnmount(() => {
   width: 48px;
   height: 100dvh;
   flex-shrink: 0;
-  border-right: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
   background: var(--surface);
   cursor: pointer;
   gap: 8px;
