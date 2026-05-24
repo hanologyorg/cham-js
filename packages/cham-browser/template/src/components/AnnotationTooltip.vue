@@ -490,6 +490,7 @@ onBeforeUnmount(() => {
   border-radius: 0;
   border-right: 1px solid var(--border);
   box-shadow: 4px 0 32px rgba(var(--shadow-rgb), 0.15);
+  flex-direction: row;
 }
 
 .ann-sheet.vertical .ann-sheet-handle {
@@ -632,6 +633,8 @@ onBeforeUnmount(() => {
 
 .ann-sheet-body.vertical {
   flex-direction: row;
+  min-height: 100%;
+  height: 100dvh;
 }
 
 .ann-sheet-body.vertical > .ann-sheet-head {
