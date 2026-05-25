@@ -13,6 +13,7 @@ const props = defineProps<{
   text: string
   isAnnotations: boolean
   vertical?: boolean
+  alwaysShow?: boolean
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -70,12 +71,13 @@ const paragraphsHtml = computed(() => {
 </script>
 
 <template>
-  <div v-if="text" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
+  <div v-if="text || alwaysShow" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
     <div class="sb-header">
       <span v-if="displayNum" class="sb-num" :class="{ special }">{{ displayNum }}</span>
       <h3>{{ displayLabel }}</h3>
+      <slot name="header-actions" />
     </div>
-    <div v-if="isAnnotations" class="sb-text sb-ann-list">
+    <div v-if="isAnnotations && text" class="sb-text sb-ann-list">
       <div v-for="entry in entries" :key="entry.num" class="sb-ann-entry">
         <div class="sb-ann-head">
           <span class="sb-ann-num">{{ entry.numDisplay }}</span>

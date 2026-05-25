@@ -269,7 +269,7 @@ function scrollToSection(key: string) {
   if (key === 'verse') {
     el = container.querySelector('.v-title-col, .h-poem-block') || container.querySelector('.v-poem-col')
   } else if (key === 'annotations') {
-    el = container.querySelector('.h-ann-section, .v-layers-inline')
+    el = container.querySelector('.h-ann-section, [data-section-key="annotations"]')
   } else {
     const blocks = container.querySelectorAll('[data-section-key]')
     el = [...blocks].find(b => b.getAttribute('data-section-key') === key) || null
@@ -323,7 +323,7 @@ function updateCurrentSection() {
     if (item.key === 'verse') {
       el = container.querySelector('.v-poem-col')
     } else if (item.key === 'annotations') {
-      el = container.querySelector('.v-layers-inline')
+      el = container.querySelector('[data-section-key="annotations"]')
     } else {
       const blocks = container.querySelectorAll('[data-section-key]')
       el = [...blocks].find(b => b.getAttribute('data-section-key') === item.key) || null
@@ -516,24 +516,27 @@ function tcy(n: number): string {
         </section>
 
         <SectionBlock
-          v-if="!isMultiPart && annotationsVisible && piece.sections.annotations"
+          v-if="!isMultiPart && (piece.sections.annotations || piece.annotations.length > 0)"
+          data-section-key="annotations"
           num=""
           :label="t('annotation.notes')"
           :special="false"
-          :text="piece.sections.annotations"
+          :text="annotationsVisible ? (piece.sections.annotations || '') : ''"
           :is-annotations="true"
           :vertical="true"
+          :always-show="true"
           class="v-section"
-        />
-        <template v-if="hasLayers">
-          <div class="v-layers-inline v-section">
+        >
+          <template #header-actions>
             <AnnotationControlBar
               :layers="annotationLayers"
               :has-annotations="true"
               v-model:active-ids="activeLayerIds"
               v-model:annotations-visible="annotationsVisible"
             />
-          </div>
+          </template>
+        </SectionBlock>
+        <template v-if="hasLayers && annotationsVisible">
           <SectionBlock
             v-for="block in layerAnnotationBlocks"
             :key="block.label"
@@ -546,14 +549,6 @@ function tcy(n: number): string {
             class="v-section"
           />
         </template>
-        <div v-else-if="piece.annotations.length > 0 || piece.sections.annotations" class="v-layers-inline v-section">
-          <AnnotationControlBar
-            :layers="annotationLayers"
-            :has-annotations="true"
-            v-model:active-ids="activeLayerIds"
-            v-model:annotations-visible="annotationsVisible"
-          />
-        </div>
 
         <SectionBlock
           v-for="(sec, idx) in proseSections"
@@ -937,13 +932,6 @@ function tcy(n: number): string {
 
 .v-section {
   flex-shrink: 0;
-}
-
-.v-layers-inline {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  padding: 12px 0 4px;
-  border-top: 1px solid var(--border-light);
 }
 
 .v-source-link {
