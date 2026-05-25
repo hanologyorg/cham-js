@@ -234,8 +234,7 @@ const paragraphsHtml = computed(() => {
   letter-spacing: 6px;
 }
 .sb-vertical .sb-toggle {
-  writing-mode: horizontal-tb;
-  padding: 6px 14px;
+  padding: 6px 10px;
   letter-spacing: 3px;
 }
 .sb-vertical .sb-text {
