@@ -636,11 +636,10 @@ function tcy(n: number): string {
         </button>
       </nav>
 
-      <!-- 頂部 TOC 觸發列 -->
+      <!-- 右側 TOC 觸發條 -->
       <Transition name="toc-bar">
         <div v-if="titleCollapsed" class="v-toc-bar" @click="tocOpen = !tocOpen">
-          <span class="v-toc-context">{{ piece.num }}. {{ piece.title }}</span>
-          <span class="v-toc-trigger">☰ {{ t('nav.contents') }}</span>
+          <span class="v-toc-trigger">☰</span>
         </div>
       </Transition>
 
@@ -1473,7 +1472,7 @@ function tcy(n: number): string {
   left: 0;
   right: var(--nav-width, 56px);
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
   justify-content: center;
   gap: 6px;
   padding: 8px 16px max(8px, env(safe-area-inset-bottom, 0px));
@@ -1505,24 +1504,25 @@ function tcy(n: number): string {
   background: color-mix(in srgb, var(--vermillion) 8%, var(--surface));
 }
 
-/* ─── 頂部 TOC 觸發列 ─── */
+/* ─── 右側 TOC 觸發條 ─── */
 .v-toc-bar {
   position: fixed;
   top: 0;
-  left: 0;
   right: var(--nav-width, 56px);
-  height: 28px;
+  bottom: 0;
+  width: 28px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border-light);
+  border-left: 1px solid var(--border-light);
   z-index: 150;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  font-size: 11px;
+  gap: 0;
+  font-size: 14px;
   color: var(--ink-faint);
   cursor: pointer;
-  writing-mode: horizontal-tb;
+  writing-mode: vertical-rl;
   transition: background 0.15s;
 }
 .v-toc-bar:hover {
@@ -1531,12 +1531,12 @@ function tcy(n: number): string {
 }
 .v-toc-trigger {
   font-family: var(--sans);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
 }
 .toc-bar-enter-active, .toc-bar-leave-active { transition: transform 0.2s ease, opacity 0.2s ease; }
-.toc-bar-enter-from, .toc-bar-leave-to { transform: translateY(-100%); opacity: 0; }
+.toc-bar-enter-from, .toc-bar-leave-to { transform: translateX(100%); opacity: 0; }
 
-/* ─── 目錄彈出面板 ─── */
+/* ─── 目錄彈出面板（從右側展開） ─── */
 .v-toc-overlay {
   position: fixed;
   inset: 0;
@@ -1546,12 +1546,11 @@ function tcy(n: number): string {
 .v-toc-panel {
   position: absolute;
   top: 0;
-  left: 0;
-  width: calc(100vw - var(--nav-width, 56px));
-  max-height: 50vh;
+  right: var(--nav-width, 56px);
+  bottom: 0;
   background: var(--paper);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.12);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 32px rgba(var(--shadow-rgb), 0.12);
   display: flex;
   flex-direction: row;
   padding: 24px 16px;
@@ -1580,9 +1579,9 @@ function tcy(n: number): string {
 .toc-slide-leave-active { transition: opacity 0.15s ease; }
 .toc-slide-leave-active .v-toc-panel { transition: transform 0.15s ease; }
 .toc-slide-enter-from { opacity: 0; }
-.toc-slide-enter-from .v-toc-panel { transform: translateY(-20px); }
+.toc-slide-enter-from .v-toc-panel { transform: translateX(20px); }
 .toc-slide-leave-to { opacity: 0; }
-.toc-slide-leave-to .v-toc-panel { transform: translateY(-10px); }
+.toc-slide-leave-to .v-toc-panel { transform: translateX(10px); }
 
 /* ─── 注釋閃爍 ─── */
 :deep(.ann-flash) {

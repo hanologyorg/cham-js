@@ -30,6 +30,7 @@ describe('PieceView.vue nav structure', () => {
     expect(pieceView).toContain('v-toc-panel')
     expect(pieceView).toContain('v-toc-item')
     expect(pieceView).toContain('tocOpen')
+    expect(pieceView).toContain('v-toc-trigger')
   })
 
   it('sectionNavItems includes verse, annotations and prose sections', () => {
