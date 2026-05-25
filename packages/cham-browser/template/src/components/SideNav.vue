@@ -11,11 +11,14 @@ defineProps<{
   poemTitle?: string
   poemAuthor?: string
   titleCollapsed?: boolean
+  hasPrev?: boolean
+  hasNext?: boolean
 }>()
 
 const emit = defineEmits<{
   back: []
   home: []
+  navigate: [delta: number]
 }>()
 
 const { theme, layout, mainFontSize, bodyFontSize, setTheme, setLayout, setMainFontSize, setBodyFontSize } = useReadingMode()
@@ -43,12 +46,20 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
     <Transition name="title-in">
       <div v-if="titleCollapsed && poemTitle" class="sn-poem-info">
-        <div class="sn-poem-title">{{ poemTitle }}</div>
+        <div class="sn-poem-title" :class="{ 'sn-title-long': poemTitle.length > 6 }">{{ poemTitle }}</div>
         <div v-if="poemAuthor" class="sn-poem-author">{{ poemAuthor }}</div>
       </div>
     </Transition>
 
     <div class="sn-spacer" />
+
+    <button v-if="hasPrev" class="sn-btn sn-nav-btn" @click="emit('navigate', -1)" :title="t('piece.previous')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <button v-if="hasNext" class="sn-btn sn-nav-btn" @click="emit('navigate', 1)" :title="t('piece.next')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
 
     <button v-if="aboutHtml" class="sn-btn" @click="aboutPane?.toggleAbout()" :title="t('nav.about')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -183,6 +194,10 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 .sn-btn:hover { border-color: var(--ink); color: var(--ink); }
 .sn-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
+.sn-nav-btn svg {
+  writing-mode: vertical-rl;
+}
+
 .sn-context {
   writing-mode: vertical-rl;
   font-size: 11px;
@@ -199,17 +214,24 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   gap: 4px;
+  max-height: 240px;
+  overflow: hidden;
 }
 .sn-poem-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 4px;
   color: var(--ink);
-  padding-left: 8px;
+  padding-left: 6px;
   border-left: 2px solid var(--vermillion);
+  line-height: 1.5;
+}
+.sn-title-long {
+  font-size: 13px;
+  letter-spacing: 2px;
   line-height: 1.6;
 }
 .sn-poem-author {
@@ -217,7 +239,6 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   font-weight: 400;
   color: var(--ink-light);
   letter-spacing: 2px;
-  margin-left: 4px;
 }
 
 .title-in-enter-active, .title-in-leave-active {

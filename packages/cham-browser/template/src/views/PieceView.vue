@@ -46,6 +46,15 @@ onMounted(() => {
   onUnmounted(() => observer.disconnect())
 })
 
+// Track current section in vertical mode
+onMounted(() => {
+  const el = vPageRef.value
+  if (!el) return
+  const onScroll = () => updateCurrentSection()
+  el.addEventListener('scroll', onScroll, { passive: true })
+  onUnmounted(() => el.removeEventListener('scroll', onScroll))
+})
+
 // Keyboard navigation
 onMounted(() => {
   function onKey(e: KeyboardEvent) {
@@ -242,6 +251,7 @@ const SECTION_META: Record<string, { special: boolean }> = {
 
 const sectionNavItems = computed(() => {
   const items: { key: string; short: string; label: string }[] = []
+  items.push({ key: 'verse', short: t('section.short.verse'), label: t('section.verse') })
   const hasAnn = piece.value?.annotations.length > 0 || piece.value?.sections.annotations || hasLayers.value
   if (hasAnn) {
     items.push({ key: 'annotations', short: t('section.short.annotations'), label: t('annotation.notes') })
@@ -256,7 +266,9 @@ function scrollToSection(key: string) {
   const container = isVertical.value ? vPageRef.value : document.documentElement
   if (!container) return
   let el: Element | null
-  if (key === 'annotations') {
+  if (key === 'verse') {
+    el = container.querySelector('.v-poem-col, .h-poem-block')
+  } else if (key === 'annotations') {
     el = container.querySelector('.h-ann-section, .v-layers-inline')
   } else {
     const blocks = container.querySelectorAll('[data-section-key]')
@@ -272,6 +284,61 @@ function fontSizeUp() {
 function fontSizeDown() {
   const idx = FONT_SIZES.indexOf(mainFontSize.value)
   if (idx > 0) setMainFontSize(FONT_SIZES[idx - 1])
+}
+
+const currentSection = ref('')
+const tocOpen = ref(false)
+
+const tocItems = computed(() => {
+  const items: { key: string; label: string }[] = [
+    { key: 'title', label: piece.value?.title || '' },
+    { key: 'verse', label: t('section.verse') },
+  ]
+  const hasAnn = piece.value?.annotations.length > 0 || piece.value?.sections.annotations || hasLayers.value
+  if (hasAnn) {
+    items.push({ key: 'annotations', label: t('annotation.notes') })
+  }
+  for (const sec of proseSections.value) {
+    items.push({ key: sec.key, label: sec.title })
+  }
+  return items
+})
+
+function updateCurrentSection() {
+  if (!vPageRef.value || !isVertical.value) return
+  const container = vPageRef.value
+  const center = container.scrollLeft + container.clientWidth / 2
+  const sections: { key: string; left: number }[] = []
+
+  const titleCol = container.querySelector('.v-title-col')
+  if (titleCol) {
+    const r = titleCol.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    sections.push({ key: 'title', left: r.left - containerRect.left + container.scrollLeft })
+  }
+
+  for (const item of sectionNavItems.value) {
+    let el: Element | null = null
+    if (item.key === 'verse') {
+      el = container.querySelector('.v-poem-col')
+    } else if (item.key === 'annotations') {
+      el = container.querySelector('.v-layers-inline')
+    } else {
+      const blocks = container.querySelectorAll('[data-section-key]')
+      el = [...blocks].find(b => b.getAttribute('data-section-key') === item.key) || null
+    }
+    if (el) {
+      const r = el.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      sections.push({ key: item.key, left: r.left - containerRect.left + container.scrollLeft })
+    }
+  }
+
+  let best = 'title'
+  for (const s of sections) {
+    if (s.left <= center + 50) best = s.key
+  }
+  currentSection.value = best
 }
 
 const proseSections = computed(() => {
@@ -388,8 +455,11 @@ function tcy(n: number): string {
         :poem-title="piece.title"
         :poem-author="piece.author"
         :title-collapsed="titleCollapsed"
+        :has-prev="adjacent.prev !== null"
+        :has-next="adjacent.next !== null"
         @back="goBack"
         @home="goHome"
+        @navigate="navigate"
       />
       <ReadingProgress vertical :scroll-container="vPageRef" />
       <div ref="vPageRef" class="v-page">
@@ -416,32 +486,6 @@ function tcy(n: number): string {
             </template>
           </div>
         </section>
-
-        <div class="v-inline-nav">
-          <button v-if="adjacent.prev !== null" class="v-inav" @click="navigate(-1)" :title="t('piece.previous')">
-            ▲
-          </button>
-          <span v-else class="v-inav-spacer" />
-          <div class="v-inav-sep" />
-          <div class="v-sec-nav-v">
-            <button
-              v-for="item in sectionNavItems"
-              :key="item.key"
-              class="v-sec-btn"
-              @click="scrollToSection(item.key)"
-              :title="item.label"
-            >{{ item.short }}</button>
-          </div>
-          <div class="v-inav-sep" />
-          <div class="v-font-nav-v">
-            <button class="v-inav v-inav-font" @click="fontSizeUp" :title="t('nav.fontSizeUp')">大</button>
-            <button class="v-inav v-inav-font" @click="fontSizeDown" :title="t('nav.fontSizeDown')">小</button>
-          </div>
-          <div class="v-inav-sep" />
-          <button v-if="adjacent.next !== null" class="v-inav" @click="navigate(1)" :title="t('piece.next')">
-            ▼
-          </button>
-        </div>
 
         <section v-if="isMultiPart" class="v-poem-col v-multipart">
           <PartGroup
@@ -582,6 +626,38 @@ function tcy(n: number): string {
         </Transition>
       </Teleport>
       <BackToTop vertical :scroll-container="vPageRef" />
+
+      <!-- 底部浮動段落導航列 -->
+      <nav class="v-section-bar" aria-label="section navigation">
+        <button v-for="item in sectionNavItems" :key="item.key"
+          class="v-sec-item" :class="{ active: currentSection === item.key }"
+          @click="scrollToSection(item.key)" :title="item.label">
+          {{ item.short }}
+        </button>
+      </nav>
+
+      <!-- 頂部 TOC 觸發列 -->
+      <Transition name="toc-bar">
+        <div v-if="titleCollapsed" class="v-toc-bar" @click="tocOpen = !tocOpen">
+          <span class="v-toc-context">{{ piece.num }}. {{ piece.title }}</span>
+          <span class="v-toc-trigger">☰ {{ t('nav.contents') }}</span>
+        </div>
+      </Transition>
+
+      <!-- 目錄彈出面板 -->
+      <Teleport to="body">
+        <Transition name="toc-slide">
+          <div v-if="tocOpen" class="v-toc-overlay" @click="tocOpen = false">
+            <div class="v-toc-panel" @click.stop>
+              <div v-for="item in tocItems" :key="item.key"
+                class="v-toc-item" :class="{ active: currentSection === item.key }"
+                @click="scrollToSection(item.key); tocOpen = false">
+                <span class="v-toc-label">{{ item.label }}</span>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </div>
 
     <!-- ═══════ 橫排模式 ═══════ -->
@@ -1390,61 +1466,26 @@ function tcy(n: number): string {
 .v-poem-author:active { color: var(--vermillion); }
 .h-author-link:active { color: var(--vermillion); }
 
-/* ─── 直排行內導航 ─── */
-.v-inline-nav {
-  writing-mode: horizontal-tb;
+/* ─── 底部浮動段落導航列 ─── */
+.v-section-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: var(--nav-width, 56px);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
   gap: 6px;
-  flex-shrink: 0;
-  height: 100dvh;
-  align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-}
-.v-inav {
-  width: 30px;
-  height: 44px;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
+  padding: 8px 16px max(8px, env(safe-area-inset-bottom, 0px));
   background: var(--surface);
-  color: var(--ink-faint);
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-top: 1px solid var(--border-light);
+  z-index: 150;
+  writing-mode: horizontal-tb;
 }
-.v-inav:hover {
-  border-color: var(--vermillion);
-  color: var(--vermillion);
-  background: var(--surface-warm);
-  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.06);
-}
-.v-inav:active {
-  transform: scale(0.94);
-}
-.v-inav-spacer {
-  width: 30px;
-  height: 44px;
-}
-.v-inav-sep {
-  width: 20px;
-  height: 1px;
-  background: var(--border-light);
-  margin: 2px 0;
-}
-.v-sec-nav-v {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.v-sec-btn {
-  width: 30px;
-  height: 30px;
+.v-sec-item {
+  padding: 6px 14px;
   border: 1px solid var(--border-light);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--surface);
   font-family: var(--serif);
   font-size: 13px;
@@ -1452,27 +1493,96 @@ function tcy(n: number): string {
   color: var(--ink-faint);
   cursor: pointer;
   transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: 0;
 }
-.v-sec-btn:hover {
+.v-sec-item:hover {
   border-color: var(--vermillion);
   color: var(--vermillion);
   background: var(--surface-warm);
 }
-.v-font-nav-v {
+.v-sec-item.active {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+  background: color-mix(in srgb, var(--vermillion) 8%, var(--surface));
+}
+
+/* ─── 頂部 TOC 觸發列 ─── */
+.v-toc-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: var(--nav-width, 56px);
+  height: 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 150;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  cursor: pointer;
+  writing-mode: horizontal-tb;
+  transition: background 0.15s;
 }
-.v-inav-font {
-  height: 30px;
-  font-family: var(--serif);
-  font-size: 13px;
-  font-weight: 700;
+.v-toc-bar:hover {
+  background: var(--surface-warm);
+  color: var(--ink-mid);
 }
+.v-toc-trigger {
+  font-family: var(--sans);
+  letter-spacing: 1px;
+}
+.toc-bar-enter-active, .toc-bar-leave-active { transition: transform 0.2s ease, opacity 0.2s ease; }
+.toc-bar-enter-from, .toc-bar-leave-to { transform: translateY(-100%); opacity: 0; }
+
+/* ─── 目錄彈出面板 ─── */
+.v-toc-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--shadow-rgb), 0.2);
+  z-index: 250;
+}
+.v-toc-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100vw - var(--nav-width, 56px));
+  max-height: 50vh;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(var(--shadow-rgb), 0.12);
+  display: flex;
+  flex-direction: row;
+  padding: 24px 16px;
+  gap: 16px;
+}
+.v-toc-item {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-right: 1px solid var(--border-light);
+  transition: all 0.15s;
+}
+.v-toc-item:first-child { padding-left: 0; }
+.v-toc-item:last-child { border-right: none; }
+.v-toc-item:hover { color: var(--vermillion); }
+.v-toc-item.active { border-right-color: var(--vermillion); color: var(--vermillion); }
+.v-toc-label {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  white-space: nowrap;
+}
+.toc-slide-enter-active { transition: opacity 0.2s ease; }
+.toc-slide-enter-active .v-toc-panel { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.toc-slide-leave-active { transition: opacity 0.15s ease; }
+.toc-slide-leave-active .v-toc-panel { transition: transform 0.15s ease; }
+.toc-slide-enter-from { opacity: 0; }
+.toc-slide-enter-from .v-toc-panel { transform: translateY(-20px); }
+.toc-slide-leave-to { opacity: 0; }
+.toc-slide-leave-to .v-toc-panel { transform: translateY(-10px); }
 
 /* ─── 注釋閃爍 ─── */
 :deep(.ann-flash) {
@@ -1488,12 +1598,10 @@ function tcy(n: number): string {
   .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
   .v-poem-author { font-size: 18px; letter-spacing: 4px; }
   .v-poem-col { padding: 12px 8px; }
-  .v-inline-nav { padding: 0 4px; gap: 4px; }
-  .v-inav { width: 26px; height: 36px; font-size: 12px; }
-  .v-inav-spacer { width: 26px; height: 36px; }
-  .v-sec-btn { width: 26px; height: 26px; font-size: 12px; }
-  .v-inav-font { height: 26px; font-size: 12px; }
-  .v-inav-sep { width: 16px; }
+  .v-section-bar { right: var(--nav-width, 44px); gap: 4px; padding: 6px 8px max(6px, env(safe-area-inset-bottom, 0px)); }
+  .v-sec-item { padding: 5px 10px; font-size: 12px; }
+  .v-toc-bar { right: var(--nav-width, 44px); }
+  .v-toc-label { font-size: 14px; letter-spacing: 2px; }
   .v-nav { padding: 16px 8px; gap: 20px; }
   .v-nav-btn { padding: 14px 10px; }
   .v-nav-title { font-size: 16px; letter-spacing: 2px; }

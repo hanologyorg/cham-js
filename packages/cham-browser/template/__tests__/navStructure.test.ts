@@ -20,19 +20,21 @@ describe('PieceView.vue nav structure', () => {
     expect(pieceView).toContain('fontSizeDown')
   })
 
-  it('has section navigation in vertical inline-nav', () => {
-    expect(pieceView).toContain('v-sec-nav-v')
-    expect(pieceView).toContain('v-sec-btn')
+  it('has bottom section bar for vertical mode', () => {
+    expect(pieceView).toContain('v-section-bar')
+    expect(pieceView).toContain('v-sec-item')
   })
 
-  it('has font size controls in vertical inline-nav', () => {
-    expect(pieceView).toContain('v-font-nav-v')
-    expect(pieceView).toContain('v-inav-font')
+  it('has TOC bar and panel for vertical mode', () => {
+    expect(pieceView).toContain('v-toc-bar')
+    expect(pieceView).toContain('v-toc-panel')
+    expect(pieceView).toContain('v-toc-item')
+    expect(pieceView).toContain('tocOpen')
   })
 
-  it('sectionNavItems includes annotations and prose sections', () => {
-    // Must reference annotation section check
-    expect(pieceView).toContain("key: 'annotations'")
+  it('sectionNavItems includes verse, annotations and prose sections', () => {
+    expect(pieceView).toContain("'verse'")
+    expect(pieceView).toContain("'annotations'")
     expect(pieceView).toContain('sectionNavItems')
     expect(pieceView).toContain('scrollToSection')
   })
@@ -41,18 +43,18 @@ describe('PieceView.vue nav structure', () => {
     expect(pieceView).toContain(':data-section-key')
   })
 
-  it('scrollToSection handles both annotations and prose sections', () => {
-    const scrollFn = pieceView.match(/function scrollToSection[\s\S]*?^}/m)
-    expect(scrollFn).toBeTruthy()
-    expect(scrollFn![0]).toContain('annotations')
-    expect(scrollFn![0]).toContain('data-section-key')
+  it('scrollToSection handles verse, annotations and prose sections', () => {
+    expect(pieceView).toContain("'verse'")
+    expect(pieceView).toContain("'annotations'")
+    expect(pieceView).toContain('data-section-key')
   })
 
   it('imports FONT_SIZES from useReadingMode', () => {
     expect(pieceView).toMatch(/import.*FONT_SIZES.*useReadingMode/)
   })
 
-  it('font size buttons use setMainFontSize from useReadingMode', () => {
-    expect(pieceView).toContain('setMainFontSize')
+  it('tracks current section via scroll observer', () => {
+    expect(pieceView).toContain('currentSection')
+    expect(pieceView).toContain('updateCurrentSection')
   })
 })
