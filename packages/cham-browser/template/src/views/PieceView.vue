@@ -637,12 +637,14 @@ function tcy(n: number): string {
         </button>
       </nav>
 
-      <!-- 右側 TOC 觸發條 + 麵包屑 -->
+      <!-- 右側 TOC 條 + 麵包屑 -->
       <div class="v-toc-strip">
         <button class="v-toc-toggle" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
-          <span class="v-toc-hamburger">
-            <span /><span /><span />
-          </span>
+          <svg class="v-toc-hamburger" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <line x1="1" y1="4" x2="15" y2="4" />
+            <line x1="1" y1="8" x2="15" y2="8" />
+            <line x1="1" y1="12" x2="15" y2="12" />
+          </svg>
         </button>
         <div v-if="currentSection && !tocOpen" class="v-toc-breadcrumb">
           <span>{{ tocItems.find(i => i.key === currentSection)?.label || '' }}</span>
@@ -1536,31 +1538,16 @@ function tcy(n: number): string {
   justify-content: center;
   padding: 0;
   flex-shrink: 0;
-  transition: background 0.15s;
+  color: var(--ink-faint);
+  transition: background 0.15s, color 0.15s;
 }
-.v-toc-toggle:hover { background: var(--surface-warm); }
-.v-toc-toggle.open .v-toc-hamburger span:nth-child(1) {
-  transform: translateY(6px) rotate(45deg);
-}
-.v-toc-toggle.open .v-toc-hamburger span:nth-child(2) {
-  opacity: 0;
-}
-.v-toc-toggle.open .v-toc-hamburger span:nth-child(3) {
-  transform: translateY(-6px) rotate(-45deg);
-}
+.v-toc-toggle:hover { background: var(--surface-warm); color: var(--ink-mid); }
+.v-toc-toggle.open { color: var(--vermillion); }
 .v-toc-hamburger {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 16px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.v-toc-hamburger span {
-  display: block;
-  width: 100%;
-  height: 1.5px;
-  background: var(--ink-faint);
-  border-radius: 1px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.v-toc-toggle.open .v-toc-hamburger {
+  transform: rotate(90deg);
 }
 .v-toc-breadcrumb {
   padding-top: 8px;

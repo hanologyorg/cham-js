@@ -147,25 +147,27 @@ onBeforeUnmount(() => {
         @mouseleave="emit('tooltipLeave')"
       >
         <div class="ann-card-inner">
-          <div v-if="headword" class="ann-card-head" :class="dominantKind()">
-            <div class="ann-headword">{{ headword }}</div>
-            <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
+          <div class="ann-card-main">
+            <div v-if="headword" class="ann-card-head" :class="dominantKind()">
+              <div class="ann-headword">{{ headword }}</div>
+              <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
+            </div>
+            <div class="ann-card-scroll">
+              <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
+                <div class="ann-entry-header">
+                  <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                </div>
+                <div class="ann-entry-body">
+                  <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
+                  <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
+                  <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <button class="ann-card-close" @click="dismiss" :aria-label="t('action.close')">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
-          <div class="ann-card-scroll">
-            <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
-              <div class="ann-entry-header">
-                <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
-              </div>
-              <div class="ann-entry-body">
-                <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
-                <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </Transition>
@@ -316,12 +318,21 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   box-shadow: 0 12px 48px rgba(var(--shadow-rgb), 0.2), 0 2px 8px rgba(var(--shadow-rgb), 0.06);
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   writing-mode: horizontal-tb;
+}
+.ann-card-inner {
+  display: flex;
+  flex-direction: column;
+}
+.ann-card-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
 }
 
 .ann-card-close {
@@ -537,7 +548,10 @@ onBeforeUnmount(() => {
 }
 
 /* ─── Vertical mode ─── */
-.ann-card.vertical {
+.ann-card.vertical .ann-card-inner {
+  flex-direction: row-reverse;
+}
+.ann-card.vertical .ann-card-main {
   flex-direction: row-reverse;
 }
 
