@@ -14,6 +14,12 @@ const props = defineProps<{
   isAnnotations: boolean
   vertical?: boolean
   alwaysShow?: boolean
+  toggleable?: boolean
+  toggledOn?: boolean
+}>()
+
+const emit = defineEmits<{
+  toggle: []
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
@@ -72,9 +78,13 @@ const paragraphsHtml = computed(() => {
 
 <template>
   <div v-if="text || alwaysShow" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
-    <div class="sb-header">
+    <div class="sb-header" :class="{ 'sb-toggleable': toggleable, 'sb-on': toggledOn }">
       <span v-if="displayNum" class="sb-num" :class="{ special }">{{ displayNum }}</span>
-      <h3 v-if="displayLabel">{{ displayLabel }}</h3>
+      <component :is="toggleable ? 'button' : 'h3'" v-if="displayLabel"
+        class="sb-title"
+        :class="{ 'sb-toggle': toggleable, 'sb-active': toggledOn }"
+        @click="toggleable && emit('toggle')"
+      >{{ displayLabel }}</component>
       <slot name="header-actions" />
     </div>
     <div v-if="isAnnotations && text" class="sb-text sb-ann-list">
@@ -120,7 +130,14 @@ const paragraphsHtml = computed(() => {
   flex-shrink: 0;
 }
 .sb-num.special { background: var(--jade); }
-.sb-header h3 { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--ink); }
+.sb-title { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--ink); margin: 0; }
+.sb-toggle {
+  border: none; background: none; cursor: pointer; font-family: inherit;
+  padding: 4px 12px; border-radius: 4px; transition: all 0.2s;
+  color: var(--ink-faint); border: 1px solid var(--border-light);
+}
+.sb-toggle:hover { color: var(--vermillion); border-color: var(--vermillion); }
+.sb-toggle.sb-active { background: var(--vermillion); color: var(--paper); border-color: var(--vermillion); }
 .sb-text {
   font-size: var(--body-font-size, 16px); line-height: 2.2; color: var(--ink-mid);
   text-align: justify;
@@ -212,9 +229,14 @@ const paragraphsHtml = computed(() => {
   color: var(--vermillion);
   font-size: 16px;
 }
-.sb-vertical .sb-header h3 {
+.sb-vertical .sb-title {
   font-size: 20px;
   letter-spacing: 6px;
+}
+.sb-vertical .sb-toggle {
+  writing-mode: horizontal-tb;
+  padding: 6px 14px;
+  letter-spacing: 3px;
 }
 .sb-vertical .sb-text {
   margin-left: 16px;

@@ -104,8 +104,21 @@ const totalAnnotationCount = computed(() => {
 
 const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotationLayers || [])
 const hasLayers = computed(() => annotationLayers.value.length > 1)
+const toggleableLayers = computed(() => annotationLayers.value.filter(l => l.id !== 'default'))
 const activeLayerIds = ref<string[]>([])
 const annotationsVisible = prefAnnotationsVisible
+
+function toggleLayer(id: string) {
+  const current = activeLayerIds.value
+  if (current.includes(id)) {
+    const next = current.filter(x => x !== id)
+    activeLayerIds.value = next
+    if (next.length === 0) annotationsVisible.value = false
+  } else {
+    activeLayerIds.value = [...current, id]
+    annotationsVisible.value = true
+  }
+}
 const paneVisible = ref(false)
 const paneActiveId = ref('')
 
@@ -524,21 +537,28 @@ function tcy(n: number): string {
           v-if="!isMultiPart && (piece.sections.annotations || piece.annotations.length > 0)"
           data-section-key="annotations"
           num=""
-          label=""
+          :label="t('annotation.notes')"
           :special="false"
           :text="annotationsVisible ? (piece.sections.annotations || '') : ''"
           :is-annotations="true"
           :vertical="true"
           :always-show="true"
+          :toggleable="true"
+          :toggled-on="annotationsVisible"
           class="v-section"
+          @toggle="annotationsVisible = !annotationsVisible"
         >
-          <template #header-actions>
-            <AnnotationControlBar
-              :layers="annotationLayers"
-              :has-annotations="true"
-              v-model:active-ids="activeLayerIds"
-              v-model:annotations-visible="annotationsVisible"
-            />
+          <template v-if="hasLayers" #header-actions>
+            <div class="v-layer-toggles" v-show="annotationsVisible">
+              <button
+                v-for="layer in toggleableLayers"
+                :key="layer.id"
+                class="v-layer-btn"
+                :class="{ active: activeLayerIds.includes(layer.id) }"
+                @click="toggleLayer(layer.id)"
+                :title="layer.label"
+              >{{ layer.shortLabel }}</button>
+            </div>
           </template>
         </SectionBlock>
         <template v-if="hasLayers && annotationsVisible">
@@ -1468,6 +1488,28 @@ function tcy(n: number): string {
 .h-author-link:active { color: var(--vermillion); }
 
 /* ─── 底部浮動段落導航列 ─── */
+/* ─── 層級切換按鈕 ─── */
+.v-layer-toggles {
+  display: flex;
+  gap: 6px;
+  writing-mode: horizontal-tb;
+}
+.v-layer-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.v-layer-btn:hover { border-color: var(--gold); color: var(--ink); }
+.v-layer-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
 /* ─── 底部浮動段落按鈕 ─── */
 .v-section-bar {
   position: fixed;
