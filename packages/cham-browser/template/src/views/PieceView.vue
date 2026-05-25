@@ -660,10 +660,10 @@ function tcy(n: number): string {
       <!-- 右側 TOC 條 + 麵包屑 -->
       <div class="v-toc-strip">
         <button class="v-toc-toggle" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
-          <svg class="v-toc-hamburger" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <line x1="4" y1="1" x2="4" y2="15" />
-            <line x1="8" y1="1" x2="8" y2="15" />
-            <line x1="12" y1="1" x2="12" y2="15" />
+          <svg class="v-toc-hamburger" viewBox="0 0 3 28" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linecap="round">
+            <line x1="0.5" y1="2" x2="0.5" y2="26" />
+            <line x1="1.5" y1="2" x2="1.5" y2="26" />
+            <line x1="2.5" y1="2" x2="2.5" y2="26" />
           </svg>
         </button>
         <div v-if="currentSection && !tocOpen" class="v-toc-breadcrumb">
@@ -890,6 +890,7 @@ function tcy(n: number): string {
 .v-page {
   padding: 0;
   background: var(--paper);
+  margin-right: 28px;
 }
 
 .v-title-col {
@@ -1563,15 +1564,16 @@ function tcy(n: number): string {
   writing-mode: vertical-rl;
 }
 .v-toc-toggle {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: auto;
+  min-height: 48px;
   border: none;
   background: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 8px 0;
   flex-shrink: 0;
   color: var(--ink-faint);
   transition: background 0.15s, color 0.15s;
@@ -1579,6 +1581,8 @@ function tcy(n: number): string {
 .v-toc-toggle:hover { background: var(--surface-warm); color: var(--ink-mid); }
 .v-toc-toggle.open { color: var(--vermillion); }
 .v-toc-hamburger {
+  width: 12px;
+  height: 48px;
   transition: color 0.2s ease;
 }
 .v-toc-breadcrumb {
