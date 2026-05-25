@@ -1564,7 +1564,7 @@ function tcy(n: number): string {
   writing-mode: vertical-rl;
 }
 .v-toc-toggle {
-  width: 100%;
+  width: 28px;
   height: auto;
   min-height: 48px;
   border: none;
