@@ -641,9 +641,9 @@ function tcy(n: number): string {
       <div class="v-toc-strip">
         <button class="v-toc-toggle" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
           <svg class="v-toc-hamburger" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <line x1="1" y1="4" x2="15" y2="4" />
-            <line x1="1" y1="8" x2="15" y2="8" />
-            <line x1="1" y1="12" x2="15" y2="12" />
+            <line x1="4" y1="1" x2="4" y2="15" />
+            <line x1="8" y1="1" x2="8" y2="15" />
+            <line x1="12" y1="1" x2="12" y2="15" />
           </svg>
         </button>
         <div v-if="currentSection && !tocOpen" class="v-toc-breadcrumb">
@@ -1537,10 +1537,7 @@ function tcy(n: number): string {
 .v-toc-toggle:hover { background: var(--surface-warm); color: var(--ink-mid); }
 .v-toc-toggle.open { color: var(--vermillion); }
 .v-toc-hamburger {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.v-toc-toggle.open .v-toc-hamburger {
-  transform: rotate(90deg);
+  transition: color 0.2s ease;
 }
 .v-toc-breadcrumb {
   padding-top: 8px;
