@@ -1466,26 +1466,25 @@ function tcy(n: number): string {
 .h-author-link:active { color: var(--vermillion); }
 
 /* ─── 底部浮動段落導航列 ─── */
+/* ─── 底部浮動段落按鈕 ─── */
 .v-section-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: var(--nav-width, 56px);
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(calc(-50% + var(--nav-width, 56px) / 2));
   display: flex;
   flex-direction: row-reverse;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 16px max(8px, env(safe-area-inset-bottom, 0px));
-  background: var(--surface);
-  border-top: 1px solid var(--border-light);
+  gap: 8px;
   z-index: 150;
   writing-mode: horizontal-tb;
 }
 .v-sec-item {
   padding: 6px 14px;
   border: 1px solid var(--border-light);
-  border-radius: 4px;
+  border-radius: 16px;
   background: var(--surface);
+  box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.1);
   font-family: var(--serif);
   font-size: 13px;
   font-weight: 700;
@@ -1597,7 +1596,7 @@ function tcy(n: number): string {
   .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
   .v-poem-author { font-size: 18px; letter-spacing: 4px; }
   .v-poem-col { padding: 12px 8px; }
-  .v-section-bar { right: var(--nav-width, 44px); gap: 4px; padding: 6px 8px max(6px, env(safe-area-inset-bottom, 0px)); }
+  .v-section-bar { transform: translateX(calc(-50% + var(--nav-width, 44px) / 2)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); gap: 6px; }
   .v-sec-item { padding: 5px 10px; font-size: 12px; }
   .v-toc-bar { right: var(--nav-width, 44px); }
   .v-toc-label { font-size: 14px; letter-spacing: 2px; }
