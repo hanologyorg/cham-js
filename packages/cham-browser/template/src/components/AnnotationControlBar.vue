@@ -55,7 +55,7 @@ function toggleLayer(id: string) {
       :class="{ on: annotationsVisible }"
       @click="toggleAnnotations"
       :title="annotationsVisible ? t('annotation.hideAnnotations') : t('annotation.showAnnotations')"
-    >{{ t('annotation.notes').charAt(0) }}</button>
+    >{{ t('annotation.notes') }}</button>
     <button
       v-for="layer in toggleableLayers"
       :key="layer.id"
@@ -78,8 +78,7 @@ function toggleLayer(id: string) {
 }
 
 .ann-toggle {
-  width: 36px;
-  height: 36px;
+  padding: 6px 12px;
   border: 1.5px solid var(--vermillion);
   border-radius: 6px;
   background: none;
@@ -87,9 +86,11 @@ function toggleLayer(id: string) {
   font-family: var(--serif);
   font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.2s;
+  writing-mode: horizontal-tb;
+  white-space: nowrap;
 }
 
 .ann-toggle:hover {
@@ -138,8 +139,7 @@ function toggleLayer(id: string) {
 
 @media (max-width: 768px) {
   .ann-toggle {
-    width: 40px;
-    height: 40px;
+    padding: 8px 14px;
     font-size: 17px;
   }
   .ann-layer-btn {

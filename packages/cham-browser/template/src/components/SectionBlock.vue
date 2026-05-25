@@ -74,7 +74,7 @@ const paragraphsHtml = computed(() => {
   <div v-if="text || alwaysShow" ref="rootRef" class="sb-root" :class="{ 'sb-vertical': vertical, 'sb-visible': visible }">
     <div class="sb-header">
       <span v-if="displayNum" class="sb-num" :class="{ special }">{{ displayNum }}</span>
-      <h3>{{ displayLabel }}</h3>
+      <h3 v-if="displayLabel">{{ displayLabel }}</h3>
       <slot name="header-actions" />
     </div>
     <div v-if="isAnnotations && text" class="sb-text sb-ann-list">

@@ -524,7 +524,7 @@ function tcy(n: number): string {
           v-if="!isMultiPart && (piece.sections.annotations || piece.annotations.length > 0)"
           data-section-key="annotations"
           num=""
-          :label="t('annotation.notes')"
+          label=""
           :special="false"
           :text="annotationsVisible ? (piece.sections.annotations || '') : ''"
           :is-annotations="true"
