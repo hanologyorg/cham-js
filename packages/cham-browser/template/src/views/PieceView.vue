@@ -308,14 +308,15 @@ const tocItems = computed(() => {
 function updateCurrentSection() {
   if (!vPageRef.value || !isVertical.value) return
   const container = vPageRef.value
-  const center = container.scrollLeft + container.clientWidth / 2
-  const sections: { key: string; left: number }[] = []
+  const containerRect = container.getBoundingClientRect()
+  const viewportCenter = containerRect.left + containerRect.width / 2
+
+  const sections: { key: string; centerX: number }[] = []
 
   const titleCol = container.querySelector('.v-title-col')
   if (titleCol) {
     const r = titleCol.getBoundingClientRect()
-    const containerRect = container.getBoundingClientRect()
-    sections.push({ key: 'title', left: r.left - containerRect.left + container.scrollLeft })
+    sections.push({ key: 'title', centerX: r.left + r.width / 2 })
   }
 
   for (const item of sectionNavItems.value) {
@@ -330,14 +331,18 @@ function updateCurrentSection() {
     }
     if (el) {
       const r = el.getBoundingClientRect()
-      const containerRect = container.getBoundingClientRect()
-      sections.push({ key: item.key, left: r.left - containerRect.left + container.scrollLeft })
+      sections.push({ key: item.key, centerX: r.left + r.width / 2 })
     }
   }
 
   let best = 'title'
+  let bestDist = Infinity
   for (const s of sections) {
-    if (s.left <= center + 50) best = s.key
+    const dist = Math.abs(s.centerX - viewportCenter)
+    if (dist < bestDist) {
+      bestDist = dist
+      best = s.key
+    }
   }
   currentSection.value = best
 }
