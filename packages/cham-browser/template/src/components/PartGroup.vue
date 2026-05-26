@@ -6,6 +6,7 @@ defineProps<{
   label: string
   parts: Part[]
   vertical?: boolean
+  annotationsVisible?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +26,7 @@ const emit = defineEmits<{
       :verses="part.verses"
       :annotations="part.annotations"
       :annotation-text="part.annotationText"
+      :annotations-visible="annotationsVisible"
       :vertical="vertical"
       :source="part.source"
       @annotation-hover="(e, a) => emit('annotationHover', e, a)"

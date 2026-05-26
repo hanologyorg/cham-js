@@ -306,14 +306,16 @@ const tocItems = computed(() => {
   const p = piece.value
   const items: { key: string; label: string; context?: string }[] = [
     { key: 'title', label: p?.title || '', context: `${p?.num}. ` },
-    { key: 'verse', label: t('section.verse'), context: p?.title },
+    { key: 'verse', label: t('section.verse') },
   ]
   const hasAnn = p?.annotations.length > 0 || p?.sections.annotations || hasLayers.value
   if (hasAnn) {
-    items.push({ key: 'annotations', label: t('annotation.notes'), context: p?.title })
+    items.push({ key: 'annotations', label: t('annotation.notes') })
   }
+  let secIdx = 1
   for (const sec of proseSections.value) {
-    items.push({ key: sec.key, label: sec.title, context: p?.title })
+    items.push({ key: sec.key, label: sec.title, context: String(secIdx).padStart(2, '0') })
+    secIdx++
   }
   return items
 })
@@ -513,6 +515,7 @@ function tcy(n: number): string {
             :label="group.label"
             :parts="group.parts"
             :vertical="true"
+            :annotations-visible="annotationsVisible"
             @annotation-hover="onAnnotationHover"
             @annotation-leave="onAnnotationLeave"
             @annotation-tap="onAnnotationTap"
@@ -545,7 +548,7 @@ function tcy(n: number): string {
           :always-show="true"
           :toggleable="true"
           :toggled-on="annotationsVisible"
-          class="v-section"
+          class="v-section v-indent-1"
           @toggle="annotationsVisible = !annotationsVisible"
         >
           <template v-if="hasLayers" #header-actions>
@@ -586,6 +589,7 @@ function tcy(n: number): string {
           :is-annotations="false"
           :vertical="true"
           class="v-section"
+          :class="SECTION_META[sec.key]?.special ? 'v-indent-2' : 'v-indent-1'"
         />
 
         <nav class="v-nav" aria-label="piece navigation">
@@ -677,7 +681,7 @@ function tcy(n: number): string {
               <div v-for="item in tocItems" :key="item.key"
                 class="v-toc-item" :class="{ active: currentSection === item.key }"
                 @click="scrollToSection(item.key); tocOpen = false">
-                <span class="v-toc-context">{{ item.context }}</span>
+                <span v-if="item.context" class="v-toc-context">{{ item.context }}</span>
                 <span class="v-toc-label">{{ item.label }}</span>
               </div>
             </div>
@@ -747,6 +751,7 @@ function tcy(n: number): string {
               :key="group.label"
               :label="group.label"
               :parts="group.parts"
+              :annotations-visible="annotationsVisible"
               @annotation-hover="interaction.onHover"
               @annotation-leave="interaction.onLeave"
               @annotation-tap="interaction.onTap"
@@ -957,6 +962,8 @@ function tcy(n: number): string {
 .v-section {
   flex-shrink: 0;
 }
+.v-indent-1 { --v-indent: 48px; }
+.v-indent-2 { --v-indent: 64px; }
 
 .v-source-link {
   font-size: 12px;

@@ -200,7 +200,7 @@ const paragraphsHtml = computed(() => {
   text-orientation: mixed;
   height: 100dvh;
   flex-shrink: 0;
-  padding: 32px 24px;
+  padding: var(--v-indent, 32px) 24px;
   border-right: 1px solid var(--border);
   overflow-x: auto;
   overflow-y: hidden;

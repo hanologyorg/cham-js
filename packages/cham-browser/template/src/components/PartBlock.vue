@@ -12,6 +12,7 @@ const props = defineProps<{
   vertical?: boolean
   source?: PieceSource
   annotationText?: string
+  annotationsVisible?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -76,7 +77,7 @@ const annotationEntries = computed(() =>
         v-html="verseHtml(i)"
       />
     </div>
-    <div v-if="annotationText && annotationEntries.length > 0" class="part-annotations">
+    <div v-if="annotationsVisible !== false && annotationText && annotationEntries.length > 0" class="part-annotations">
       <div v-for="entry in annotationEntries" :key="entry.num" class="part-ann-entry">
         <div class="part-ann-head">
           <span class="part-ann-num">{{ entry.numDisplay }}</span>
@@ -91,7 +92,7 @@ const annotationEntries = computed(() =>
         <div v-if="entry.definition" class="part-ann-def">{{ entry.definition }}</div>
       </div>
     </div>
-    <div v-else-if="annotationText" class="part-annotations">
+    <div v-else-if="annotationsVisible !== false && annotationText" class="part-annotations">
       <div v-for="line in annotationText.split('\n')" :key="line" class="part-ann-line">{{ line }}</div>
     </div>
   </div>

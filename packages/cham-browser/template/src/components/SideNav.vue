@@ -21,7 +21,7 @@ const emit = defineEmits<{
   navigate: [delta: number]
 }>()
 
-const { theme, layout, mainFontSize, bodyFontSize, setTheme, setLayout, setMainFontSize, setBodyFontSize } = useReadingMode()
+const { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, setTheme, setLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible } = useReadingMode()
 const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
 const { logoUrl, aboutHtml } = useSiteConfig()
 const router = useRouter()
@@ -111,6 +111,13 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
             <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(bodyFontSize) - 1)] as FontSize)">−</button>
             <span class="ss-size-val">{{ bodyFontSize }}</span>
             <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(bodyFontSize) + 1)] as FontSize)">+</button>
+          </div>
+        </div>
+        <div class="ss-group">
+          <div class="ss-label">{{ t('settings.annotations') }}</div>
+          <div class="ss-options">
+            <button class="ss-opt" :class="{ active: annotationsVisible }" @click="setAnnotationsVisible(true)">{{ t('settings.show') }}</button>
+            <button class="ss-opt" :class="{ active: !annotationsVisible }" @click="setAnnotationsVisible(false)">{{ t('settings.hide') }}</button>
           </div>
         </div>
         <div class="ss-group">
