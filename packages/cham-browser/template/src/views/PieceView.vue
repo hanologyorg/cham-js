@@ -1009,6 +1009,10 @@ function tcy(n: number): string {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   line-height: 1.6;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-height: calc(100dvh - var(--v-indent-0) * 2);
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
@@ -1017,16 +1021,19 @@ function tcy(n: number): string {
 .v-nav-btn:hover .v-nav-title { color: var(--vermillion); }
 .v-nav-dir {
   font-size: 16px; color: var(--vermillion);
-  margin-bottom: 0.3em;
+  flex-shrink: 0;
 }
 .v-nav-title {
-  display: inline-block;
+  display: block;
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  min-height: 120px;
+  max-height: calc(100dvh - var(--v-indent-0) * 2 - 40px - 16px);
   font-size: 18px; font-weight: 700;
   letter-spacing: 3px; color: var(--ink);
   transition: color 0.25s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ═══════ 橫排模式 ═══════ */
