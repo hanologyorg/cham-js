@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { Annotation, VerseLine, PieceSource } from '../types'
 import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations } from '../composables/useAnnotationRenderer'
 import { parseAnnotationBlock } from '../utils/annotationParser'
+import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
 import PronunciationGroup from './PronunciationGroup.vue'
 
@@ -70,7 +71,7 @@ const annotationEntries = computed(() =>
 <template>
   <div class="part-block" :class="{ 'part-block--vertical': vertical }">
     <div v-if="sourceLabel" class="part-header">
-      <span class="part-header-num">{{ num }}</span>
+      <span class="part-header-num">（{{ toChineseNumber(num) }}）</span>
       <h3>{{ sourceLabel }}</h3>
     </div>
     <div class="part-text" @mouseover="onHover" @mouseleave="onLeave" @click="onTap">
