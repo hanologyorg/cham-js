@@ -307,8 +307,17 @@ const tocItems = computed(() => {
   const p = piece.value
   const items: { key: string; label: string; context?: string; level: number }[] = [
     { key: 'title', label: p?.title || '', context: `${p?.num}. `, level: 0 },
-    { key: 'verse', label: t('section.verse'), level: 1 },
   ]
+  if (isMultiPart.value && p?.parts) {
+    for (const part of p.parts) {
+      const chapter = (part.source?.range as Record<string, string>)?.chapter
+      if (chapter) {
+        items.push({ key: `part-${part.num}`, label: chapter, context: `（${toChineseNumber(part.num)}）`, level: 1 })
+      }
+    }
+  } else {
+    items.push({ key: 'verse', label: t('section.verse'), level: 1 })
+  }
   const hasAnn = p?.annotations.length > 0 || p?.sections.annotations || hasLayers.value
   if (hasAnn) {
     items.push({ key: 'annotations', label: t('annotation.notes'), level: 1 })
@@ -336,20 +345,11 @@ function updateCurrentSection() {
     sections.push({ key: 'title', centerX: r.left + r.width / 2 })
   }
 
-  for (const item of sectionNavItems.value) {
-    let el: Element | null = null
-    if (item.key === 'verse') {
-      el = container.querySelector('.v-poem-col')
-    } else if (item.key === 'annotations') {
-      el = container.querySelector('[data-section-key="annotations"]')
-    } else {
-      const blocks = container.querySelectorAll('[data-section-key]')
-      el = [...blocks].find(b => b.getAttribute('data-section-key') === item.key) || null
-    }
-    if (el) {
-      const r = el.getBoundingClientRect()
-      sections.push({ key: item.key, centerX: r.left + r.width / 2 })
-    }
+  const blocks = container.querySelectorAll('[data-section-key]')
+  for (const block of blocks) {
+    const key = block.getAttribute('data-section-key')!
+    const r = block.getBoundingClientRect()
+    sections.push({ key, centerX: r.left + r.width / 2 })
   }
 
   let best = 'title'

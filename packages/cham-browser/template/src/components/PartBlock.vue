@@ -69,7 +69,7 @@ const annotationEntries = computed(() =>
 </script>
 
 <template>
-  <div class="part-block" :class="{ 'part-block--vertical': vertical }">
+  <div class="part-block" :class="{ 'part-block--vertical': vertical }" :data-section-key="sourceLabel ? `part-${num}` : undefined">
     <div v-if="sourceLabel" class="part-header">
       <span class="part-header-num">（{{ toChineseNumber(num) }}）</span>
       <h3>{{ sourceLabel }}</h3>
@@ -332,10 +332,10 @@ const annotationEntries = computed(() =>
 
 .part-block--vertical .part-ann-section {
   margin-top: 0;
-  margin-left: 12px;
+  margin-left: 16px;
   border-top: none;
-  border-left: 1px dashed var(--border-light);
-  padding-left: 8px;
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
 }
 
 .part-block--vertical .part-ann-header {
