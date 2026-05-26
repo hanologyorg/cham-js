@@ -1513,8 +1513,8 @@ function tcy(n: number): string {
 /* ─── 層級切換按鈕 ─── */
 .v-layer-toggles {
   display: flex;
+  flex-direction: row;
   gap: 6px;
-  writing-mode: horizontal-tb;
 }
 .v-layer-btn {
   padding: 4px 10px;
@@ -1523,8 +1523,8 @@ function tcy(n: number): string {
   background: none;
   color: var(--ink-faint);
   font-family: var(--sans);
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 13px;
+  letter-spacing: 3px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;

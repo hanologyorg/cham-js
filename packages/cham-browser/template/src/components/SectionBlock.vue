@@ -213,7 +213,7 @@ const paragraphsHtml = computed(() => {
 .sb-vertical::-webkit-scrollbar { height: 3px; }
 .sb-vertical::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 .sb-vertical .sb-header {
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   margin-bottom: 0;
   margin-left: 20px;
