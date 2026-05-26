@@ -668,7 +668,7 @@ function tcy(n: number): string {
           <line x1="6" y1="4" x2="6" y2="44" />
           <line x1="10" y1="4" x2="10" y2="44" />
         </svg>
-        <div v-if="currentSection" class="v-toc-breadcrumb">
+        <div v-if="currentSection && currentSection !== 'title'" class="v-toc-breadcrumb">
           <span>{{ tocItems.find(i => i.key === currentSection)?.label || '' }}</span>
         </div>
       </div>
@@ -1568,7 +1568,7 @@ function tcy(n: number): string {
   border-left: 1px solid var(--border-light);
   z-index: 160;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   writing-mode: vertical-rl;
   cursor: pointer;
