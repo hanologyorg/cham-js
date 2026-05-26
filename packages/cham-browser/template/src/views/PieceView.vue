@@ -891,6 +891,10 @@ function tcy(n: number): string {
 /* ═══════ 直排模式 ═══════ */
 
 .v-page {
+  --v-indent-0: 24px;
+  --v-indent-1: 40px;
+  --v-indent-2: 56px;
+  --v-pad: 20px;
   padding: 0;
   background: var(--paper);
   margin-right: calc(var(--nav-width, 56px) + 28px);
@@ -905,7 +909,7 @@ function tcy(n: number): string {
   align-items: flex-start;
   justify-content: center;
   gap: 16px;
-  padding: 40px 20px;
+  padding: var(--v-indent-0) var(--v-pad);
   border-right: 1px solid var(--border);
   scroll-snap-align: start;
 }
@@ -946,7 +950,7 @@ function tcy(n: number): string {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 20px 16px;
+  padding: var(--v-indent-0) var(--v-pad);
 }
 
 .v-multipart {
@@ -956,14 +960,14 @@ function tcy(n: number): string {
   gap: 0;
   height: 100dvh;
   box-sizing: border-box;
-  padding: 20px 16px;
+  padding: var(--v-indent-0) var(--v-pad);
 }
 
 .v-section {
   flex-shrink: 0;
 }
-.v-indent-1 { --v-indent: 48px; }
-.v-indent-2 { --v-indent: 64px; }
+.v-indent-1 { --v-indent: var(--v-indent-1); }
+.v-indent-2 { --v-indent: var(--v-indent-2); }
 
 .v-source-link {
   font-size: 12px;
@@ -983,7 +987,7 @@ function tcy(n: number): string {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: var(--v-indent-0) var(--v-pad);
   gap: 32px;
   scroll-snap-align: start;
   background: var(--surface);
@@ -1653,17 +1657,15 @@ function tcy(n: number): string {
 
 @media (max-width: 768px) {
   /* ─── 直排模式 ─── */
-  .v-page { margin-right: calc(var(--nav-width, 44px) + 28px + env(safe-area-inset-right, 0px)); }
-  .v-title-col { padding: 20px 12px; }
+  .v-page { --v-indent-0: 16px; --v-indent-1: 28px; --v-indent-2: 40px; --v-pad: 12px; margin-right: calc(var(--nav-width, 44px) + 28px + env(safe-area-inset-right, 0px)); }
   .v-poem-title { font-size: 28px; letter-spacing: 6px; padding-left: 12px; }
   .v-poem-author { font-size: 18px; letter-spacing: 4px; }
-  .v-poem-col { padding: 12px 8px; }
   .v-section-bar { transform: translateX(calc(-50% + var(--nav-width, 44px) / 2)); bottom: max(8px, env(safe-area-inset-bottom, 0px)); gap: 6px; }
   .v-sec-item { padding: 5px 10px; font-size: 12px; }
   .v-toc-strip { right: var(--nav-width, 44px); }
   .v-toc-panel { right: calc(var(--nav-width, 44px) + 28px); }
   .v-toc-label { font-size: 14px; letter-spacing: 2px; }
-  .v-nav { padding: 16px 8px; gap: 20px; }
+  .v-nav { gap: 20px; }
   .v-nav-btn { padding: 14px 10px; }
   .v-nav-title { font-size: 16px; letter-spacing: 2px; }
 
