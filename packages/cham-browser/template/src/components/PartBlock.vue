@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import type { Annotation, VerseLine, PieceSource } from '../types'
 import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations } from '../composables/useAnnotationRenderer'
 import { parseAnnotationBlock } from '../utils/annotationParser'
+import { useI18n } from '../composables/useI18n'
 import PronunciationGroup from './PronunciationGroup.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   num: number
@@ -19,6 +22,7 @@ const emit = defineEmits<{
   annotationHover: [event: MouseEvent, annotations: Annotation[]]
   annotationLeave: []
   annotationTap: [event: MouseEvent, annotations: Annotation[]]
+  toggleAnnotations: []
 }>()
 
 const allVerseSpans = computed(() =>
@@ -77,23 +81,30 @@ const annotationEntries = computed(() =>
         v-html="verseHtml(i)"
       />
     </div>
-    <div v-if="annotationsVisible !== false && annotationText && annotationEntries.length > 0" class="part-annotations">
-      <div v-for="entry in annotationEntries" :key="entry.num" class="part-ann-entry">
-        <div class="part-ann-head">
-          <span class="part-ann-num">{{ entry.numDisplay }}</span>
-          <span class="part-ann-term">{{ entry.term }}</span>
-          <PronunciationGroup
-            v-for="seg in entry.pronSegments"
-            :key="seg.lang"
-            :segment="seg"
-            class="part-ann-pron"
-          />
-        </div>
-        <div v-if="entry.definition" class="part-ann-def">{{ entry.definition }}</div>
+    <div v-if="annotationText" class="part-ann-section">
+      <div class="part-ann-header">
+        <button class="part-ann-toggle" :class="{ active: annotationsVisible !== false }" @click="emit('toggleAnnotations')">{{ t('section.short.annotations') }}</button>
       </div>
-    </div>
-    <div v-else-if="annotationsVisible !== false && annotationText" class="part-annotations">
-      <div v-for="line in annotationText.split('\n')" :key="line" class="part-ann-line">{{ line }}</div>
+      <template v-if="annotationsVisible !== false">
+        <div v-if="annotationEntries.length > 0" class="part-annotations">
+          <div v-for="entry in annotationEntries" :key="entry.num" class="part-ann-entry">
+            <div class="part-ann-head">
+              <span class="part-ann-num">{{ entry.numDisplay }}</span>
+              <span class="part-ann-term">{{ entry.term }}</span>
+              <PronunciationGroup
+                v-for="seg in entry.pronSegments"
+                :key="seg.lang"
+                :segment="seg"
+                class="part-ann-pron"
+              />
+            </div>
+            <div v-if="entry.definition" class="part-ann-def">{{ entry.definition }}</div>
+          </div>
+        </div>
+        <div v-else class="part-annotations">
+          <div v-for="line in annotationText.split('\n')" :key="line" class="part-ann-line">{{ line }}</div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -138,10 +149,45 @@ const annotationEntries = computed(() =>
   line-height: 1;
 }
 
-.part-annotations {
+.part-ann-section {
   margin-top: 16px;
-  padding-top: 12px;
   border-top: 1px dashed var(--border-light);
+}
+
+.part-ann-header {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.part-ann-toggle {
+  padding: 2px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: none;
+  color: var(--ink-faint);
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.part-ann-toggle:hover {
+  border-color: var(--vermillion);
+  color: var(--vermillion);
+}
+
+.part-ann-toggle.active {
+  background: var(--vermillion);
+  color: var(--paper);
+  border-color: var(--vermillion);
+}
+
+.part-annotations {
+  padding-top: 8px;
   text-align: left;
 }
 
@@ -282,13 +328,32 @@ const annotationEntries = computed(() =>
   letter-spacing: 6px;
 }
 
+.part-block--vertical .part-ann-section {
+  margin-top: 0;
+  margin-left: 12px;
+  border-top: none;
+  border-left: 1px dashed var(--border-light);
+  padding-left: 8px;
+}
+
+.part-block--vertical .part-ann-header {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 4px;
+}
+
+.part-block--vertical .part-ann-toggle {
+  padding: 4px 8px;
+  letter-spacing: 3px;
+}
+
 .part-block--vertical .part-annotations {
   margin-top: 0;
   margin-left: 12px;
   padding-top: 0;
   padding-left: 12px;
   border-top: none;
-  border-left: 1px dashed var(--border-light);
+  border-left: none;
 }
 
 .part-block--vertical .part-ann-entry {

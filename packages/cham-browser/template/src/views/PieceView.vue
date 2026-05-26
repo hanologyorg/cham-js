@@ -18,6 +18,7 @@ import SideNav from '../components/SideNav.vue'
 import PartGroup from '../components/PartGroup.vue'
 import ReadingProgress from '../components/ReadingProgress.vue'
 import BackToTop from '../components/BackToTop.vue'
+import { toChineseNumber } from '../utils/chineseNumber'
 import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
@@ -304,17 +305,18 @@ const tocOpen = ref(false)
 
 const tocItems = computed(() => {
   const p = piece.value
-  const items: { key: string; label: string; context?: string }[] = [
-    { key: 'title', label: p?.title || '', context: `${p?.num}. ` },
-    { key: 'verse', label: t('section.verse') },
+  const items: { key: string; label: string; context?: string; level: number }[] = [
+    { key: 'title', label: p?.title || '', context: `${p?.num}. `, level: 0 },
+    { key: 'verse', label: t('section.verse'), level: 1 },
   ]
   const hasAnn = p?.annotations.length > 0 || p?.sections.annotations || hasLayers.value
   if (hasAnn) {
-    items.push({ key: 'annotations', label: t('annotation.notes') })
+    items.push({ key: 'annotations', label: t('annotation.notes'), level: 1 })
   }
   let secIdx = 1
   for (const sec of proseSections.value) {
-    items.push({ key: sec.key, label: sec.title, context: String(secIdx).padStart(2, '0') })
+    const isSpecial = SECTION_META[sec.key]?.special ?? false
+    items.push({ key: sec.key, label: sec.title, context: toChineseNumber(secIdx), level: isSpecial ? 2 : 1 })
     secIdx++
   }
   return items
@@ -519,6 +521,7 @@ function tcy(n: number): string {
             @annotation-hover="onAnnotationHover"
             @annotation-leave="onAnnotationLeave"
             @annotation-tap="onAnnotationTap"
+            @toggle-annotations="annotationsVisible = !annotationsVisible"
           />
         </section>
 
@@ -679,7 +682,7 @@ function tcy(n: number): string {
           <div v-if="tocOpen" class="v-toc-overlay" @click="tocOpen = false">
             <div class="v-toc-panel" @click.stop>
               <div v-for="item in tocItems" :key="item.key"
-                class="v-toc-item" :class="{ active: currentSection === item.key }"
+                class="v-toc-item" :class="{ active: currentSection === item.key, ['v-toc-l' + item.level]: true }"
                 @click="scrollToSection(item.key); tocOpen = false">
                 <span v-if="item.context" class="v-toc-context">{{ item.context }}</span>
                 <span class="v-toc-label">{{ item.label }}</span>
@@ -755,6 +758,7 @@ function tcy(n: number): string {
               @annotation-hover="interaction.onHover"
               @annotation-leave="interaction.onLeave"
               @annotation-tap="interaction.onTap"
+              @toggle-annotations="annotationsVisible = !annotationsVisible"
             />
           </div>
 
@@ -1626,6 +1630,9 @@ function tcy(n: number): string {
 .v-toc-item:last-child { border-right: none; }
 .v-toc-item:hover { color: var(--vermillion); }
 .v-toc-item.active { border-right-color: var(--vermillion); color: var(--vermillion); }
+.v-toc-l0 { }
+.v-toc-l1 { padding-top: 24px; }
+.v-toc-l2 { padding-top: 40px; }
 .v-toc-label {
   font-size: 16px;
   font-weight: 600;

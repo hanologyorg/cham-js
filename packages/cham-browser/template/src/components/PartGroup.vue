@@ -13,6 +13,7 @@ const emit = defineEmits<{
   annotationHover: [event: MouseEvent, annotations: Annotation[]]
   annotationLeave: []
   annotationTap: [event: MouseEvent, annotations: Annotation[]]
+  toggleAnnotations: []
 }>()
 </script>
 
@@ -32,6 +33,7 @@ const emit = defineEmits<{
       @annotation-hover="(e, a) => emit('annotationHover', e, a)"
       @annotation-leave="emit('annotationLeave')"
       @annotation-tap="(e, a) => emit('annotationTap', e, a)"
+      @toggle-annotations="emit('toggleAnnotations')"
     />
   </div>
 </template>
