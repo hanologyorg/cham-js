@@ -996,6 +996,7 @@ function tcy(n: number): string {
   scroll-snap-align: start;
   background: var(--surface);
   border-right: 1px solid var(--border-light);
+  margin-right: auto;
 }
 .v-nav-spacer { flex: 1; }
 .v-nav-btn {
