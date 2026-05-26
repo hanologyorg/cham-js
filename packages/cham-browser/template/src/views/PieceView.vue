@@ -658,15 +658,13 @@ function tcy(n: number): string {
       </nav>
 
       <!-- 右側 TOC 條 + 麵包屑 -->
-      <div class="v-toc-strip">
-        <button class="v-toc-toggle" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
-          <svg class="v-toc-hamburger" viewBox="0 0 3 28" fill="none" stroke="currentColor" stroke-width="0.5" stroke-linecap="round">
-            <line x1="0.5" y1="2" x2="0.5" y2="26" />
-            <line x1="1.5" y1="2" x2="1.5" y2="26" />
-            <line x1="2.5" y1="2" x2="2.5" y2="26" />
-          </svg>
-        </button>
-        <div v-if="currentSection && !tocOpen" class="v-toc-breadcrumb">
+      <div class="v-toc-strip" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
+        <svg class="v-toc-hamburger" viewBox="0 0 12 48" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+          <line x1="2" y1="4" x2="2" y2="44" />
+          <line x1="6" y1="4" x2="6" y2="44" />
+          <line x1="10" y1="4" x2="10" y2="44" />
+        </svg>
+        <div v-if="currentSection" class="v-toc-breadcrumb">
           <span>{{ tocItems.find(i => i.key === currentSection)?.label || '' }}</span>
         </div>
       </div>
@@ -890,7 +888,7 @@ function tcy(n: number): string {
 .v-page {
   padding: 0;
   background: var(--paper);
-  margin-right: 28px;
+  margin-right: calc(var(--nav-width, 56px) + 28px);
 }
 
 .v-title-col {
@@ -1562,27 +1560,17 @@ function tcy(n: number): string {
   flex-direction: column;
   align-items: center;
   writing-mode: vertical-rl;
-}
-.v-toc-toggle {
-  width: 28px;
-  height: auto;
-  min-height: 48px;
-  border: none;
-  background: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0;
-  flex-shrink: 0;
   color: var(--ink-faint);
   transition: background 0.15s, color 0.15s;
 }
-.v-toc-toggle:hover { background: var(--surface-warm); color: var(--ink-mid); }
-.v-toc-toggle.open { color: var(--vermillion); }
+.v-toc-strip:hover { background: var(--surface-warm); color: var(--ink-mid); }
+.v-toc-strip.open { color: var(--vermillion); }
 .v-toc-hamburger {
-  width: 12px;
+  width: 16px;
   height: 48px;
+  flex-shrink: 0;
+  margin-top: 8px;
   transition: color 0.2s ease;
 }
 .v-toc-breadcrumb {
@@ -1590,10 +1578,9 @@ function tcy(n: number): string {
   font-family: var(--serif);
   font-size: 11px;
   letter-spacing: 3px;
-  color: var(--ink-faint);
-  max-height: calc(100dvh - 48px);
+  color: inherit;
+  max-height: calc(100dvh - 72px);
   overflow: hidden;
-  transition: opacity 0.2s ease;
 }
 
 /* ─── 目錄彈出面板（從右側展開） ─── */

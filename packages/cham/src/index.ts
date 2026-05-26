@@ -17,9 +17,13 @@ export type {
   EpubConversionOptions, EpubAnnotation, EpubSection, EpubVolume,
   AuthorRecord, DynastyRecord, EraRecord, SexagenaryRecord,
   PlaceRecord, EventRecord, LexiconEntry, ChamRegistries,
+  HierarchyLevelName, HierarchyLevel,
+  ClassicalNature, GeneralNature, AnnotationNature,
+  SpeakerRole, TextBlockRole, HcnDate, WorkRecord,
+  TextSection,
 } from './types.js'
 
-export { isSecondaryMeta, isPartMeta } from './types.js'
+export { isSecondaryMeta, isPartMeta, VALID_NATURES } from './types.js'
 
 // Parser & Serializer
 export { ChamParser, parse, ChamParseError } from './parser.js'
@@ -47,6 +51,9 @@ export {
 // Registry
 export { RegistryLoader } from './registry.js'
 export type { RegistryLoadOptions } from './registry.js'
+
+// Date Utilities
+export { parseHcnDate, formatHcnDate, resolveEraToDate, normalizeDynasty } from './date-utils.js'
 
 // Lexicon
 export { LexiconApplier } from './lexicon.js'

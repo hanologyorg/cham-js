@@ -3,6 +3,60 @@
 export type Genre = 'poetry' | 'prose' | 'mixed' | 'drama'
 export type Role = 'author' | 'editor' | 'annotator' | 'translator' | 'commentator'
 
+// ─── Hierarchy ────────────────────────────────────────────────
+
+export type HierarchyLevelName =
+  | '部' | '卷' | '篇' | '章' | '節' | '段' | '句'
+  | (string & {})
+
+export interface HierarchyLevel {
+  level: HierarchyLevelName
+  index: number
+  label?: string
+  parent?: number | string
+}
+
+// ─── Commentary Nature ────────────────────────────────────────
+
+export type ClassicalNature =
+  | 'zhuan' | 'gu' | 'zhu' | 'zhangju' | 'jian'
+  | 'jijie' | 'jizhu' | 'shu' | 'zhengyi'
+  | 'yinyi' | 'kaozheng' | 'pingdian'
+
+export type GeneralNature =
+  | 'commentary' | 'translation' | 'annotation' | 'exegesis' | 'notes'
+
+export type AnnotationNature = ClassicalNature | GeneralNature
+
+export const VALID_NATURES: ReadonlySet<string> = new Set<string>([
+  'zhuan', 'gu', 'zhu', 'zhangju', 'jian', 'jijie', 'jizhu',
+  'shu', 'zhengyi', 'yinyi', 'kaozheng', 'pingdian',
+  'commentary', 'translation', 'annotation', 'exegesis', 'notes',
+])
+
+// ─── Speaker ──────────────────────────────────────────────────
+
+export type SpeakerRole =
+  | 'emperor' | 'official' | 'scholar' | 'narrator' | 'character'
+  | (string & {})
+
+// ─── Text Block Role ──────────────────────────────────────────
+
+export type TextBlockRole =
+  | 'body' | 'attribution' | 'heading' | 'speaker'
+  | (string & {})
+
+// ─── Date Encoding ────────────────────────────────────────────
+
+export interface HcnDate {
+  type: 1 | 2 | 3 | 4
+  dynasty?: string
+  ruler?: string
+  era?: string
+  year?: number
+  cycle?: string
+}
+
 // ─── Contributors & Dates ─────────────────────────────────────
 
 export interface ChamContributor {
@@ -32,6 +86,7 @@ export interface PrimaryMeta {
   date?: ChamDate
   genre?: Genre
   source?: PieceSource
+  hierarchy?: HierarchyLevel[]
 }
 
 export interface SecondaryMeta {
@@ -75,7 +130,17 @@ export interface PieceSource {
   publisher?: string
   page?: string
   relation: 'section' | 'excerpt' | 'complete' | 'standalone'
-  range?: { start?: string; end?: string; chapter?: string; [key: string]: string | undefined }
+  range?: { start?: string; end?: string; chapter?: string; juan?: number; section?: string; [key: string]: string | number | undefined }
+}
+
+// ─── Text Sections (within-piece hierarchy) ────────────────────
+
+export interface TextSection {
+  level: string
+  label?: string
+  index: number
+  startBlock: number
+  endBlock: number
 }
 
 // ─── Text Model ──────────────────────────────────────────────
@@ -86,6 +151,10 @@ export interface TextBlock {
   text: string
   display: string
   source: string
+  lineStart?: number
+  lineEnd?: number
+  role?: TextBlockRole
+  textSectionIndex?: number
 }
 
 // ─── Marker Model ────────────────────────────────────────────
@@ -126,6 +195,7 @@ export type AnnotationKind =
   | 'meaning' | 'commentary'            // semantic
   | 'person' | 'place' | 'event' | 'date' | 'allusion'
   | 'collation' | 'variant' | 'see-also' | 'translation'
+  | 'speaker' | 'skqs-variant'
   | (string & {})
 
 export type AnnotationTarget =
@@ -145,9 +215,11 @@ export interface AnnotationEntry {
 // ─── SKQS Variant Character ──────────────────────────────────
 
 export interface SkqsVariant {
-  imageFile: string
+  imageFile?: string
   altText: string
   context?: string
+  unicode?: string
+  component?: string
 }
 
 // ─── Document Model ──────────────────────────────────────────
@@ -163,6 +235,7 @@ export interface ChamDocument {
   meta: ChamMeta
   textBlocks: TextBlock[]
   markers: MarkerTable
+  textSections?: TextSection[]
   sections: AnnotationSection[]
   skqsVariants?: SkqsVariant[]
   parts?: ChamPart[]
@@ -213,6 +286,7 @@ export interface BookConfig {
   layers?: BookLayer[]
   annotation?: BookAnnotationDefaults
   volumes?: VolumeConfig[]
+  hierarchy?: HierarchyLevelName[]
 }
 
 export interface BookMeta {
@@ -388,6 +462,22 @@ export interface LexiconEntry {
   readings: Array<{ lang: string; value: string }>
 }
 
+export interface WorkRecord {
+  id: string
+  label: string
+  altLabels?: string[]
+  creator?: string
+  indexedIn?: Array<{
+    collection: string
+    juan?: number
+  }>
+  genre?: string
+  hierarchy?: HierarchyLevelName[]
+  wikidata?: string
+  ctextId?: string
+  wikipediaZh?: string
+}
+
 export interface ChamRegistries {
   authors: Record<string, AuthorRecord>
   dynasties: DynastyRecord[]
@@ -396,6 +486,7 @@ export interface ChamRegistries {
   places: Record<string, PlaceRecord>
   events: Record<string, EventRecord>
   lexicon: LexiconEntry[]
+  works: Record<string, WorkRecord>
 }
 
 // ─── Validator Types ──────────────────────────────────────────

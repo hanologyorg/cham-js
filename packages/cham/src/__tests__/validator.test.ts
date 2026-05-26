@@ -352,5 +352,36 @@ describe('ChamValidator', () => {
       expect(result.issues.some(i => i.message.includes('missing required field'))).toBe(true)
       cleanup()
     })
+
+    describe('text sections', () => {
+      it('validates valid text sections without issues', () => {
+        setupDir({
+          'book.yaml': 'id: test\n\ntitle: Test\ngenre: prose\nhierarchy:\n  - 章',
+          'piece1/text.cham.md': [
+            '---',
+            'id: 1',
+            'title: Test',
+            'genre: prose',
+            '---',
+            '',
+            '### 章:第一章',
+            '',
+            'Text one.',
+            '',
+            '### 章:第二章',
+            '',
+            'Text two.',
+            '',
+            '## 注釋',
+            '',
+            '{1} meaning [test]',
+          ].join('\n'),
+        })
+        const result = validator.validateBook(TMP)
+        const sectionIssues = result.issues.filter(i => i.message.includes('Text section'))
+        expect(sectionIssues).toEqual([])
+        cleanup()
+      })
+    })
   })
 })

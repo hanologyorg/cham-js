@@ -2,6 +2,7 @@ import type {
   ChamMeta, PrimaryMeta, SecondaryMeta, PartMeta,
   TextBlock, Marker, MarkerTable,
   AnnotationSection, AnnotationEntry, AnnotationTarget,
+  HierarchyLevel, TextSection,
 } from './types.js'
 import { isSecondaryMeta, isPartMeta } from './types.js'
 
@@ -37,6 +38,7 @@ function serializePrimaryMeta(meta: PrimaryMeta): string[] {
     lines.push('date:')
     if (meta.date.dynasty) lines.push(`  dynasty: ${serializeValue(meta.date.dynasty)}`)
     if (meta.date.era) lines.push(`  era: ${serializeValue(meta.date.era)}`)
+    if (meta.date.eraCode) lines.push(`  eraCode: ${serializeValue(meta.date.eraCode)}`)
     if (meta.date.era_year !== undefined) lines.push(`  era_year: ${meta.date.era_year}`)
     if (meta.date.sexagenary) lines.push(`  sexagenary: ${serializeValue(meta.date.sexagenary)}`)
     if (meta.date.iso !== undefined) lines.push(`  iso: ${meta.date.iso}`)
@@ -44,6 +46,34 @@ function serializePrimaryMeta(meta: PrimaryMeta): string[] {
   }
 
   if (meta.genre) lines.push(`genre: ${serializeValue(meta.genre)}`)
+
+  if (meta.source) {
+    lines.push('source:')
+    if (meta.source.text) lines.push(`  text: ${serializeValue(meta.source.text)}`)
+    if (meta.source.textRef) lines.push(`  textRef: ${serializeValue(meta.source.textRef)}`)
+    if (meta.source.edition) lines.push(`  edition: ${serializeValue(meta.source.edition)}`)
+    if (meta.source.publisher) lines.push(`  publisher: ${serializeValue(meta.source.publisher)}`)
+    if (meta.source.relation) lines.push(`  relation: ${serializeValue(meta.source.relation)}`)
+    if (meta.source.range) {
+      lines.push('  range:')
+      const r = meta.source.range as Record<string, unknown>
+      for (const [k, v] of Object.entries(r)) {
+        if (v !== undefined) lines.push(`    ${k}: ${serializeValue(v)}`)
+      }
+    }
+  }
+
+  if (meta.hierarchy?.length) {
+    lines.push('hierarchy:')
+    for (const h of meta.hierarchy) {
+      const fields = [`level: ${serializeValue(h.level)}`, `index: ${h.index}`]
+      if (h.label) fields.push(`label: ${serializeValue(h.label)}`)
+      if (h.parent !== undefined) fields.push(`parent: ${serializeValue(h.parent)}`)
+      lines.push('  - ' + fields[0])
+      for (let i = 1; i < fields.length; i++) lines.push('    ' + fields[i])
+    }
+  }
+
   return lines
 }
 
@@ -110,7 +140,7 @@ function insertMarkers(text: string, markers: Marker[]): string {
   return result
 }
 
-function serializeTextBlocks(textBlocks: TextBlock[], markers: MarkerTable): string {
+function serializeTextBlocks(textBlocks: TextBlock[], markers: MarkerTable, textSections: TextSection[]): string {
   if (textBlocks.length === 0) return ''
 
   const markersByBlock = new Map<number, Marker[]>()
@@ -120,20 +150,32 @@ function serializeTextBlocks(textBlocks: TextBlock[], markers: MarkerTable): str
     markersByBlock.set(m.blockIndex, arr)
   }
 
+  const sectionStartMap = new Map<number, TextSection>()
+  for (const s of textSections) {
+    sectionStartMap.set(s.startBlock, s)
+  }
+
   const lines: string[] = []
-  let prevSection = textBlocks[0].sectionIndex
+  let prevSectionIndex = textBlocks[0].sectionIndex
 
   for (let i = 0; i < textBlocks.length; i++) {
     const block = textBlocks[i]
+    const startingSection = sectionStartMap.get(i)
 
     if (i > 0) {
       lines.push('')
-      if (block.sectionIndex !== prevSection) lines.push('')
+      if (block.sectionIndex !== prevSectionIndex || startingSection) lines.push('')
+    }
+
+    if (startingSection) {
+      const label = startingSection.label ? `:${startingSection.label}` : ''
+      lines.push(`### ${startingSection.level}${label}`)
+      lines.push('')
     }
 
     const blockMarkers = (markersByBlock.get(i) || []).sort((a, b) => a.offset - b.offset)
     lines.push(insertMarkers(block.text, blockMarkers))
-    prevSection = block.sectionIndex
+    prevSectionIndex = block.sectionIndex
   }
 
   return lines.join('\n')
@@ -198,7 +240,7 @@ export class ChamSerializer {
   serialize(doc: import('./types.js').ChamDocument): string {
     const parts: string[] = [serializeFrontmatter(doc.meta)]
 
-    const textPart = serializeTextBlocks(doc.textBlocks, doc.markers)
+    const textPart = serializeTextBlocks(doc.textBlocks, doc.markers, doc.textSections ?? [])
     if (textPart) parts.push(textPart)
 
     for (const section of doc.sections) {

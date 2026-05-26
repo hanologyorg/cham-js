@@ -1,5 +1,6 @@
 import type {
   ChamMeta, PrimaryMeta, SecondaryMeta, PartMeta, ChamContributor, ChamDate, PieceSource,
+  HierarchyLevel, TextSection,
   TextBlock, Marker, MarkerTable,
   AnnotationSection, SectionMeta, AnnotationEntry, AnnotationTarget,
   ChamDocument, ChamPart, BookConfig,
@@ -86,6 +87,16 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
     }
   }
 
+  let hierarchy: HierarchyLevel[] | undefined
+  if (raw.hierarchy && Array.isArray(raw.hierarchy)) {
+    hierarchy = (raw.hierarchy as Array<Record<string, unknown>>).map(h => ({
+      level: h.level as string,
+      index: h.index as number,
+      label: h.label as string | undefined,
+      parent: h.parent as number | string | undefined,
+    }))
+  }
+
   return {
     type: 'primary',
     id: raw.id as number | string,
@@ -98,6 +109,7 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
     date: date ? {
       dynasty: date.dynasty as string | undefined,
       era: date.era as string | undefined,
+      eraCode: date.eraCode as string | undefined,
       era_year: date.era_year as number | undefined,
       sexagenary: date.sexagenary as string | undefined,
       iso: date.iso as number | undefined,
@@ -105,6 +117,7 @@ function buildMeta(raw: Record<string, unknown>): ChamMeta {
     } as ChamDate : undefined,
     genre: raw.genre as PrimaryMeta['genre'],
     source: pieceSource,
+    hierarchy,
   }
 }
 
@@ -151,20 +164,72 @@ function parseMarkers(source: string): { clean: string; positions: MarkerPositio
   return { clean: chars.join(''), positions }
 }
 
-function buildTextBlocksAndMarkers(body: string): { textBlocks: TextBlock[]; markers: MarkerTable } {
+function parseSectionHeader(text: string): { level: string; label?: string } | null {
+  const content = text.replace(/^###\s+/, '')
+  if (!content) return null
+  const colonIdx = content.search(/[：:]/)
+  if (colonIdx !== -1) {
+    return { level: content.slice(0, colonIdx).trim(), label: content.slice(colonIdx + 1).trim() || undefined }
+  }
+  const spaceIdx = content.indexOf(' ')
+  if (spaceIdx !== -1) {
+    return { level: content.slice(0, spaceIdx).trim(), label: content.slice(spaceIdx + 1).trim() || undefined }
+  }
+  return { level: content.trim() }
+}
+
+function buildTextBlocksAndMarkers(body: string, bodyLineOffset: number = 0): { textBlocks: TextBlock[]; markers: MarkerTable; textSections: TextSection[] } {
   const markers: MarkerTable = new Map()
   const textBlocks: TextBlock[] = []
+  const textSections: TextSection[] = []
   const sectionParts = body.split(/\n{3,}/)
   let globalBlockIndex = 0
   const sectionBlockCounts = new Map<number, number>()
 
+  let currentLine = bodyLineOffset + 1
+  let sectionCounter = 0
+  let activeTextSectionIdx: number | undefined
+
   for (let si = 0; si < sectionParts.length; si++) {
     const sectionText = sectionParts[si].trim()
-    if (!sectionText) continue
+    if (!sectionText) {
+      currentLine += sectionParts[si].split('\n').length
+      continue
+    }
 
-    for (const blockSource of sectionText.split(/\n{2}/)) {
+    const blockSources = sectionText.split(/\n{2}/)
+    let blockLineStart = currentLine
+
+    for (let bi = 0; bi < blockSources.length; bi++) {
+      const blockSource = blockSources[bi]
       const trimmed = blockSource.trim()
-      if (!trimmed) continue
+      const linesInBlock = blockSource.split('\n').length
+
+      if (!trimmed) {
+        blockLineStart += linesInBlock
+        continue
+      }
+
+      // Check for text section header (### LEVEL[:LABEL])
+      if (trimmed.startsWith('### ') && !trimmed.includes('\n')) {
+        const header = parseSectionHeader(trimmed)
+        if (header) {
+          if (activeTextSectionIdx !== undefined) {
+            textSections[activeTextSectionIdx].endBlock = globalBlockIndex
+          }
+          sectionCounter++
+          activeTextSectionIdx = textSections.length
+          textSections.push({
+            level: header.level,
+            label: header.label,
+            index: sectionCounter,
+            startBlock: globalBlockIndex,
+            endBlock: -1,
+          })
+          blockLineStart += linesInBlock + 2
+          continue
+        }
+      }
 
       const blockIdxInSection = sectionBlockCounts.get(si) || 0
       sectionBlockCounts.set(si, blockIdxInSection + 1)
@@ -178,6 +243,9 @@ function buildTextBlocksAndMarkers(body: string): { textBlocks: TextBlock[]; mar
         text: flatText,
         display: clean,
         source: trimmed,
+        lineStart: blockLineStart,
+        lineEnd: blockLineStart + linesInBlock - 1,
+        textSectionIndex: activeTextSectionIdx,
       })
 
       const openMap = new Map<number, number>()
@@ -210,10 +278,18 @@ function buildTextBlocksAndMarkers(body: string): { textBlocks: TextBlock[]; mar
       }
 
       globalBlockIndex++
+      blockLineStart += linesInBlock + 2 // +2 for the \n\n that split the block
     }
+
+    currentLine = blockLineStart + 1 // +1 for the extra \n that split the section
   }
 
-  return { textBlocks, markers }
+  // Close last text section
+  if (activeTextSectionIdx !== undefined) {
+    textSections[activeTextSectionIdx].endBlock = globalBlockIndex
+  }
+
+  return { textBlocks, markers, textSections }
 }
 
 // ─── Annotation Sections ──────────────────────────────────────
@@ -379,7 +455,7 @@ function parseAnnotationSections(body: string): AnnotationSection[] {
 
 // ─── Body Splitting ───────────────────────────────────────────
 
-function splitBodyAndAnnotations(body: string): { textBody: string; annotationBody: string } {
+function splitBodyAndAnnotations(body: string): { textBody: string; annotationBody: string; bodyLineOffset: number } {
   const lines = body.split('\n')
   let splitIdx = lines.length
   for (let i = 0; i < lines.length; i++) {
@@ -388,6 +464,7 @@ function splitBodyAndAnnotations(body: string): { textBody: string; annotationBo
   return {
     textBody: lines.slice(0, splitIdx).join('\n'),
     annotationBody: lines.slice(splitIdx).join('\n'),
+    bodyLineOffset: splitIdx > 0 ? 1 : 0, // frontmatter takes lines 0-N, body starts after
   }
 }
 
@@ -399,11 +476,11 @@ export class ChamParser {
     const raw = parseYamlSimple(metaStr)
     const meta = buildMeta(raw)
 
-    const { textBody, annotationBody } = splitBodyAndAnnotations(body)
-    const { textBlocks, markers } = buildTextBlocksAndMarkers(textBody)
+    const { textBody, annotationBody, bodyLineOffset } = splitBodyAndAnnotations(body)
+    const { textBlocks, markers, textSections } = buildTextBlocksAndMarkers(textBody, bodyLineOffset)
     const sections = parseAnnotationSections(annotationBody)
 
-    return { meta, textBlocks, markers, sections }
+    return { meta, textBlocks, markers, textSections, sections }
   }
 
   parsePiece(pieceDir: string, bookConfig?: BookConfig): ChamDocument {
@@ -459,7 +536,7 @@ export class ChamParser {
     }
     parts.sort((a, b) => a.meta.part - b.meta.part)
 
-    return { ...primary, sections: mergedSections, ...(parts.length ? { parts } : {}) }
+    return { ...primary, sections: mergedSections, textSections: primary.textSections, ...(parts.length ? { parts } : {}) }
   }
 }
 

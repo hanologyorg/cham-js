@@ -3,10 +3,12 @@ import { join, basename } from 'path'
 import { parse } from './parser.js'
 import { parseYaml } from './yaml.js'
 import { RegistryLoader } from './registry.js'
+import { resolveEraToDate } from './date-utils.js'
 import type {
   ChamDocument, ValidationIssue, ValidationResult,
-  BookConfig, BookLayer, ChamRegistries,
+  BookConfig, BookLayer, ChamRegistries, PrimaryMeta,
 } from './types.js'
+import { VALID_NATURES } from './types.js'
 
 const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = {
   pron: { required: ['type', 'lang'], optional: [] },
@@ -21,6 +23,8 @@ const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = 
   collation: { required: [], optional: ['source'] },
   variant: { required: [], optional: ['action'] },
   'see-also': { required: [], optional: ['ref'] },
+  speaker: { required: [], optional: ['ref', 'role'] },
+  'skqs-variant': { required: [], optional: ['image', 'unicode'] },
 }
 
 const KNOWN_KINDS = new Set(Object.keys(KIND_PARAMS))
@@ -64,6 +68,12 @@ export class ChamValidator {
 
     this.validateBookConfig(config, pieceDirs)
 
+    const allPrimaryDocsMap = new Map<string, ChamDocument>()
+    for (const { filePath, doc } of this.lastParsedDocs) {
+      allPrimaryDocsMap.set(filePath, doc)
+    }
+    this.validateHierarchy(config, allPrimaryDocsMap)
+
     return {
       valid: !this.issues.some(i => i.severity === 'error'),
       issues: this.issues,
@@ -74,8 +84,8 @@ export class ChamValidator {
     const result = this.validateBook(bookDir)
     if (!result.valid) return result
 
-    const registries = new RegistryLoader().loadAll(dataDir)
-    this.validateRegistryRefs(this.lastParsedDocs, registries)
+    this.registries = new RegistryLoader().loadAll(dataDir)
+    this.validateRegistryRefs(this.lastParsedDocs, this.registries)
 
     result.valid = !this.issues.some(i => i.severity === 'error')
     result.issues = this.issues
@@ -104,6 +114,10 @@ export class ChamValidator {
       this.validateNestedBrackets(doc, filePath)
       this.validateAnnotationQuality(doc, filePath)
       this.validatePinyinIpa(filePath)
+      this.validateNature(doc, filePath)
+      this.validateSpeakerAnnotations(doc, filePath)
+      this.validateDate(doc, filePath)
+      this.validateTextSections(doc, filePath)
 
       for (const section of doc.sections) {
         for (const entry of section.entries) {
@@ -485,6 +499,115 @@ export class ChamValidator {
       }
     }
   }
+
+  // ─── Hierarchy Validation ────────────────────────────────────
+
+  private validateHierarchy(bookConfig: BookConfig, pieceDocs: Map<string, ChamDocument>): void {
+    if (!bookConfig.hierarchy) return
+
+    const validLevels = new Set(bookConfig.hierarchy)
+    const pieceIds = new Set([...pieceDocs.values()]
+      .map(d => (d.meta as PrimaryMeta).id)
+      .filter(id => id !== undefined))
+
+    for (const [dirName, doc] of pieceDocs) {
+      const pm = doc.meta as PrimaryMeta
+      if (!pm.hierarchy) continue
+
+      for (const h of pm.hierarchy) {
+        if (!validLevels.has(h.level)) {
+          this.warning(dirName, undefined,
+            `Hierarchy level "${h.level}" not in book scheme ${JSON.stringify(bookConfig.hierarchy)}`)
+        }
+        if (h.parent !== undefined && !pieceIds.has(h.parent)) {
+          this.error(dirName, undefined,
+            `Hierarchy parent ref ${JSON.stringify(h.parent)} does not match any piece id`)
+        }
+      }
+    }
+  }
+
+  // ─── Nature Validation ───────────────────────────────────────
+
+  private validateNature(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      if (section.meta.nature && !VALID_NATURES.has(section.meta.nature)) {
+        this.warning(filePath, undefined,
+          `Unknown @nature value: "${section.meta.nature}"`)
+      }
+    }
+  }
+
+  // ─── Speaker Validation ──────────────────────────────────────
+
+  private validateSpeakerAnnotations(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        if (entry.kind === 'speaker') {
+          if (entry.target.type !== 'marker') {
+            this.error(filePath, undefined,
+              'speaker annotation must target a marker range')
+          }
+          if (!entry.value) {
+            this.error(filePath, undefined, 'speaker annotation requires a speaker name')
+          }
+        }
+      }
+    }
+  }
+
+  // ─── Date Validation ─────────────────────────────────────────
+
+  private validateDate(doc: ChamDocument, filePath: string): void {
+    if (doc.meta.type !== 'primary') return
+    const pm = doc.meta as PrimaryMeta
+    if (!pm.date) return
+
+    const { era, era_year, iso, sexagenary } = pm.date
+
+    if (era && era_year && iso !== undefined && this.registries) {
+      const resolved = resolveEraToDate(era, era_year, this.registries.eras)
+      if (resolved !== undefined && resolved !== iso) {
+        this.warning(filePath, undefined,
+          `Date inconsistency: ${era} year ${era_year} → ISO ${resolved}, but frontmatter says ${iso}`)
+      }
+    }
+
+    if (sexagenary && this.registries) {
+      const valid = this.registries.sexagenary.some(s => s.label === sexagenary)
+      if (!valid) {
+        this.warning(filePath, undefined, `Invalid sexagenary: "${sexagenary}"`)
+      }
+    }
+  }
+
+  private validateTextSections(doc: ChamDocument, filePath: string): void {
+    const sections = doc.textSections
+    if (!sections || sections.length === 0) return
+
+    for (let i = 0; i < sections.length; i++) {
+      const s = sections[i]
+      if (!s.level) {
+        this.warning(filePath, undefined, `Text section ${i + 1} has no level name`)
+      }
+      if (s.startBlock < 0 || s.endBlock < 0) {
+        this.warning(filePath, undefined, `Text section "${s.level}" has invalid block range`)
+      }
+      if (s.endBlock < s.startBlock) {
+        this.warning(filePath, undefined, `Text section "${s.level}": endBlock (${s.endBlock}) < startBlock (${s.startBlock})`)
+      }
+      if (i > 0 && s.index !== sections[i - 1].index + 1) {
+        this.warning(filePath, undefined, `Text section indices not sequential: ${sections[i - 1].index} → ${s.index}`)
+      }
+      for (let bi = s.startBlock; bi < s.endBlock && bi < doc.textBlocks.length; bi++) {
+        if (doc.textBlocks[bi].textSectionIndex !== i) {
+          this.warning(filePath, undefined, `Text block ${bi} in section "${s.level}" has wrong textSectionIndex`)
+        }
+      }
+    }
+  }
+
+  private registries?: ChamRegistries
 
   // ─── Helpers ──────────────────────────────────────────────
 

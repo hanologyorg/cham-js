@@ -3,7 +3,7 @@ import { existsSync } from 'fs'
 import { loadYaml } from './yaml.js'
 import type {
   ChamRegistries, AuthorRecord, DynastyRecord, EraRecord,
-  SexagenaryRecord, PlaceRecord, EventRecord, LexiconEntry,
+  SexagenaryRecord, PlaceRecord, EventRecord, LexiconEntry, WorkRecord,
 } from './types.js'
 
 export interface RegistryLoadOptions {
@@ -15,6 +15,7 @@ export interface RegistryLoadOptions {
   places?: boolean
   events?: boolean
   lexicon?: boolean
+  works?: boolean
 }
 
 function loadAuthors(dataDir: string): Record<string, AuthorRecord> {
@@ -111,7 +112,6 @@ function loadLexicon(dataDir: string): LexiconEntry[] {
   const raw = loadYaml(join(dataDir, 'lexicon.yaml'))
   if (!raw.entries || !Array.isArray(raw.entries)) return []
   return (raw.entries as Array<Record<string, unknown>>).map(e => {
-    // Support both flat format (lang/value on same object) and nested readings array
     if (e.readings && Array.isArray(e.readings)) {
       return {
         char: e.char as string,
@@ -121,7 +121,6 @@ function loadLexicon(dataDir: string): LexiconEntry[] {
         })),
       }
     }
-    // Flat format: lang and value directly on the entry
     const lang = (e.lang as string) || 'cmn'
     const value = (e.value as string) || ''
     return {
@@ -129,6 +128,46 @@ function loadLexicon(dataDir: string): LexiconEntry[] {
       readings: [{ lang, value }],
     }
   })
+}
+
+function loadWorks(dataDir: string): Record<string, WorkRecord> {
+  const raw = loadYaml(join(dataDir, 'works.yaml'))
+  const result: Record<string, WorkRecord> = {}
+  if (!raw.works || !Array.isArray(raw.works)) {
+    for (const [key, val] of Object.entries(raw)) {
+      if (typeof val === 'object' && val !== null && 'label' in (val as Record<string, unknown>)) {
+        const w = val as Record<string, unknown>
+        result[key] = {
+          id: key,
+          label: w.label as string,
+          altLabels: w.altLabels as string[] | undefined,
+          creator: w.creator as string | undefined,
+          genre: w.genre as string | undefined,
+          hierarchy: w.hierarchy as string[] | undefined,
+          wikidata: w.wikidata as string | undefined,
+          ctextId: w.ctextId as string | undefined,
+          wikipediaZh: w.wikipediaZh as string | undefined,
+        }
+      }
+    }
+    return result
+  }
+  for (const item of raw.works as Array<Record<string, unknown>>) {
+    const id = item.id as string
+    if (!id) continue
+    result[id] = {
+      id,
+      label: item.label as string,
+      altLabels: item.altLabels as string[] | undefined,
+      creator: item.creator as string | undefined,
+      genre: item.genre as string | undefined,
+      hierarchy: item.hierarchy as string[] | undefined,
+      wikidata: item.wikidata as string | undefined,
+      ctextId: item.ctextId as string | undefined,
+      wikipediaZh: item.wikipediaZh as string | undefined,
+    }
+  }
+  return result
 }
 
 export class RegistryLoader {
@@ -141,6 +180,7 @@ export class RegistryLoader {
       places: existsSync(join(dataDir, 'places.yaml')) ? loadPlaces(dataDir) : {},
       events: existsSync(join(dataDir, 'events.yaml')) ? loadEvents(dataDir) : {},
       lexicon: existsSync(join(dataDir, 'lexicon.yaml')) ? loadLexicon(dataDir) : [],
+      works: existsSync(join(dataDir, 'works.yaml')) ? loadWorks(dataDir) : {},
     }
   }
 
@@ -153,6 +193,7 @@ export class RegistryLoader {
     if (opts.places !== false) result.places = loadPlaces(dataDir)
     if (opts.events !== false) result.events = loadEvents(dataDir)
     if (opts.lexicon !== false) result.lexicon = loadLexicon(dataDir)
+    if (opts.works !== false) result.works = loadWorks(dataDir)
     return result
   }
 }

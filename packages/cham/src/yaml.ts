@@ -13,7 +13,7 @@ export function parseYamlValue(val: string): unknown {
   return val
 }
 
-const ARRAY_KEYS = new Set(['contributors', 'layers', 'volumes', 'hero'])
+const ARRAY_KEYS = new Set(['contributors', 'layers', 'volumes', 'hero', 'hierarchy', 'readings', 'works'])
 
 interface YamlContext {
   result: Record<string, unknown>
@@ -21,6 +21,7 @@ interface YamlContext {
   inArray: boolean
   arrayItems: unknown[]
   currentObj: Record<string, unknown> | null
+  arrayDepth: number
 }
 
 function resolveParent(ctx: YamlContext): Record<string, unknown> | null {
@@ -50,9 +51,11 @@ function handleIndented(ctx: YamlContext, trimmed: string): void {
       obj[val.slice(0, ci).trim()] = parseYamlValue(val.slice(ci + 1).trim())
       ctx.arrayItems.push(obj)
       ctx.currentObj = obj
+      ctx.arrayDepth = 1
     } else {
       ctx.arrayItems.push(parseYamlValue(val))
       ctx.currentObj = null
+      ctx.arrayDepth = 0
     }
     return
   }
@@ -116,6 +119,7 @@ function closeNesting(ctx: YamlContext): void {
   ctx.inArray = false
   ctx.arrayItems = []
   ctx.currentObj = null
+  ctx.arrayDepth = 0
   ctx.nestingPath = []
 }
 
@@ -126,6 +130,7 @@ export function parseYaml(text: string): Record<string, unknown> {
     inArray: false,
     arrayItems: [],
     currentObj: null,
+    arrayDepth: 0,
   }
 
   for (const line of text.split('\n')) {
