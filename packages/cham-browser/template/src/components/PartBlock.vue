@@ -317,6 +317,7 @@ const annotationEntries = computed(() =>
 }
 
 .part-block--vertical .part-header-num {
+  display: inline;
   width: auto; height: auto;
   border-radius: 0;
   background: none;
