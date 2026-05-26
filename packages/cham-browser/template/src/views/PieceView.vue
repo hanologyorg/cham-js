@@ -540,7 +540,7 @@ function tcy(n: number): string {
         </section>
 
         <SectionBlock
-          v-if="!isMultiPart && (piece.sections.annotations || piece.annotations.length > 0)"
+          v-if="(isMultiPart ? hasLayers : (piece.sections.annotations || piece.annotations.length > 0 || hasLayers))"
           data-section-key="annotations"
           num=""
           :label="t('annotation.notes')"
@@ -555,7 +555,7 @@ function tcy(n: number): string {
           @toggle="annotationsVisible = !annotationsVisible"
         >
           <template v-if="hasLayers" #header-actions>
-            <div class="v-layer-toggles" v-show="annotationsVisible">
+            <div class="v-layer-toggles">
               <button
                 v-for="layer in toggleableLayers"
                 :key="layer.id"
