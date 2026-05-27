@@ -121,7 +121,9 @@ function openBook(bookId: string) {
               <span class="v-spine-title">{{ book.title }}</span>
               <span class="v-spine-badge">{{ book.count }}</span>
             </div>
-          </router-link>        </section>
+          </router-link>
+          </template>
+        </section>
       </div>
     </div>
 

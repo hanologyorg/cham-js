@@ -338,6 +338,8 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
   line-height: 1.5;
 }
+
+.ann-pane-layer {
   font-size: 10px;
   font-family: var(--sans);
   color: var(--ink-faint);
