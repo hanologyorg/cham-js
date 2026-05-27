@@ -258,6 +258,7 @@ button:focus-visible {
   scrollbar-color: var(--gold) transparent;
   scroll-snap-type: x proximity;
   scroll-padding: 0 48px;
+  overscroll-behavior-x: contain;
 }
 .v-page::-webkit-scrollbar { height: 3px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }

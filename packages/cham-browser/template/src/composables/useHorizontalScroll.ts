@@ -4,21 +4,16 @@ export function useHorizontalScroll(container: Ref<HTMLElement | null>) {
   const isScrolling = ref(false)
   let scrollTimer: ReturnType<typeof setTimeout> | null = null
 
-  function isTrackpad(e: WheelEvent): boolean {
-    // Trackpad produces smooth, small deltas; mouse wheel produces large, quantized deltas
-    return e.deltaMode === 0 && (Math.abs(e.deltaY) < 12 && e.deltaY !== 0)
-      || Math.abs(e.deltaX) > 0
-  }
-
   function onWheel(e: WheelEvent) {
     const el = container.value
     if (!el) return
 
-    if (isTrackpad(e)) return
+    // Ignore pure horizontal deltas (already horizontal)
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
 
+    // Convert vertical wheel to horizontal scroll
     e.preventDefault()
-    // Mouse wheel: swap scroll direction so scroll-up → right, scroll-down → left
-    el.scrollLeft -= e.deltaY
+    el.scrollBy({ left: -e.deltaY, behavior: 'instant' as ScrollBehavior })
   }
 
   function scrollToStart() {
