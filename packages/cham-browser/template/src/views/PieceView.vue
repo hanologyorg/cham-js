@@ -337,28 +337,39 @@ function updateCurrentSection() {
   const containerRect = container.getBoundingClientRect()
   const viewportCenter = containerRect.left + containerRect.width / 2
 
-  const sections: { key: string; centerX: number }[] = []
+  const sections: { key: string; left: number; right: number }[] = []
 
   const titleCol = container.querySelector('.v-title-col')
   if (titleCol) {
     const r = titleCol.getBoundingClientRect()
-    sections.push({ key: 'title', centerX: r.left + r.width / 2 })
+    sections.push({ key: 'title', left: r.left, right: r.right })
   }
 
   const blocks = container.querySelectorAll('[data-section-key]')
   for (const block of blocks) {
     const key = block.getAttribute('data-section-key')!
     const r = block.getBoundingClientRect()
-    sections.push({ key, centerX: r.left + r.width / 2 })
+    sections.push({ key, left: r.left, right: r.right })
   }
 
+  // Prefer section that contains the viewport center
   let best = 'title'
-  let bestDist = Infinity
   for (const s of sections) {
-    const dist = Math.abs(s.centerX - viewportCenter)
-    if (dist < bestDist) {
-      bestDist = dist
+    if (viewportCenter >= s.left && viewportCenter <= s.right) {
       best = s.key
+      break
+    }
+  }
+  // Fallback: nearest by center distance
+  if (best === 'title') {
+    let bestDist = Infinity
+    for (const s of sections) {
+      const center = (s.left + s.right) / 2
+      const dist = Math.abs(center - viewportCenter)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = s.key
+      }
     }
   }
   currentSection.value = best
@@ -1011,8 +1022,9 @@ function tcy(n: number): string {
   line-height: 1.6;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   max-height: calc(100dvh - var(--v-indent-0) * 2);
+  gap: 4px;
 }
 .v-nav-btn:hover {
   border-color: var(--gold);
