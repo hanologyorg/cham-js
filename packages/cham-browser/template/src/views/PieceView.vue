@@ -509,10 +509,10 @@ function tcy(n: number): string {
           <template v-if="piece.contributors && piece.contributors.length > 1">
             <div v-for="group in contributorGroups" :key="group.title" class="v-author-group">
               <span class="v-author-role">{{ group.title }}</span>
-              <span v-for="name in group.names" :key="name" class="v-poem-author" role="button" tabindex="0" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
+              <button v-for="name in group.names" :key="name" class="v-poem-author unstyled" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</button>
             </div>
           </template>
-          <span v-else class="v-poem-author" role="button" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</span>
+          <button class="v-poem-author unstyled" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</button>
           <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="v-source-link">
             ← {{ meta?.title }}
           </router-link>
@@ -614,12 +614,12 @@ function tcy(n: number): string {
         />
 
         <nav class="v-nav" aria-label="piece navigation">
-          <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)">
+          <button v-if="adjacent.prev !== null" class="v-nav-btn" @click="navigate(-1)" :aria-label="t('piece.previous')">
             <span class="v-nav-dir">▲</span>
             <span class="v-nav-title">{{ getPiece(adjacent.prev)?.title }}</span>
           </button>
           <div v-else class="v-nav-spacer" />
-          <button v-if="adjacent.next !== null" class="v-nav-btn" @click="navigate(1)">
+          <button v-if="adjacent.next !== null" class="v-nav-btn" @click="navigate(1)" :aria-label="t('piece.next')">
             <span class="v-nav-dir">▼</span>
             <span class="v-nav-title">{{ getPiece(adjacent.next)?.title }}</span>
           </button>
@@ -642,7 +642,7 @@ function tcy(n: number): string {
         <Transition name="overlay">
           <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
             <div class="v-author-pane" @click.stop>
-              <button class="v-pane-close" @click="closeAuthorPane">✕</button>
+              <button class="v-pane-close unstyled" @click="closeAuthorPane" :aria-label="t('action.close')">✕</button>
               <div class="v-pane-header">
                 <div class="v-pane-name">{{ selectedAuthorName }}</div>
                 <div class="v-pane-meta">
@@ -683,7 +683,7 @@ function tcy(n: number): string {
       </nav>
 
       <!-- 右側 TOC 條 + 麵包屑 -->
-      <div class="v-toc-strip" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :title="t('nav.contents')">
+      <button class="v-toc-strip" :class="{ open: tocOpen }" @click="tocOpen = !tocOpen" :aria-label="t('nav.contents')" :aria-expanded="tocOpen">
         <svg class="v-toc-hamburger" viewBox="0 0 12 48" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
           <line x1="2" y1="4" x2="2" y2="44" />
           <line x1="6" y1="4" x2="6" y2="44" />
@@ -692,7 +692,7 @@ function tcy(n: number): string {
         <div v-if="currentSection && currentSection !== 'title'" class="v-toc-breadcrumb">
           <span>{{ tocItems.find(i => i.key === currentSection)?.label || '' }}</span>
         </div>
-      </div>
+      </button>
 
       <!-- 目錄彈出面板 -->
       <Teleport to="body">
@@ -731,10 +731,10 @@ function tcy(n: number): string {
                 <template v-for="(group, gi) in contributorGroups" :key="group.title">
                   <span v-if="gi > 0" class="h-sep">|</span>
                   <span class="h-author-role">{{ group.title }}</span>
-                  <span v-for="name in group.names" :key="name" class="h-author-link" role="button" tabindex="0" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</span>
+                  <button v-for="name in group.names" :key="name" class="h-author-link unstyled" tabindex="0" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</button>
                 </template>
               </template>
-              <span v-else class="h-author-link" role="button" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</span>
+              <button v-else class="h-author-link unstyled" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</button>
             </div>
             <div class="h-controls">
               <div class="h-section-nav">
@@ -855,7 +855,7 @@ function tcy(n: number): string {
         <Transition name="overlay">
           <div v-if="authorPaneOpen" class="h-overlay" @click="closeAuthorPane">
             <div class="h-pane" @click.stop>
-              <button class="h-pane-close" @click="closeAuthorPane">✕</button>
+              <button class="h-pane-close unstyled" @click="closeAuthorPane" :aria-label="t('action.close')">✕</button>
               <div class="h-pane-header">
                 <div>
                   <div class="h-pane-name">{{ selectedAuthorName }}</div>
@@ -904,7 +904,7 @@ function tcy(n: number): string {
   </template>
 
   <div v-else class="page-loading">
-    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" class="page-loading-logo" />
+    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" width="56" height="56" class="page-loading-logo" />
     <div v-else class="page-loading-seal">文</div>
   </div>
 </template>
@@ -1027,7 +1027,7 @@ function tcy(n: number): string {
   border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: border-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   line-height: 1.6;
   display: flex;
   flex-direction: row;
@@ -1078,7 +1078,7 @@ function tcy(n: number): string {
   border-radius: 2px; background: none;
   font-family: var(--sans); font-size: 13px;
   color: var(--ink-mid); cursor: pointer;
-  transition: all 0.2s; white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s; white-space: nowrap;
 }
 .h-back:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .h-back:active { transform: scale(0.97); }
@@ -1140,7 +1140,7 @@ function tcy(n: number): string {
   font-weight: 700;
   color: var(--ink-light);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
   letter-spacing: 0;
 }
 .h-sec-btn:hover {
@@ -1189,7 +1189,7 @@ function tcy(n: number): string {
   color: var(--ink-light);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .h-nav-arrow:hover {
   border-color: var(--vermillion);
@@ -1247,7 +1247,7 @@ function tcy(n: number): string {
   padding: 20px 24px;
   background: var(--surface); border: 1px solid var(--border-light);
   border-radius: 8px; cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: border-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-family: var(--serif);
   text-align: left;
   position: relative;
@@ -1283,6 +1283,7 @@ function tcy(n: number): string {
   display: flex; justify-content: flex-end;
 }
 .h-pane {
+  overscroll-behavior: contain;
   width: min(420px, 90vw);
   height: 100dvh;
   background: var(--paper);
@@ -1293,24 +1294,32 @@ function tcy(n: number): string {
 
 /* Overlay transition */
 .overlay-enter-active { transition: opacity var(--dur-mid, 0.25s) ease; }
-.overlay-enter-active .h-pane { transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
-.overlay-enter-active .v-author-pane { transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
+.overlay-enter-active .h-pane {
+  overscroll-behavior: contain; transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
+.overlay-enter-active .v-author-pane {
+  overscroll-behavior: contain; transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
 .overlay-leave-active { transition: opacity var(--dur-fast, 0.15s) ease; }
-.overlay-leave-active .h-pane { transition: transform var(--dur-fast, 0.15s) ease; }
-.overlay-leave-active .v-author-pane { transition: transform var(--dur-fast, 0.15s) ease; }
+.overlay-leave-active .h-pane {
+  overscroll-behavior: contain; transition: transform var(--dur-fast, 0.15s) ease; }
+.overlay-leave-active .v-author-pane {
+  overscroll-behavior: contain; transition: transform var(--dur-fast, 0.15s) ease; }
 .overlay-enter-from { opacity: 0; }
-.overlay-enter-from .h-pane { transform: translateX(100%); }
-.overlay-enter-from .v-author-pane { transform: translateX(-100%); }
+.overlay-enter-from .h-pane {
+  overscroll-behavior: contain; transform: translateX(100%); }
+.overlay-enter-from .v-author-pane {
+  overscroll-behavior: contain; transform: translateX(-100%); }
 .overlay-leave-to { opacity: 0; }
-.overlay-leave-to .h-pane { transform: translateX(40px); }
-.overlay-leave-to .v-author-pane { transform: translateX(-40px); }
+.overlay-leave-to .h-pane {
+  overscroll-behavior: contain; transform: translateX(40px); }
+.overlay-leave-to .v-author-pane {
+  overscroll-behavior: contain; transform: translateX(-40px); }
 .h-pane-close {
   display: block; margin-left: auto;
   width: 36px; height: 36px;
   border: 1px solid var(--border); border-radius: 4px;
   background: none; font-size: 16px;
   color: var(--ink-light); cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .h-pane-close:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .h-pane-header {
@@ -1377,7 +1386,7 @@ function tcy(n: number): string {
   color: var(--ink-mid);
   text-decoration: none;
   letter-spacing: 1px;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .h-pane-link:hover {
   border-color: var(--vermillion);
@@ -1418,6 +1427,7 @@ function tcy(n: number): string {
   display: flex; justify-content: flex-start;
 }
 .v-author-pane {
+  overscroll-behavior: contain;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   height: 100dvh;
@@ -1427,15 +1437,14 @@ function tcy(n: number): string {
   box-shadow: 8px 0 32px rgba(var(--shadow-rgb), 0.1);
 }
 .v-pane-close {
-  display: block;
   width: 32px; height: 32px;
   border: 1px solid var(--border); border-radius: 4px;
   background: none; font-size: 14px;
   color: var(--ink-light); cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
   margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center;
 }
-.v-pane-close:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .v-pane-header {
   display: flex;
   flex-direction: column;
@@ -1496,7 +1505,7 @@ function tcy(n: number): string {
   color: var(--ink-mid);
   text-decoration: none;
   letter-spacing: 1px;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .v-pane-link:hover {
   border-color: var(--vermillion);
@@ -1548,7 +1557,7 @@ function tcy(n: number): string {
   font-weight: 700;
   letter-spacing: 3px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
   white-space: nowrap;
 }
 .v-layer-btn:hover { border-color: var(--vermillion); color: var(--vermillion); }
@@ -1578,7 +1587,7 @@ function tcy(n: number): string {
   font-weight: 700;
   color: var(--ink-faint);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .v-sec-item:hover {
   border-color: var(--vermillion);
@@ -1654,7 +1663,7 @@ function tcy(n: number): string {
   cursor: pointer;
   padding: 8px 4px;
   border-right: 1px solid var(--border-light);
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .v-toc-item:first-child { padding-left: 0; }
 .v-toc-item:last-child { border-right: none; }
@@ -1781,14 +1790,17 @@ function tcy(n: number): string {
   /* ─── 作者面板 ─── */
   .h-overlay { justify-content: center; align-items: flex-end; }
   .h-pane {
+  overscroll-behavior: contain;
     width: 100%;
     max-height: 85vh;
     height: auto;
     border-radius: 16px 16px 0 0;
     padding: 20px;
   }
-  .overlay-enter-from .h-pane { transform: translateY(100%); }
-  .overlay-leave-to .h-pane { transform: translateY(40px); }
+  .overlay-enter-from .h-pane {
+  overscroll-behavior: contain; transform: translateY(100%); }
+  .overlay-leave-to .h-pane {
+  overscroll-behavior: contain; transform: translateY(40px); }
 
   .h-pane-name { font-size: 24px; }
   .h-pane-p { font-size: 15px; line-height: 2; }

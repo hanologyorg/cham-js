@@ -162,18 +162,16 @@ onBeforeUnmount(() => {
           <span class="ann-pane-title">{{ t('annotation.all') }}</span>
           <span class="ann-pane-count">{{ annotations.length }}</span>
           <button class="ann-pane-close" @click="emit('close')" :aria-label="t('action.close')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
         <div ref="bodyRef" class="ann-pane-body">
-          <div
+          <button
             v-for="(ann, idx) in annotations"
             :key="ann.id"
             :data-ann-id="ann.id"
-            class="ann-pane-entry"
+            class="ann-pane-entry unstyled"
             :class="{ active: activeId === ann.id, [ann.kind]: true }"
-            role="button"
-            tabindex="0"
             @click="emit('select', ann)"
             @keydown.enter="emit('select', ann)"
           >
@@ -194,7 +192,7 @@ onBeforeUnmount(() => {
                 <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-pane-text">{{ ann.text }}</div>
               </div>
             </div>
-          </div>
+          </button>
         </div>
         <!-- Resize / close handle on right edge -->
         <div class="ann-pane-handle" @mousedown="onHandleStart" @touchstart.prevent="onHandleStart">
@@ -261,7 +259,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .ann-pane-close:hover {
@@ -281,7 +279,7 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--border-light);
   border-left: 3px solid transparent;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .ann-pane-entry:hover {
@@ -401,7 +399,7 @@ onBeforeUnmount(() => {
   height: 32px;
   border-radius: 2px;
   background: var(--border);
-  transition: all 0.2s;
+  transition: background 0.2s ease, height 0.2s ease;
 }
 
 .ann-pane-handle:hover .ann-handle-grip {

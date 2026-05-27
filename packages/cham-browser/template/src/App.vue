@@ -5,6 +5,7 @@ import { useSiteConfig } from './composables/useSiteConfig'
 import { useI18n } from './composables/useI18n'
 import ReadingToolbar from './components/ReadingToolbar.vue'
 import { computed, ref, watch, provide } from 'vue'
+import { useFocusTrap } from './composables/useFocusTrap'
 
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
@@ -15,7 +16,9 @@ const isVertical = computed(() => layout.value === 'vertical')
 const CHAM_VERSION = import.meta.env.CHAM_VERSION || ''
 const CHAM_BROWSER_VERSION = import.meta.env.CHAM_BROWSER_VERSION || ''
 
+const aboutPaneRef = ref<HTMLElement | null>(null)
 const aboutOpen = ref(false)
+useFocusTrap(aboutPaneRef, aboutOpen)
 function toggleAbout() { aboutOpen.value = !aboutOpen.value }
 function closeAbout() { aboutOpen.value = false }
 provide('aboutPane', { toggleAbout, closeAbout })
@@ -51,9 +54,10 @@ function onKey(event: KeyboardEvent) {
 
 <template>
   <div @keydown="onKey">
+    <a href="#main" class="skip-link">Skip to content</a>
     <router-view v-slot="{ Component, route }">
       <Suspense>
-        <component :is="Component" :key="route.fullPath" />
+        <component :is="Component" :key="route.fullPath" id="main" />
         <template #fallback>
           <div class="route-loading">
             <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo" />
@@ -68,13 +72,13 @@ function onKey(event: KeyboardEvent) {
     <!-- About overlay (only if about content is configured) -->
     <Teleport v-if="aboutHtml" to="body">
       <div v-if="aboutOpen" class="about-overlay" @click="closeAbout">
-        <div v-if="isVertical" class="about-pane-v" @click.stop>
-          <button class="about-close" @click="closeAbout">✕</button>
+        <div v-if="isVertical" ref="aboutPaneRef" class="about-pane-v" @click.stop>
+          <button class="about-close" @click="closeAbout" :aria-label="t('action.close')">✕</button>
           <div class="about-v-body" v-html="filteredAboutHtml" />
         </div>
 
-        <div v-else class="about-pane-h" @click.stop>
-          <button class="about-close" @click="closeAbout">✕</button>
+        <div v-else ref="aboutPaneRef" class="about-pane-h" @click.stop>
+          <button class="about-close" @click="closeAbout" :aria-label="t('action.close')">✕</button>
           <img v-if="logoUrl" :src="logoUrl" alt="" class="about-logo" />
           <div class="about-h-body" v-html="filteredAboutHtml" />
         </div>
@@ -104,7 +108,7 @@ function onKey(event: KeyboardEvent) {
   border: 1px solid var(--border); border-radius: 4px;
   background: none; font-size: 16px;
   color: var(--ink-light); cursor: pointer;
-  transition: all 0.15s; z-index: 1;
+  transition: background 0.15s ease, color 0.15s ease; z-index: 1;
 }
 .about-close:hover { background: var(--ink); color: var(--paper); border-color: var(--ink) }
 
@@ -148,6 +152,7 @@ function onKey(event: KeyboardEvent) {
   background: var(--paper);
   padding: 32px 28px;
   overflow-x: auto;
+  overscroll-behavior: contain;
   box-shadow: 8px 0 32px rgba(var(--shadow-rgb), 0.1);
   animation: aboutSlideInV 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }

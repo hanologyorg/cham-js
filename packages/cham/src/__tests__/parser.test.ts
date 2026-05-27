@@ -411,3 +411,89 @@ describe('ChamSerializer', () => {
     expect(result).toContain('靜夜思')
   })
 })
+
+// ─── All Annotation Kinds Round-Trip ─────────────────────────────
+
+describe('all annotation kinds round-trip', () => {
+  const allKindsSource = `---
+id: 99
+title: All Kinds Test
+---
+{1}齕{/1}{2}宓{/1}{3}處{/3}{4}B{/4}{5}騅{/5}{6}殷紂{/6}{7}垓下{/7}{8}亂臣{/8}{9}開元{/9}{10}周書{/10}{11}道可道{/11}{12}水{/12}{13}老子{/13}{14}可道{/14}
+
+## 注釋
+
+{1} fanqie upper:恨 lower:沒 [齕][恨沒切]
+
+{2} zhiyin [宓][伏]
+
+{3} tone [處][上聲]
+
+{4} pron type:pinyin lang:cmn [zhuī]
+
+{5} meaning [騅][毛色青白相雜的馬]
+
+{6} person ref:A213 [殷紂][商紂王]
+
+{7} place ref:P001 [垓下][今安徽靈璧]
+
+{8} event ref:E010 [亂臣十人][周武王十位輔臣]
+
+{9} date dynasty:唐 era:開元 year:15 iso:727 [開元十五年]
+
+{10} allusion source:shangshu [周書稱殷紂有億兆夷人]
+
+{11} collation source:帛書甲本 [作「道可道也」]
+
+{12} variant action:emend [水][冰]
+
+{13} see-also ref:laozi/1 [老子第一章]
+
+{14} commentary [可道之道可名之名]`
+
+  it('parses all annotation kinds', () => {
+    const doc = parse(allKindsSource)
+    const section = doc.sections[0]
+    expect(section.entries.length).toBe(14)
+
+    const kinds = section.entries.map(e => e.kind)
+    expect(kinds).toEqual([
+      'fanqie', 'zhiyin', 'tone', 'pron', 'meaning',
+      'person', 'place', 'event', 'date', 'allusion',
+      'collation', 'variant', 'see-also', 'commentary',
+    ])
+  })
+
+  it('round-trips all annotation kinds', () => {
+    const doc1 = parse(allKindsSource)
+    const serialized = serialize(doc1)
+    const doc2 = parse(serialized)
+
+    const kinds1 = doc1.sections[0].entries.map(e => e.kind)
+    const kinds2 = doc2.sections[0].entries.map(e => e.kind)
+    expect(kinds2).toEqual(kinds1)
+
+    const params1 = doc1.sections[0].entries.map(e => ({ ...e.params }))
+    const params2 = doc2.sections[0].entries.map(e => ({ ...e.params }))
+    expect(params2).toEqual(params1)
+
+    const values1 = doc1.sections[0].entries.map(e => e.value)
+    const values2 = doc2.sections[0].entries.map(e => e.value)
+    expect(values2).toEqual(values1)
+  })
+
+  it('preserves fanqie upper and lower params', () => {
+    const doc = parse(allKindsSource)
+    const entry = doc.sections[0].entries[0]
+    expect(entry.kind).toBe('fanqie')
+    expect(entry.params.upper).toBe('恨')
+    expect(entry.params.lower).toBe('沒')
+    expect(entry.value).toBe('恨沒切')
+  })
+
+  it('preserves tone value', () => {
+    const doc = parse(allKindsSource)
+    const toneEntry = doc.sections[0].entries.find(e => e.kind === 'tone')!
+    expect(toneEntry.value).toBe('上聲')
+  })
+})

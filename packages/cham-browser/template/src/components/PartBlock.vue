@@ -173,7 +173,7 @@ const annotationEntries = computed(() =>
   font-weight: 700;
   letter-spacing: 2px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .part-ann-toggle:hover {

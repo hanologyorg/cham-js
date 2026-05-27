@@ -133,7 +133,7 @@ const paragraphsHtml = computed(() => {
 .sb-title { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--ink); margin: 0; }
 .sb-toggle {
   border: none; background: none; cursor: pointer; font-family: inherit;
-  padding: 4px 12px; border-radius: 4px; transition: all 0.2s;
+  padding: 4px 12px; border-radius: 4px; transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   color: var(--ink-faint); border: 1px solid var(--border-light);
 }
 .sb-toggle:hover { color: var(--vermillion); border-color: var(--vermillion); }

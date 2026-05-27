@@ -15,15 +15,17 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <div class="pc-root" :class="{ 'pc-vertical': vertical }" role="button" tabindex="0" @click="$emit('click')" @keydown.enter="$emit('click')" @keydown.space.prevent="$emit('click')">
-    <div class="pc-accent"></div>
-    <div class="pc-body">
-      <div class="pc-num">{{ String(poem.num).padStart(3, '0') }}</div>
-      <h3 class="pc-title">{{ poem.title }}</h3>
-      <div class="pc-author">{{ poem.author }}</div>
-      <p class="pc-preview">{{ preview }}</p>
+  <router-link custom :to="`/poem/${poem.id}`" v-slot="{ navigate }">
+    <div class="pc-root" :class="{ 'pc-vertical': vertical }" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
+      <div class="pc-accent"></div>
+      <div class="pc-body">
+        <div class="pc-num">{{ String(poem.num).padStart(3, '0') }}</div>
+        <h3 class="pc-title">{{ poem.title }}</h3>
+        <div class="pc-author">{{ poem.author }}</div>
+        <p class="pc-preview">{{ preview }}</p>
+      </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <style scoped>
@@ -33,7 +35,7 @@ const preview = computed(() => {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 .pc-accent {

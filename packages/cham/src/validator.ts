@@ -11,21 +11,29 @@ import type {
 import { VALID_NATURES } from './types.js'
 
 const KIND_PARAMS: Record<string, { required: string[]; optional: string[] }> = {
+  fanqie: { required: ['upper', 'lower'], optional: [] },
+  zhiyin: { required: [], optional: [] },
+  tone: { required: [], optional: [] },
   pron: { required: ['type', 'lang'], optional: [] },
   meaning: { required: [], optional: [] },
+  commentary: { required: [], optional: [] },
+  translation: { required: [], optional: [] },
   person: { required: [], optional: ['ref'] },
   place: { required: [], optional: ['ref'] },
   event: { required: [], optional: ['ref'] },
   date: { required: [], optional: ['dynasty', 'era', 'year', 'iso'] },
   allusion: { required: [], optional: ['source'] },
-  commentary: { required: [], optional: [] },
-  translation: { required: [], optional: [] },
   collation: { required: [], optional: ['source'] },
   variant: { required: [], optional: ['action'] },
   'see-also': { required: [], optional: ['ref'] },
   speaker: { required: [], optional: ['ref', 'role'] },
   'skqs-variant': { required: [], optional: ['image', 'unicode'] },
 }
+
+const PRON_TYPES = new Set(['hom', 'jyut', 'pinyin', 'bopomofo'])
+const PRON_LANGS = new Set(['yue', 'cmn'])
+const VARIANT_ACTIONS = new Set(['emend', 'note', 'parallel'])
+const TONE_VALUES = new Set(['上聲', '去聲', '平聲', '入聲', '如字'])
 
 const KNOWN_KINDS = new Set(Object.keys(KIND_PARAMS))
 
@@ -118,6 +126,7 @@ export class ChamValidator {
       this.validateSpeakerAnnotations(doc, filePath)
       this.validateDate(doc, filePath)
       this.validateTextSections(doc, filePath)
+      this.validateCompoundAnnotations(doc, filePath)
 
       for (const section of doc.sections) {
         for (const entry of section.entries) {
@@ -400,6 +409,83 @@ export class ChamValidator {
             this.error(filePath, undefined,
               `Annotation kind "${entry.kind}" missing required param: ${req}`)
           }
+        }
+      }
+    }
+    this.validateKindValues(doc, filePath)
+  }
+
+  private validateKindValues(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        switch (entry.kind) {
+          case 'fanqie':
+            if (entry.value && !entry.value.endsWith('切') && !entry.value.endsWith('反')) {
+              this.error(filePath, undefined,
+                `fanqie value must end with 切 or 反: "${entry.value}"`)
+            }
+            break
+          case 'tone':
+            if (entry.value && !TONE_VALUES.has(entry.value)) {
+              this.error(filePath, undefined,
+                `Invalid tone category: "${entry.value}" — expected one of: ${[...TONE_VALUES].join(', ')}`)
+            }
+            break
+          case 'pron':
+            if (entry.params.type && !PRON_TYPES.has(entry.params.type)) {
+              this.error(filePath, undefined,
+                `Invalid pron type: "${entry.params.type}" — expected one of: ${[...PRON_TYPES].join(', ')}`)
+            }
+            if (entry.params.lang && !PRON_LANGS.has(entry.params.lang)) {
+              this.error(filePath, undefined,
+                `Invalid pron lang: "${entry.params.lang}" — expected one of: ${[...PRON_LANGS].join(', ')}`)
+            }
+            break
+          case 'variant':
+            if (entry.params.action && !VARIANT_ACTIONS.has(entry.params.action)) {
+              this.error(filePath, undefined,
+                `Invalid variant action: "${entry.params.action}" — expected one of: ${[...VARIANT_ACTIONS].join(', ')}`)
+            }
+            break
+        }
+      }
+    }
+  }
+
+  // ─── Compound Annotation Detection ────────────────────────────
+
+  private validateCompoundAnnotations(doc: ChamDocument, filePath: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        if (entry.kind !== 'meaning' && entry.kind !== 'commentary') continue
+        const v = entry.value
+
+        if (v.includes('　')) {
+          this.warning(filePath, undefined,
+            `Annotation contains full-width space (U+3000) — consider splitting into separate entries`)
+        }
+
+        if (v.includes('○按')) {
+          this.warning(filePath, undefined,
+            `Annotation contains ○按 boundary — consider splitting into commentary + kaozheng entries`)
+        }
+
+        const zhiyinMatch = v.match(/(?<![音義假借知])音(?!義|假借|訓|韻)/)
+        if (zhiyinMatch) {
+          this.warning(filePath, undefined,
+            `Annotation may contain embedded zhiyin pattern — consider extracting to zhiyin kind`)
+        }
+
+        const fanqieMatch = v.match(/\S\s\S\s*[切反]/)
+        if (fanqieMatch) {
+          this.warning(filePath, undefined,
+            `Annotation may contain embedded fanqie pattern — consider extracting to fanqie kind`)
+        }
+
+        const toneMatch = v.match(/[上去平入]聲/)
+        if (toneMatch) {
+          this.warning(filePath, undefined,
+            `Annotation may contain embedded tone pattern — consider extracting to tone kind`)
         }
       }
     }

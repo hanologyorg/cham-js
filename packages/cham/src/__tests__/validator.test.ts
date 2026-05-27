@@ -280,6 +280,222 @@ describe('ChamValidator', () => {
       expect(result.valid).toBe(true)
       cleanup()
     })
+
+    it('validates fanqie requires upper and lower params', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}齕{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} fanqie [齕][恨沒切]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const paramError = result.issues.find(i => i.message.includes('missing required param'))
+      expect(paramError).toBeDefined()
+      expect(paramError!.message).toContain('upper')
+      cleanup()
+    })
+
+    it('accepts valid fanqie with upper and lower', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}齕{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} fanqie upper:恨 lower:沒 [齕][恨沒切]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const paramError = result.issues.find(i => i.message.includes('missing required param'))
+      expect(paramError).toBeUndefined()
+      const valueError = result.issues.find(i => i.message.includes('fanqie value must end'))
+      expect(valueError).toBeUndefined()
+      cleanup()
+    })
+
+    it('accepts fanqie value ending in 反', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}齕{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} fanqie upper:恨 lower:沒 [齕][恨沒反]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const valueError = result.issues.find(i => i.message.includes('fanqie value must end'))
+      expect(valueError).toBeUndefined()
+      cleanup()
+    })
+
+    it('rejects fanqie value not ending in 切 or 反', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}齕{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} fanqie upper:恨 lower:沒 [齕][恨沒音]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('fanqie value must end with 切 or 反'))).toBe(true)
+      cleanup()
+    })
+
+    it('validates tone values', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}處{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} tone [處][上聲]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('Invalid tone'))).toBe(false)
+      cleanup()
+    })
+
+    it('rejects invalid tone value', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}處{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} tone [處][下聲]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('Invalid tone category'))).toBe(true)
+      cleanup()
+    })
+
+    it('rejects invalid pron type', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} pron type:invalid lang:cmn [bā]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('Invalid pron type'))).toBe(true)
+      cleanup()
+    })
+
+    it('rejects invalid variant action', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} variant action:delete [a][b]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('Invalid variant action'))).toBe(true)
+      cleanup()
+    })
+
+    it('flags compound annotations with full-width space', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} meaning [太甲篇曰接下思恭　處上聲]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('full-width space'))).toBe(true)
+      cleanup()
+    })
+
+    it('flags compound annotations with ○按', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} meaning [君白虎通曰君者羣也○按荀子無民者影也]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('○按'))).toBe(true)
+      cleanup()
+    })
   })
 
   describe('validateBook', () => {

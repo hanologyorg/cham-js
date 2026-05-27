@@ -62,7 +62,7 @@ onUnmounted(detach)
 <template>
   <Transition name="btt">
     <button v-if="visible" class="btt" :class="{ 'btt-v': vertical }" @click="scrollToTop" :aria-label="vertical ? t('action.backToStart') : t('action.backToTop')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 19V5M5 12l7-7 7 7"/>
       </svg>
     </button>
@@ -86,7 +86,7 @@ onUnmounted(detach)
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.1);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -108,8 +108,8 @@ onUnmounted(detach)
   box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.15);
 }
 
-.btt-enter-active { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.btt-leave-active { transition: all 0.15s ease; }
+.btt-enter-active { transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.btt-leave-active { transition: opacity 0.15s ease, transform 0.15s ease; }
 .btt-enter-from { opacity: 0; transform: translateY(12px) scale(0.8); }
 .btt-leave-to { opacity: 0; transform: translateY(8px) scale(0.9); }
 </style>

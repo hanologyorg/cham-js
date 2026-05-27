@@ -62,18 +62,23 @@ function goHome() { router.push('/') }
           <div class="v-bio-text">{{ author.bio }}</div>
         </section>
 
-        <div
+        <router-link
           v-for="piece in authorPieces"
           :key="`${piece.bookId}-${piece.num}`"
-          class="v-work"
-          role="button"
-          tabindex="0"
-          @click="openPiece(piece)"
-          @keydown.enter="openPiece(piece)" @keydown.space.prevent="openPiece(piece)"
+          custom
+          :to="`/${piece.bookId}/${piece.num}`"
+          v-slot="{ navigate }"
         >
-          <div class="v-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
-          <div class="v-work-title">{{ piece.title }}</div>
-        </div>
+          <div
+            class="v-work"
+            tabindex="0"
+            @click="navigate"
+            @keydown.enter="navigate" @keydown.space.prevent="navigate"
+          >
+            <div class="v-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
+            <div class="v-work-title">{{ piece.title }}</div>
+          </div>
+        </router-link>
       </div>
     </div>
 
@@ -115,19 +120,24 @@ function goHome() { router.push('/') }
           <div class="h-works">
             <h3>{{ t('author.collectedWorks') }}</h3>
             <div class="h-grid">
-              <div
+              <router-link
                 v-for="piece in authorPieces"
                 :key="`${piece.bookId}-${piece.num}`"
-                class="h-work"
-                role="button"
-                tabindex="0"
-                @click="openPiece(piece)"
-                @keydown.enter="openPiece(piece)" @keydown.space.prevent="openPiece(piece)"
+                custom
+                :to="`/${piece.bookId}/${piece.num}`"
+                v-slot="{ navigate }"
               >
-                <div class="h-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
-                <div class="h-work-title">{{ piece.title }}</div>
-                <div class="h-work-preview">{{ piece.verses.map(v => v.text).join('').slice(0, 40) }}</div>
-              </div>
+                <div
+                  class="h-work"
+                  tabindex="0"
+                  @click="navigate"
+                  @keydown.enter="navigate" @keydown.space.prevent="navigate"
+                >
+                  <div class="h-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
+                  <div class="h-work-title">{{ piece.title }}</div>
+                  <div class="h-work-preview">{{ piece.verses.map(v => v.text).join('').slice(0, 40) }}</div>
+                </div>
+              </router-link>
             </div>
           </div>
         </div>
@@ -225,7 +235,7 @@ function goHome() { router.push('/') }
   border: 1px solid var(--border-light);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   align-self: center;
 }
 .v-work:hover {
@@ -266,7 +276,7 @@ function goHome() { router.push('/') }
   border-radius: 2px; background: none;
   font-family: var(--sans); font-size: 13px;
   color: var(--ink-mid); cursor: pointer;
-  transition: all 0.2s; white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; white-space: nowrap;
 }
 .h-back:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .h-breadcrumb { font-size: 15px; font-weight: 600; letter-spacing: 1px; }
@@ -327,7 +337,7 @@ function goHome() { router.push('/') }
   padding: 20px;
   background: var(--surface); border: 1px solid var(--border-light);
   border-radius: 6px; cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .h-work:hover {
   border-color: var(--gold);

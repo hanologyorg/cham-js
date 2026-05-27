@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <button class="ann-card-close" @click="dismiss" :aria-label="t('action.close')">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
@@ -349,7 +349,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
   opacity: 0;
   z-index: 1;
 }

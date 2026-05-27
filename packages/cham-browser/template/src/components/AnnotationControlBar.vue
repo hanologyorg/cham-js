@@ -88,7 +88,7 @@ function toggleLayer(id: string) {
   font-weight: 700;
   letter-spacing: 2px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
   writing-mode: horizontal-tb;
   white-space: nowrap;
 }
@@ -117,7 +117,7 @@ function toggleLayer(id: string) {
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   white-space: nowrap;
   text-align: center;
 }

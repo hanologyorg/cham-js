@@ -151,7 +151,7 @@ function close() { open.value = false }
   font-size: 16px;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(var(--shadow-rgb), 0.12);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex; align-items: center; justify-content: center;
 }
 .rt-fab:hover {
@@ -203,7 +203,7 @@ function close() { open.value = false }
   font-size: 13px;
   color: var(--ink-mid);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .rt-opt:hover { border-color: var(--ink); color: var(--ink); }
 .rt-opt.rt-theme {
@@ -243,7 +243,7 @@ function close() { open.value = false }
   color: var(--ink-mid);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 .rt-size-btn:hover { border-color: var(--ink); color: var(--ink); }
 .rt-size-val {
@@ -252,6 +252,7 @@ function close() { open.value = false }
   color: var(--ink);
   min-width: 32px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 .rt-backdrop {
   position: fixed; inset: 0;

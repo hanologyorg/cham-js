@@ -102,24 +102,26 @@ function openBook(bookId: string) {
             <div class="v-shelf-cat">
               <span class="v-cat-label">{{ group.category }}</span>
             </div>
+          <router-link v-for="(book, bi) in group.books"
+            :key="book.id"
+            custom
+            :to="`/${book.id}`"
+            v-slot="{ navigate }"
+          >
             <div
-              v-for="(book, bi) in group.books"
-              :key="book.id"
               class="v-spine v-spine-anim"
               :data-cat="bookCategoryKey(book)"
-              role="button"
               tabindex="0"
               :style="{ animationDelay: bi * 0.04 + 's' }"
-              @click="openBook(book.id)"
-              @keydown.enter="openBook(book.id)"
-              @keydown.space.prevent="openBook(book.id)"
+              @click="navigate"
+              @keydown.enter="navigate"
+              @keydown.space.prevent="navigate"
             >
               <span class="v-spine-accent"></span>
               <span class="v-spine-title">{{ book.title }}</span>
               <span class="v-spine-badge">{{ book.count }}</span>
             </div>
-          </template>
-        </section>
+          </router-link>        </section>
       </div>
     </div>
 
@@ -139,28 +141,34 @@ function openBook(bookId: string) {
       <div v-for="group in groupedBooks" :key="group.category" class="lib-group">
         <h2 class="lib-group-title">{{ group.category }}</h2>
         <div class="lib-grid">
-          <div
+          <router-link
             v-for="(book, bi) in group.books"
             :key="book.id"
-            class="lib-card lib-card-anim"
-            role="button"
-            tabindex="0"
-            :style="{ animationDelay: bi * 0.06 + 's' }"
-            @click="openBook(book.id)"
-            @keydown.enter="openBook(book.id)"
-            @keydown.space.prevent="openBook(book.id)"
+            custom
+            :to="`/${book.id}`"
+            v-slot="{ navigate }"
           >
-            <div class="lib-card-accent"></div>
-            <div class="lib-card-body">
-              <div class="lib-card-top">
-                <h3 class="lib-card-title">{{ book.title }}</h3>
-                <span class="lib-card-genre">{{ bookCategory(book) }}</span>
-              </div>
-              <p v-if="book.subtitle" class="lib-card-sub">{{ book.subtitle }}</p>
-              <div class="lib-card-stats">
-                <span class="lib-card-count">{{ t('stat.pieceCount', { count: book.count }) }}</span>
+            <div
+              class="lib-card lib-card-anim"
+              tabindex="0"
+              :style="{ animationDelay: bi * 0.06 + 's' }"
+              @click="navigate"
+              @keydown.enter="navigate"
+              @keydown.space.prevent="navigate"
+            >
+              <div class="lib-card-accent"></div>
+              <div class="lib-card-body">
+                <div class="lib-card-top">
+                  <h3 class="lib-card-title">{{ book.title }}</h3>
+                  <span class="lib-card-genre">{{ bookCategory(book) }}</span>
+                </div>
+                <p v-if="book.subtitle" class="lib-card-sub">{{ book.subtitle }}</p>
+                <div class="lib-card-stats">
+                  <span class="lib-card-count">{{ t('stat.pieceCount', { count: book.count }) }}</span>
+                </div>
               </div>
             </div>
+          </router-link>            </div>
           </div>
         </div>
       </div>
@@ -353,6 +361,7 @@ function openBook(bookId: string) {
   width: auto;
   object-fit: contain;
   margin-bottom: 24px;
+  display: block;
 }
 .lib-seal {
   writing-mode: vertical-rl;
@@ -394,6 +403,9 @@ function openBook(bookId: string) {
   color: var(--ink-light);
   letter-spacing: 2px;
 }
+.lib-stat {
+  font-variant-numeric: tabular-nums;
+}
 .lib-stat-sep { color: var(--border); }
 
 .lib-group { margin-bottom: 40px; }
@@ -426,7 +438,7 @@ function openBook(bookId: string) {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s var(--ease-out-expo, ease);
+  transition: border-color 0.3s var(--ease-out-expo, ease), box-shadow 0.3s var(--ease-out-expo, ease), transform 0.3s var(--ease-out-expo, ease);
   position: relative;
   background: var(--surface);
 }
@@ -474,6 +486,7 @@ function openBook(bookId: string) {
   padding: 2px 8px;
   background: var(--surface-warm);
   border-radius: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 768px) {

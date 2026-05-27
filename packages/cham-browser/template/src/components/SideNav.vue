@@ -33,13 +33,13 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
 <template>
   <nav class="sidenav">
-    <button class="sn-brand" @click="emit('home')" :title="t('nav.home')">
-      <img v-if="logoUrl" :src="logoUrl" alt="" class="sn-logo" />
+    <button class="sn-brand" @click="emit('home')" :aria-label="t('nav.home')">
+      <img v-if="logoUrl" :src="logoUrl" alt="" width="36" height="44" class="sn-logo" />
       <span v-else class="sn-seal">文</span>
     </button>
 
-    <button class="sn-btn" @click="emit('back')" :title="t('nav.back')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    <button class="sn-btn" @click="emit('back')" :aria-label="t('nav.back')">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
     </button>
 
     <div v-if="context && !titleCollapsed" class="sn-context">{{ context }}</div>
@@ -53,25 +53,25 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
     <div class="sn-spacer" />
 
-    <button v-if="hasPrev" class="sn-btn sn-nav-btn" @click="emit('navigate', -1)" :title="t('piece.previous')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+    <button v-if="hasPrev" class="sn-btn sn-nav-btn" @click="emit('navigate', -1)" :aria-label="t('piece.previous')">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
     </button>
 
-    <button v-if="hasNext" class="sn-btn sn-nav-btn" @click="emit('navigate', 1)" :title="t('piece.next')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    <button v-if="hasNext" class="sn-btn sn-nav-btn" @click="emit('navigate', 1)" :aria-label="t('piece.next')">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </button>
 
-    <button v-if="aboutHtml" class="sn-btn" @click="aboutPane?.toggleAbout()" :title="t('nav.about')">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <button v-if="aboutHtml" class="sn-btn" @click="aboutPane?.toggleAbout()" :aria-label="t('nav.about')">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
     </button>
 
     <button
       class="sn-btn"
       :class="{ active: settingsOpen }"
       @click="toggleSettings"
-      :title="t('settings.shortTitle')"
+      :aria-label="t('settings.shortTitle')"
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
 
     <div v-if="layout === 'vertical'" class="sn-layout-tag">{{ t('layout.verticalShort') }}</div>
@@ -165,7 +165,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   background: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: opacity 0.2s;
   margin-bottom: 4px;
   padding: 2px;
 }
@@ -196,7 +196,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   color: var(--ink-light);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .sn-btn:hover { border-color: var(--ink); color: var(--ink); }
 .sn-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -249,7 +249,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 }
 
 .title-in-enter-active, .title-in-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .title-in-enter-from, .title-in-leave-to {
   opacity: 0;
@@ -283,7 +283,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 }
 
 .slide-left-enter-active, .slide-left-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 0.2s, transform 0.2s ease;
 }
 .slide-left-enter-from, .slide-left-leave-to {
   opacity: 0;
@@ -310,7 +310,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   font-size: 12px;
   color: var(--ink-mid);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
 }
 .ss-opt:hover { border-color: var(--ink); color: var(--ink); }
 .ss-opt.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
@@ -327,7 +327,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   color: var(--ink-mid);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  transition: color 0.15s, border-color 0.15s;
 }
 .ss-size-btn:hover { border-color: var(--ink); color: var(--ink); }
 .ss-size-val {
@@ -336,6 +336,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   color: var(--ink);
   min-width: 32px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .sn-overlay {

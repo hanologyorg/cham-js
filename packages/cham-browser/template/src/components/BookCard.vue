@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import type { BookMeta } from '../types'
-import { useRouter } from 'vue-router'
 import { useI18n } from '../composables/useI18n'
 
 const props = defineProps<{ book: BookMeta }>()
-const router = useRouter()
 const { t } = useI18n()
 
 function genreLabel(genre: string): string {
@@ -13,17 +11,19 @@ function genreLabel(genre: string): string {
 </script>
 
 <template>
-  <div class="bc-root" role="button" tabindex="0" @click="router.push(`/${props.book.id}`)" @keydown.enter="router.push(`/${props.book.id}`)" @keydown.space.prevent="router.push(`/${props.book.id}`)">
-    <div class="bc-accent"></div>
-    <div class="bc-body">
-      <h2 class="bc-title">{{ props.book.title }}</h2>
-      <p v-if="props.book.subtitle" class="bc-subtitle">{{ props.book.subtitle }}</p>
-      <div class="bc-stats">
-        <span class="bc-count">{{ t('stat.pieceCount', { count: props.book.count }) }}</span>
-        <span class="bc-genre">{{ genreLabel(props.book.genre) }}</span>
+  <router-link custom :to="`/${props.book.id}`" v-slot="{ navigate }">
+    <div class="bc-root" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
+      <div class="bc-accent"></div>
+      <div class="bc-body">
+        <h2 class="bc-title">{{ props.book.title }}</h2>
+        <p v-if="props.book.subtitle" class="bc-subtitle">{{ props.book.subtitle }}</p>
+        <div class="bc-stats">
+          <span class="bc-count">{{ t('stat.pieceCount', { count: props.book.count }) }}</span>
+          <span class="bc-genre">{{ genreLabel(props.book.genre) }}</span>
+        </div>
       </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <style scoped>
@@ -33,7 +33,7 @@ function genreLabel(genre: string): string {
   border: 1px solid var(--border-light);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 .bc-accent {
@@ -76,6 +76,7 @@ function genreLabel(genre: string): string {
   padding: 2px 8px;
   background: var(--surface-warm);
   border-radius: 4px;
+  font-variant-numeric: tabular-nums;
 }
 .bc-genre {
   padding: 2px 8px;
