@@ -13,7 +13,7 @@ export function parseYamlValue(val: string): unknown {
   return val
 }
 
-const ARRAY_KEYS = new Set(['contributors', 'layers', 'volumes', 'hero', 'hierarchy', 'readings', 'works'])
+const ARRAY_KEYS = new Set(['contributors', 'layers', 'volumes', 'hero', 'hierarchy', 'readings', 'works', 'groups'])
 
 interface YamlContext {
   result: Record<string, unknown>

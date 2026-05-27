@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, reactive, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
@@ -18,6 +18,7 @@ import SideNav from '../components/SideNav.vue'
 import PartGroup from '../components/PartGroup.vue'
 import ReadingProgress from '../components/ReadingProgress.vue'
 import BackToTop from '../components/BackToTop.vue'
+import AuthorPane from '../components/AuthorPane.vue'
 import { toChineseNumber } from '../utils/chineseNumber'
 import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
@@ -48,12 +49,64 @@ onMounted(() => {
 })
 
 // Track current section in vertical mode
+let sectionCache: { key: string; el: Element }[] = []
+let rafId = 0
+
+function rebuildSectionCache() {
+  const container = vPageRef.value
+  if (!container) { sectionCache = []; return }
+  const cache: { key: string; el: Element }[] = []
+  const titleCol = container.querySelector('.v-title-col')
+  if (titleCol) cache.push({ key: 'title', el: titleCol })
+  for (const block of container.querySelectorAll('[data-section-key]')) {
+    cache.push({ key: block.getAttribute('data-section-key')!, el: block })
+  }
+  sectionCache = cache
+}
+
+function updateCurrentSection() {
+  if (!vPageRef.value || !isVertical.value) return
+  if (!sectionCache.length) rebuildSectionCache()
+  const containerRect = vPageRef.value.getBoundingClientRect()
+  const viewportCenter = containerRect.left + containerRect.width / 2
+
+  let best = 'title'
+  for (const s of sectionCache) {
+    const r = s.el.getBoundingClientRect()
+    if (viewportCenter >= r.left && viewportCenter <= r.right) {
+      best = s.key
+      break
+    }
+  }
+  if (best === 'title') {
+    let bestDist = Infinity
+    for (const s of sectionCache) {
+      const r = s.el.getBoundingClientRect()
+      const center = (r.left + r.right) / 2
+      const dist = Math.abs(center - viewportCenter)
+      if (dist < bestDist) { bestDist = dist; best = s.key }
+    }
+  }
+  currentSection.value = best
+}
+
 onMounted(() => {
   const el = vPageRef.value
   if (!el) return
-  const onScroll = () => updateCurrentSection()
+  const onScroll = () => {
+    cancelAnimationFrame(rafId)
+    rafId = requestAnimationFrame(updateCurrentSection)
+  }
   el.addEventListener('scroll', onScroll, { passive: true })
-  onUnmounted(() => el.removeEventListener('scroll', onScroll))
+  onUnmounted(() => {
+    el.removeEventListener('scroll', onScroll)
+    cancelAnimationFrame(rafId)
+  })
+})
+
+watch(() => piece.value?.id, () => {
+  sectionCache = []
+  nextTick(rebuildSectionCache)
 })
 
 // Keyboard navigation
@@ -317,7 +370,7 @@ const tocItems = computed(() => {
   ]
   if (isMultiPart.value && p?.parts) {
     for (const part of p.parts) {
-      const chapter = (part.source?.range as Record<string, string>)?.chapter
+      const chapter = part.source?.range?.chapter
       if (chapter) {
         items.push({ key: `part-${part.num}`, label: chapter, context: `（${toChineseNumber(part.num)}）`, level: 1 })
       }
@@ -337,50 +390,6 @@ const tocItems = computed(() => {
   }
   return items
 })
-
-function updateCurrentSection() {
-  if (!vPageRef.value || !isVertical.value) return
-  const container = vPageRef.value
-  const containerRect = container.getBoundingClientRect()
-  const viewportCenter = containerRect.left + containerRect.width / 2
-
-  const sections: { key: string; left: number; right: number }[] = []
-
-  const titleCol = container.querySelector('.v-title-col')
-  if (titleCol) {
-    const r = titleCol.getBoundingClientRect()
-    sections.push({ key: 'title', left: r.left, right: r.right })
-  }
-
-  const blocks = container.querySelectorAll('[data-section-key]')
-  for (const block of blocks) {
-    const key = block.getAttribute('data-section-key')!
-    const r = block.getBoundingClientRect()
-    sections.push({ key, left: r.left, right: r.right })
-  }
-
-  // Prefer section that contains the viewport center
-  let best = 'title'
-  for (const s of sections) {
-    if (viewportCenter >= s.left && viewportCenter <= s.right) {
-      best = s.key
-      break
-    }
-  }
-  // Fallback: nearest by center distance
-  if (best === 'title') {
-    let bestDist = Infinity
-    for (const s of sections) {
-      const center = (s.left + s.right) / 2
-      const dist = Math.abs(center - viewportCenter)
-      if (dist < bestDist) {
-        bestDist = dist
-        best = s.key
-      }
-    }
-  }
-  currentSection.value = best
-}
 
 const proseSections = computed(() => {
   const ss = piece.value?.structuredSections
@@ -638,39 +647,17 @@ function tcy(n: number): string {
         @select="onPaneSelect"
       />
 
-      <Teleport to="body">
-        <Transition name="overlay">
-          <div v-if="authorPaneOpen" class="v-overlay" @click="closeAuthorPane">
-            <div class="v-author-pane" @click.stop>
-              <button class="v-pane-close unstyled" @click="closeAuthorPane" :aria-label="t('action.close')">✕</button>
-              <div class="v-pane-header">
-                <div class="v-pane-name">{{ selectedAuthorName }}</div>
-                <div class="v-pane-meta">
-                  <span v-if="selectedAuthorEra">{{ selectedAuthorEra }}</span>
-                  <span v-if="authorLifespan">{{ authorLifespan }}</span>
-                  <span v-if="selectedAuthorWorkCount" class="v-pane-count">{{ t('stat.pieceCount', { count: selectedAuthorWorkCount }) }}</span>
-                </div>
-                <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="v-pane-names">
-                  <span v-if="selectedAuthorData?.courtesyName">{{ t('author.courtesyName', { name: selectedAuthorData.courtesyName }) }}</span>
-                  <span v-if="selectedAuthorData?.artName">{{ t('author.artName', { name: selectedAuthorData.artName }) }}</span>
-                </div>
-              </div>
-              <div class="v-pane-links">
-                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="v-pane-link">CTEXT</a>
-                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="v-pane-link">Wikipedia ZH</a>
-                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="v-pane-link">Wikipedia EN</a>
-                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="v-pane-link">Wikidata</a>
-              </div>
-              <div v-if="selectedAuthorBio" class="v-pane-bio">
-                <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="v-pane-p">
-                  {{ p.trim() }}
-                </div>
-              </div>
-              <div v-if="!selectedAuthorBio" class="v-pane-empty">{{ t('piece.noAuthorData') }}</div>
-            </div>
-          </div>
-        </Transition>
-      </Teleport>
+      <AuthorPane
+        :open="authorPaneOpen"
+        :author="selectedAuthorData"
+        :name="selectedAuthorName"
+        :era="selectedAuthorEra"
+        :work-count="selectedAuthorWorkCount"
+        :lifespan="authorLifespan"
+        vertical
+        @close="closeAuthorPane"
+      />
+
       <BackToTop vertical :scroll-container="vPageRef" />
 
       <!-- 底部浮動段落導航列 -->
@@ -851,41 +838,15 @@ function tcy(n: number): string {
 
       <BackToTop />
 
-      <Teleport to="body">
-        <Transition name="overlay">
-          <div v-if="authorPaneOpen" class="h-overlay" @click="closeAuthorPane">
-            <div class="h-pane" @click.stop>
-              <button class="h-pane-close unstyled" @click="closeAuthorPane" :aria-label="t('action.close')">✕</button>
-              <div class="h-pane-header">
-                <div>
-                  <div class="h-pane-name">{{ selectedAuthorName }}</div>
-                  <div class="h-pane-meta">
-                    <span v-if="selectedAuthorEra" class="h-pane-era">{{ selectedAuthorEra }}</span>
-                    <span v-if="authorLifespan" class="h-pane-lifespan">{{ authorLifespan }}</span>
-                    <span v-if="selectedAuthorWorkCount" class="h-pane-count">{{ t('piece.collected', { count: selectedAuthorWorkCount }) }}</span>
-                  </div>
-                  <div v-if="selectedAuthorData?.courtesyName || selectedAuthorData?.artName" class="h-pane-alt-names">
-                    <span v-if="selectedAuthorData?.courtesyName">{{ t('author.courtesyName', { name: selectedAuthorData.courtesyName }) }}</span>
-                    <span v-if="selectedAuthorData?.artName">{{ t('author.artName', { name: selectedAuthorData.artName }) }}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="h-pane-links">
-                <a v-if="selectedAuthorData?.ctextId" :href="`https://ctext.org/wiki.pl?if=en&res=${selectedAuthorData.ctextId}`" target="_blank" rel="noopener" class="h-pane-link">CTEXT</a>
-                <a v-if="selectedAuthorData?.wikipediaZh" :href="selectedAuthorData.wikipediaZh" target="_blank" rel="noopener" class="h-pane-link">Wikipedia</a>
-                <a v-if="selectedAuthorData?.wikipediaEn" :href="selectedAuthorData.wikipediaEn" target="_blank" rel="noopener" class="h-pane-link">Wikipedia EN</a>
-                <a v-if="selectedAuthorData?.wikidata" :href="`https://www.wikidata.org/wiki/${selectedAuthorData.wikidata}`" target="_blank" rel="noopener" class="h-pane-link">Wikidata</a>
-              </div>
-              <div v-if="selectedAuthorBio" class="h-pane-bio">
-                <div v-for="p in selectedAuthorBio.split('\n').filter(l => l.trim())" :key="p" class="h-pane-p">
-                  {{ p.trim() }}
-                </div>
-              </div>
-              <div v-if="!selectedAuthorBio" class="h-pane-empty">{{ t('piece.noAuthorData') }}</div>
-            </div>
-          </div>
-        </Transition>
-      </Teleport>
+      <AuthorPane
+        :open="authorPaneOpen"
+        :author="selectedAuthorData"
+        :name="selectedAuthorName"
+        :era="selectedAuthorEra"
+        :work-count="selectedAuthorWorkCount"
+        :lifespan="authorLifespan"
+        @close="closeAuthorPane"
+      />
     </div>
   </div>
 
@@ -1273,262 +1234,6 @@ function tcy(n: number): string {
 .h-nav-btn.h-nav-next { text-align: right; }
 .h-nav-label { font-size: 11px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; margin-bottom: 4px; }
 .h-nav-title { font-size: 16px; font-weight: 600; letter-spacing: 1px; color: var(--ink); transition: color 0.25s ease; }
-
-.h-overlay {
-  position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.24);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 200;
-  display: flex; justify-content: flex-end;
-}
-.h-pane {
-  overscroll-behavior: contain;
-  width: min(420px, 90vw);
-  height: 100dvh;
-  background: var(--paper);
-  padding: 32px;
-  overflow-y: auto;
-  box-shadow: -8px 0 32px rgba(var(--shadow-rgb), 0.1);
-}
-
-/* Overlay transition */
-.overlay-enter-active { transition: opacity var(--dur-mid, 0.25s) ease; }
-.overlay-enter-active .h-pane {
-  overscroll-behavior: contain; transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
-.overlay-enter-active .v-author-pane {
-  overscroll-behavior: contain; transition: transform var(--dur-mid, 0.25s) cubic-bezier(0.34, 1.56, 0.64, 1); }
-.overlay-leave-active { transition: opacity var(--dur-fast, 0.15s) ease; }
-.overlay-leave-active .h-pane {
-  overscroll-behavior: contain; transition: transform var(--dur-fast, 0.15s) ease; }
-.overlay-leave-active .v-author-pane {
-  overscroll-behavior: contain; transition: transform var(--dur-fast, 0.15s) ease; }
-.overlay-enter-from { opacity: 0; }
-.overlay-enter-from .h-pane {
-  overscroll-behavior: contain; transform: translateX(100%); }
-.overlay-enter-from .v-author-pane {
-  overscroll-behavior: contain; transform: translateX(-100%); }
-.overlay-leave-to { opacity: 0; }
-.overlay-leave-to .h-pane {
-  overscroll-behavior: contain; transform: translateX(40px); }
-.overlay-leave-to .v-author-pane {
-  overscroll-behavior: contain; transform: translateX(-40px); }
-.h-pane-close {
-  display: block; margin-left: auto;
-  width: 36px; height: 36px;
-  border: 1px solid var(--border); border-radius: 4px;
-  background: none; font-size: 16px;
-  color: var(--ink-light); cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-}
-.h-pane-close:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.h-pane-header {
-  display: flex; align-items: center; gap: 20px;
-  margin: 24px 0 32px;
-}
-.h-pane-seal {
-  width: 64px; height: 64px;
-  border: 2px solid var(--vermillion); border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px; font-weight: 900;
-  color: var(--vermillion); flex-shrink: 0;
-}
-.h-pane-name { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: var(--ink); }
-.h-pane-meta { font-size: 14px; color: var(--ink-faint); letter-spacing: 2px; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
-.h-pane-era {
-  display: inline-flex;
-  padding: 2px 8px;
-  background: var(--vermillion);
-  color: var(--paper);
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  border-radius: 3px;
-}
-.h-pane-count {
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--ink-faint);
-  letter-spacing: 1px;
-}
-.h-pane-lifespan {
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--ink-light);
-  letter-spacing: 1px;
-}
-.h-pane-alt-names {
-  font-size: 14px;
-  color: var(--ink-light);
-  letter-spacing: 2px;
-  margin-top: 6px;
-  display: flex;
-  gap: 12px;
-}
-.h-pane-links {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 16px 0 0;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-light);
-}
-.h-pane-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--ink-mid);
-  text-decoration: none;
-  letter-spacing: 1px;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-}
-.h-pane-link:hover {
-  border-color: var(--vermillion);
-  color: var(--vermillion);
-}
-.h-pane-link .link-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  background: var(--surface-warm);
-  font-size: 10px;
-  font-weight: 700;
-}
-.h-pane-empty {
-  padding: 40px 0;
-  text-align: center;
-  color: var(--ink-faint);
-  font-family: var(--sans);
-  font-size: 14px;
-  letter-spacing: 2px;
-}
-.h-pane-bio { border-top: 1px solid var(--border); padding-top: 24px; }
-.h-pane-p {
-  font-size: 16px; line-height: 2.2;
-  color: var(--ink-mid); text-align: justify;
-  text-indent: 2em; margin-bottom: 12px;
-}
-
-.v-overlay {
-  position: fixed; inset: 0;
-  background: rgba(var(--shadow-rgb), 0.24);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 200;
-  display: flex; justify-content: flex-start;
-}
-.v-author-pane {
-  overscroll-behavior: contain;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  height: 100dvh;
-  background: var(--paper);
-  padding: 32px 24px;
-  overflow-x: auto;
-  box-shadow: 8px 0 32px rgba(var(--shadow-rgb), 0.1);
-}
-.v-pane-close {
-  width: 32px; height: 32px;
-  border: 1px solid var(--border); border-radius: 4px;
-  background: none; font-size: 14px;
-  color: var(--ink-light); cursor: pointer;
-  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
-  margin-bottom: 16px;
-  display: flex; align-items: center; justify-content: center;
-}
-.v-pane-header {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-bottom: 24px;
-  padding-left: 20px;
-  border-left: 1px solid var(--border);
-}
-.v-pane-seal {
-  width: 56px; height: 56px;
-  border: 2px solid var(--vermillion); border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 900;
-  color: var(--vermillion);
-  margin-bottom: 12px;
-}
-.v-pane-name {
-  font-size: 28px; font-weight: 900;
-  letter-spacing: 6px; color: var(--ink);
-}
-.v-pane-meta {
-  font-size: 13px;
-  color: var(--ink-faint);
-  font-family: var(--sans);
-  letter-spacing: 2px;
-  display: flex;
-  gap: 8px;
-  margin-left: 4px;
-}
-.v-pane-count {
-  font-size: 12px;
-  color: var(--ink-faint);
-  letter-spacing: 1px;
-}
-.v-pane-names {
-  font-size: 14px;
-  color: var(--ink-light);
-  letter-spacing: 2px;
-  display: flex;
-  gap: 8px;
-  margin-left: 4px;
-}
-.v-pane-links {
-  display: flex;
-  gap: 8px;
-  padding-left: 16px;
-  border-left: 1px solid var(--border);
-  margin-bottom: 16px;
-}
-.v-pane-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  font-family: var(--sans);
-  font-size: 11px;
-  color: var(--ink-mid);
-  text-decoration: none;
-  letter-spacing: 1px;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-}
-.v-pane-link:hover {
-  border-color: var(--vermillion);
-  color: var(--vermillion);
-}
-.v-pane-empty {
-  font-size: 14px;
-  color: var(--ink-faint);
-  font-family: var(--sans);
-  letter-spacing: 2px;
-  padding-left: 16px;
-  border-left: 1px solid var(--border);
-}
-.v-pane-bio {
-  font-size: 16px; line-height: 2.4;
-  color: var(--ink-mid);
-  padding-left: 16px;
-  border-left: 1px solid var(--border);
-}
-.v-pane-p {
-  margin-bottom: 0;
-  margin-left: 12px;
-}
 
 
 /* ─── 觸控回饋 ─── */

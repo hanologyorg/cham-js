@@ -6,7 +6,7 @@ const props = defineProps<{ book: BookMeta }>()
 const { t } = useI18n()
 
 function genreLabel(genre: string): string {
-  return t(`genre.${genre}` as 'genre.poetry') || genre
+  return t(`genre.${genre}`) || genre
 }
 </script>
 

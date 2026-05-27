@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
               <div class="ann-pane-entry-head">
                 <span v-if="!vertical" class="ann-pane-idx">{{ toChineseNumber(idx + 1) }}</span>
                 <span v-if="!vertical && headword(ann)" class="ann-pane-word">{{ headword(ann) }}</span>
-                <span class="ann-pane-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                <span class="ann-pane-kind ann-kind-badge" :class="ann.kind">{{ kindLabel(ann) }}</span>
                 <span v-if="layerLabel(ann)" class="ann-pane-layer">{{ layerLabel(ann) }}</span>
               </div>
               <div class="ann-pane-entry-body">
@@ -338,21 +338,6 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
   line-height: 1.5;
 }
-
-.ann-pane-kind.pronunciation { background: var(--jade); color: var(--paper); }
-.ann-pane-kind.semantic { background: var(--vermillion); color: var(--paper); }
-.ann-pane-kind.etymology { background: var(--ann-etymology); color: var(--paper); }
-.ann-pane-kind.note,
-.ann-pane-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-pane-kind.commentary { background: var(--ann-commentary); color: var(--paper); }
-.ann-pane-kind.translation { background: var(--ann-translation); color: var(--paper); }
-.ann-pane-kind.person { background: var(--ann-person); color: var(--paper); }
-.ann-pane-kind.place { background: var(--ann-place); color: var(--paper); }
-.ann-pane-kind.event { background: var(--ann-event); color: var(--paper); }
-.ann-pane-kind.date { background: var(--ann-date); color: var(--paper); }
-.ann-pane-kind.allusion { background: var(--ann-allusion); color: var(--paper); }
-
-.ann-pane-layer {
   font-size: 10px;
   font-family: var(--sans);
   color: var(--ink-faint);

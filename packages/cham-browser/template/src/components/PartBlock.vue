@@ -5,7 +5,7 @@ import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations }
 import { parseAnnotationBlock } from '../utils/annotationParser'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
-import PronunciationGroup from './PronunciationGroup.vue'
+import AnnotationParsedEntry from './AnnotationParsedEntry.vue'
 
 const { t } = useI18n()
 
@@ -58,10 +58,7 @@ function onTap(event: MouseEvent) {
   if (matched) emit('annotationTap', event, matched)
 }
 
-const sourceLabel = (() => {
-  const r = props.source?.range as Record<string, string> | undefined
-  return r?.chapter || ''
-})()
+const sourceLabel = props.source?.range?.chapter || ''
 
 const annotationEntries = computed(() =>
   props.annotationText ? parseAnnotationBlock(props.annotationText) : []
@@ -88,19 +85,12 @@ const annotationEntries = computed(() =>
       </div>
       <template v-if="annotationsVisible !== false">
         <div v-if="annotationEntries.length > 0" class="part-annotations">
-          <div v-for="entry in annotationEntries" :key="entry.num" class="part-ann-entry">
-            <div class="part-ann-head">
-              <span class="part-ann-num">{{ entry.numDisplay }}</span>
-              <span class="part-ann-term">{{ entry.term }}</span>
-              <PronunciationGroup
-                v-for="seg in entry.pronSegments"
-                :key="seg.lang"
-                :segment="seg"
-                class="part-ann-pron"
-              />
-            </div>
-            <div v-if="entry.definition" class="part-ann-def">{{ entry.definition }}</div>
-          </div>
+          <AnnotationParsedEntry
+            v-for="entry in annotationEntries"
+            :key="entry.num"
+            :entry="entry"
+            :vertical="vertical"
+          />
         </div>
         <div v-else class="part-annotations">
           <div v-for="line in annotationText.split('\n')" :key="line" class="part-ann-line">{{ line }}</div>
@@ -192,56 +182,13 @@ const annotationEntries = computed(() =>
   text-align: left;
 }
 
-.part-ann-entry {
+.part-annotations :deep(.ape) {
   padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
 }
-.part-ann-entry:last-child {
+.part-annotations :deep(.ape:last-child) {
   border-bottom: none;
   padding-bottom: 0;
-}
-
-.part-ann-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 10px;
-  margin-bottom: 4px;
-}
-
-.part-ann-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  background: var(--vermillion);
-  color: var(--paper);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.part-ann-term {
-  font-weight: 700;
-  font-size: 1.05em;
-  color: var(--ink);
-  padding: 2px 8px;
-  background: var(--surface-warm);
-  border-radius: 3px;
-}
-
-.part-ann-pron {
-  margin-left: 2px;
-}
-
-.part-ann-def {
-  color: var(--ink-mid);
-  line-height: 2;
-  white-space: pre-line;
-  padding-left: 32px;
 }
 
 .part-ann-line {
@@ -358,35 +305,10 @@ const annotationEntries = computed(() =>
   border-left: none;
 }
 
-.part-block--vertical .part-ann-entry {
+.part-block--vertical .part-annotations :deep(.ape) {
   margin-bottom: 0;
   margin-left: 16px;
   padding: 0;
   border-bottom: none;
-}
-
-.part-block--vertical .part-ann-head {
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.part-block--vertical .part-ann-num {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: none;
-  color: var(--vermillion);
-  font-size: inherit;
-}
-
-.part-block--vertical .part-ann-term {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-}
-
-.part-block--vertical .part-ann-def {
-  padding-left: 0;
-  margin-left: 12px;
 }
 </style>

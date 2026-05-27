@@ -379,7 +379,7 @@ export function buildBookMeta(config: BookConfig, pieceCount: number): BookMeta 
     id: config.id,
     title: config.title,
     subtitle: config.subtitle,
-    titleEn: config.titleEn,
+    'title-en': config['title-en'],
     publisher: config.publisher,
     genre: config.genre || 'poetry',
     count: pieceCount,

@@ -131,6 +131,20 @@ rt.ann-num, sup.ann-num {
   box-shadow: 0 var(--ann-shadow-y, 2px) 8px color-mix(in srgb, var(--ann-translation) 8%, transparent);
 }
 
+/* ─── Annotation kind badge colors (global) ─── */
+.ann-kind-badge.pronunciation { background: var(--jade); color: var(--paper); }
+.ann-kind-badge.semantic { background: var(--vermillion); color: var(--paper); }
+.ann-kind-badge.etymology { background: var(--ann-etymology); color: var(--paper); }
+.ann-kind-badge.note,
+.ann-kind-badge.definition { background: var(--ink); color: var(--paper); }
+.ann-kind-badge.commentary { background: var(--ann-commentary); color: var(--paper); }
+.ann-kind-badge.translation { background: var(--ann-translation); color: var(--paper); }
+.ann-kind-badge.person { background: var(--ann-person); color: var(--paper); }
+.ann-kind-badge.place { background: var(--ann-place); color: var(--paper); }
+.ann-kind-badge.event { background: var(--ann-event); color: var(--paper); }
+.ann-kind-badge.date { background: var(--ann-date); color: var(--paper); }
+.ann-kind-badge.allusion { background: var(--ann-allusion); color: var(--paper); }
+
 /* ─── Annotation number — horizontal mode (superscript) ─── */
 .ann-num {
   color: var(--vermillion);

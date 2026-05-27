@@ -23,7 +23,7 @@ export interface BookMeta {
   id: string
   title: string
   subtitle?: string
-  titleEn?: string
+  'title-en'?: string
   publisher?: string
   genre: BookGenre
   count: number
@@ -108,12 +108,18 @@ export interface PieceContributor {
   title?: string
 }
 
+export interface SourceRange {
+  start?: string
+  end?: string
+  chapter?: string
+}
+
 export interface PieceSource {
   text?: string
   textRef?: string
   pieceRef?: number
   relation: 'section' | 'excerpt' | 'standalone'
-  range?: { start?: string; end?: string; chapter?: string; [key: string]: string | undefined }
+  range?: SourceRange
 }
 
 export interface ProseSection {

@@ -887,7 +887,7 @@ export class EpubConverter {
       `title: ${config.title || ''}`,
     ]
     if (config.subtitle) lines.push(`subtitle: ${config.subtitle}`)
-    if (config.titleEn) lines.push(`titleEn: ${config.titleEn}`)
+    if (config['title-en']) lines.push(`title-en: ${config['title-en']}`)
     if (config.publisher) lines.push(`publisher: ${config.publisher}`)
     lines.push(`genre: ${config.genre || 'prose'}`)
 

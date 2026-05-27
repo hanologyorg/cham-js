@@ -273,11 +273,17 @@ export interface VolumeConfig {
   pieces: string[]
 }
 
+export interface BookGroup {
+  id: string
+  label: string
+  piece: number
+}
+
 export interface BookConfig {
   id: string
   title: string
   subtitle?: string
-  titleEn?: string
+  'title-en'?: string
   publisher?: string
   genre?: BookGenre
   contributors?: ChamContributor[]
@@ -287,13 +293,14 @@ export interface BookConfig {
   annotation?: BookAnnotationDefaults
   volumes?: VolumeConfig[]
   hierarchy?: HierarchyLevelName[]
+  groups?: BookGroup[]
 }
 
 export interface BookMeta {
   id: string
   title: string
   subtitle?: string
-  titleEn?: string
+  'title-en'?: string
   publisher?: string
   genre: BookGenre
   count: number
@@ -301,6 +308,7 @@ export interface BookMeta {
   layers?: BookLayer[]
   annotation?: BookAnnotationDefaults
   volumes?: VolumeConfig[]
+  groups?: BookGroup[]
 }
 
 export interface CrossRef {

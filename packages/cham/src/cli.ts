@@ -157,7 +157,7 @@ converter.convert({
     id,
     title,
     subtitle,
-    titleEn,
+    'title-en': titleEn,
     genre,
     contributors: contributors.length > 0 ? contributors : undefined,
     date: Object.keys(date).length > 0 ? date as any : undefined,

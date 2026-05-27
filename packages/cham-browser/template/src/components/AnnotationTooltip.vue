@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
             <div class="ann-card-scroll">
               <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
                 <div class="ann-entry-header">
-                  <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                  <span class="ann-kind ann-kind-badge" :class="ann.kind">{{ kindLabel(ann) }}</span>
                 </div>
                 <div class="ann-entry-body">
                   <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
@@ -191,7 +191,7 @@ onBeforeUnmount(() => {
           <div class="ann-sheet-scroll">
             <div v-for="ann in annotations" :key="ann.id" class="ann-entry">
               <div class="ann-entry-header">
-                <span class="ann-kind" :class="ann.kind">{{ kindLabel(ann) }}</span>
+                <span class="ann-kind ann-kind-badge" :class="ann.kind">{{ kindLabel(ann) }}</span>
               </div>
               <div class="ann-entry-body">
                 <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
@@ -281,18 +281,6 @@ onBeforeUnmount(() => {
   letter-spacing: 1px;
   line-height: 1.5;
 }
-.ann-kind.pronunciation { background: var(--jade); color: var(--paper); }
-.ann-kind.semantic { background: var(--vermillion); color: var(--paper); }
-.ann-kind.etymology { background: var(--ann-etymology); color: var(--paper); }
-.ann-kind.note,
-.ann-kind.definition { background: var(--ink); color: var(--paper); }
-.ann-kind.commentary { background: var(--ann-commentary); color: var(--paper); }
-.ann-kind.translation { background: var(--ann-translation); color: var(--paper); }
-.ann-kind.person { background: var(--ann-person); color: var(--paper); }
-.ann-kind.place { background: var(--ann-place); color: var(--paper); }
-.ann-kind.event { background: var(--ann-event); color: var(--paper); }
-.ann-kind.date { background: var(--ann-date); color: var(--paper); }
-.ann-kind.allusion { background: var(--ann-allusion); color: var(--paper); }
 
 .ann-layer {
   font-size: 10px;

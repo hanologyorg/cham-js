@@ -146,7 +146,7 @@ export class ChamJsonConverter {
       id: raw.id as string || basename(bookDir),
       title: raw.title as string || '',
       subtitle: raw.subtitle as string | undefined,
-      titleEn: raw.titleEn as string | undefined,
+      'title-en': raw['title-en'] as string | undefined,
       publisher: raw.publisher as string | undefined,
       genre: raw.genre as BookConfig['genre'],
       contributors: raw.contributors as BookConfig['contributors'],

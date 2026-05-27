@@ -66,7 +66,9 @@ export class ChamValidator {
       if (primaryDoc) {
         allPrimaryDocs.set(dirName, primaryDoc)
         this.validateMarkerIntegrity(primaryDoc, dirName)
+        this.validateMarkerUniqueness(primaryDoc, dirName)
         this.validateAnnotationRefs(primaryDoc, dirName)
+        this.validateVerseTargets(primaryDoc, dirName)
         this.validateKindParams(primaryDoc, join(dir, 'text.cham.md'))
         this.validateSequentialMarkers(primaryDoc, dirName)
       }
@@ -113,7 +115,9 @@ export class ChamValidator {
       if (doc.meta.type === 'primary') {
         this.validateMarkerInterleaving(doc, fileName)
         this.validateMarkerIntegrity(doc, fileName)
+        this.validateMarkerUniqueness(doc, fileName)
         this.validateAnnotationRefs(doc, fileName)
+        this.validateVerseTargets(doc, fileName)
         this.validateSequentialMarkers(doc, fileName)
       }
 
@@ -341,6 +345,41 @@ export class ChamValidator {
 
   // ─── Layer Annotation Validation ──────────────────────────
 
+  private validateMarkerUniqueness(doc: ChamDocument, context: string): void {
+    const seen = new Map<number, number>()
+    for (const [id, marker] of doc.markers) {
+      if (seen.has(id)) {
+        this.error(context, undefined,
+          `Marker ID {${id}} is reused (first in block ${seen.get(id)}, again in block ${marker.blockIndex})`)
+      }
+      seen.set(id, marker.blockIndex)
+    }
+  }
+
+  private validateVerseTargets(doc: ChamDocument, context: string): void {
+    for (const section of doc.sections) {
+      for (const entry of section.entries) {
+        if (entry.target.type !== 'verse') continue
+        const { line, char, end } = entry.target
+        if (line < 0 || line >= doc.textBlocks.length) {
+          this.error(context, undefined,
+            `Verse/position target references non-existent text block ${line} (max ${doc.textBlocks.length - 1})`)
+          continue
+        }
+        const block = doc.textBlocks[line]
+        if (char < 0 || char >= block.text.length) {
+          this.error(context, undefined,
+            `Verse/position target char offset ${char} out of range in block ${line} (length ${block.text.length})`)
+          continue
+        }
+        if (end !== undefined && end > block.text.length) {
+          this.warning(context, undefined,
+            `Verse/position target end offset ${end} exceeds block ${line} length ${block.text.length}`)
+        }
+      }
+    }
+  }
+
   private validateLayerAnnotations(
     layerDoc: ChamDocument,
     primaryDoc: ChamDocument,
@@ -371,6 +410,9 @@ export class ChamValidator {
         if (!layer.id) this.error('book.yaml', undefined, 'Layer missing id')
         if (!layer.label) this.warning('book.yaml', undefined, `Layer "${layer.id}" missing label`)
         if (!layer.contributor) this.warning('book.yaml', undefined, `Layer "${layer.id}" missing contributor`)
+        if (layer.nature && !VALID_NATURES.has(layer.nature)) {
+          this.error('book.yaml', undefined, `Layer "${layer.id}" has unknown nature: "${layer.nature}"`)
+        }
       }
     }
 
@@ -386,6 +428,13 @@ export class ChamValidator {
         if (!dirNames.includes(p)) {
           this.warning('book.yaml', undefined, `Volume references missing piece dir: "${p}"`)
         }
+      }
+    }
+
+    if (config.groups) {
+      for (const group of config.groups) {
+        if (!group.id) this.error('book.yaml', undefined, 'Group missing id')
+        if (!group.label) this.warning('book.yaml', undefined, `Group "${group.id}" missing label`)
       }
     }
 

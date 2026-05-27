@@ -2,7 +2,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { parseAnnotationBlock } from '../utils/annotationParser'
 import { useI18n } from '../composables/useI18n'
-import PronunciationGroup from './PronunciationGroup.vue'
+import AnnotationParsedEntry from './AnnotationParsedEntry.vue'
 
 const { locale } = useI18n()
 
@@ -88,19 +88,12 @@ const paragraphsHtml = computed(() => {
       <slot name="header-actions" />
     </div>
     <div v-if="isAnnotations && text" class="sb-text sb-ann-list">
-      <div v-for="entry in entries" :key="entry.num" class="sb-ann-entry">
-        <div class="sb-ann-head">
-          <span class="sb-ann-num">{{ entry.numDisplay }}</span>
-          <span class="sb-ann-term">{{ entry.term }}</span>
-          <PronunciationGroup
-            v-for="seg in entry.pronSegments"
-            :key="seg.lang"
-            :segment="seg"
-            class="sb-ann-pron"
-          />
-        </div>
-        <div v-if="entry.definition" class="sb-ann-def">{{ entry.definition }}</div>
-      </div>
+      <AnnotationParsedEntry
+        v-for="entry in entries"
+        :key="entry.num"
+        :entry="entry"
+        :vertical="vertical"
+      />
     </div>
     <div v-else class="sb-text" v-html="paragraphsHtml" />
   </div>
@@ -147,51 +140,13 @@ const paragraphsHtml = computed(() => {
 
 /* ─── Annotation list ─── */
 .sb-ann-list { text-align: start; }
-.sb-ann-entry {
+.sb-ann-list :deep(.ape) {
   padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
 }
-.sb-ann-entry:last-child {
+.sb-ann-list :deep(.ape:last-child) {
   border-bottom: none;
   padding-bottom: 0;
-}
-.sb-ann-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 10px;
-  margin-bottom: 4px;
-}
-.sb-ann-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  background: var(--vermillion);
-  color: var(--paper);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.sb-ann-term {
-  font-weight: 700;
-  font-size: 1.05em;
-  color: var(--ink);
-  padding: 2px 8px;
-  background: var(--surface-warm);
-  border-radius: 3px;
-}
-.sb-ann-pron {
-  margin-left: 2px;
-}
-.sb-ann-def {
-  color: var(--ink-mid);
-  line-height: 2;
-  white-space: pre-line;
-  padding-left: 32px;
 }
 
 /* ─── 直排模式 ─── */
@@ -256,39 +211,18 @@ const paragraphsHtml = computed(() => {
   text-indent: 0;
   line-height: 2.4;
 }
-.sb-vertical .sb-ann-entry {
+.sb-vertical .sb-ann-list :deep(.ape) {
   margin-bottom: 0;
   margin-left: 16px;
   padding: 0;
   border-bottom: none;
 }
-.sb-vertical .sb-ann-head {
-  align-items: flex-start;
-  gap: 4px;
-}
-.sb-vertical .sb-ann-num {
-  width: auto;
-  height: auto;
-  border-radius: 0;
-  background: none;
-  color: var(--vermillion);
-  font-size: inherit;
-}
-.sb-vertical .sb-ann-term {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-}
-.sb-vertical .sb-ann-def {
-  padding-left: 0;
-  margin-left: 12px;
-}
 
 @media (max-width: 768px) {
-  .sb-ann-entry {
+  .sb-ann-list :deep(.ape) {
     padding: 10px 0;
   }
-  .sb-ann-def {
+  .sb-ann-list :deep(.ape-def) {
     padding-left: 0;
   }
 }

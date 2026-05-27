@@ -354,8 +354,9 @@ function parseAnnotationEntry(line: string): AnnotationEntry | null {
   } else if (line.startsWith('@full')) {
     target = { type: 'full' }
     rest = line.slice(5).trimStart()
-  } else if (line.startsWith('@verse:')) {
-    const spec = line.slice(7).split(/\s/)[0]
+  } else if (line.startsWith('@verse:') || line.startsWith('@position:')) {
+    const prefix = line.startsWith('@verse:') ? '@verse:' : '@position:'
+    const spec = line.slice(prefix.length).split(/\s/)[0]
     const colonParts = spec.split(':')
     const l = parseInt(colonParts[0], 10)
     const rangePart = colonParts[1] || '0'
@@ -363,7 +364,7 @@ function parseAnnotationEntry(line: string): AnnotationEntry | null {
     const c = parseInt(rangeParts[0], 10) || 0
     const e = rangeParts.length > 1 ? parseInt(rangeParts[1], 10) : undefined
     target = { type: 'verse', line: l, char: c, ...(e !== undefined ? { end: e } : {}) }
-    rest = line.slice(7 + spec.length).trimStart()
+    rest = line.slice(prefix.length + spec.length).trimStart()
   } else {
     return null
   }

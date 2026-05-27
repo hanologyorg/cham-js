@@ -599,5 +599,47 @@ describe('ChamValidator', () => {
         cleanup()
       })
     })
+
+    it('catches verse target referencing non-existent block', () => {
+      setupDir({
+        'book.yaml': 'id: test\ntitle: Test\ngenre: poetry',
+        'piece1/text.cham.md': [
+          '---',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'Some text',
+          '',
+          '## 注釋',
+          '',
+          '@verse:5:3 meaning [字]',
+        ].join('\n'),
+      })
+      const result = validator.validateBook(TMP)
+      expect(result.issues.some(i => i.severity === 'error' && i.message.includes('non-existent text block'))).toBe(true)
+      cleanup()
+    })
+
+    it('catches verse target char offset out of range', () => {
+      setupDir({
+        'book.yaml': 'id: test\ntitle: Test\ngenre: poetry',
+        'piece1/text.cham.md': [
+          '---',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          '短',
+          '',
+          '## 注釋',
+          '',
+          '@verse:0:10 meaning [字]',
+        ].join('\n'),
+      })
+      const result = validator.validateBook(TMP)
+      expect(result.issues.some(i => i.severity === 'error' && i.message.includes('char offset'))).toBe(true)
+      cleanup()
+    })
   })
 })
