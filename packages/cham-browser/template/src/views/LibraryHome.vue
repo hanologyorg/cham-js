@@ -170,8 +170,7 @@ function openBook(bookId: string) {
                 </div>
               </div>
             </div>
-          </router-link>            </div>
-          </div>
+          </router-link>
         </div>
       </div>
       <ReadingToolbar />
