@@ -1526,22 +1526,23 @@ function tcy(n: number): string {
 .v-layer-toggles {
   display: flex;
   flex-direction: row;
-  gap: 6px;
+  gap: 4px;
 }
 .v-layer-btn {
   padding: 4px 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   border-radius: 4px;
   background: none;
   color: var(--ink-faint);
   font-family: var(--sans);
   font-size: 13px;
+  font-weight: 700;
   letter-spacing: 3px;
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
 }
-.v-layer-btn:hover { border-color: var(--gold); color: var(--ink); }
+.v-layer-btn:hover { border-color: var(--vermillion); color: var(--vermillion); }
 .v-layer-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
 /* ─── 底部浮動段落按鈕 ─── */

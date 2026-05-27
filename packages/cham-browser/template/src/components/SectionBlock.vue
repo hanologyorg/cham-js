@@ -221,6 +221,7 @@ const paragraphsHtml = computed(() => {
   border-bottom: none;
   padding-left: 16px;
   border-left: 2px solid var(--vermillion);
+  gap: 4px;
 }
 .sb-vertical .sb-num {
   width: auto; height: auto;
@@ -234,8 +235,13 @@ const paragraphsHtml = computed(() => {
   letter-spacing: 6px;
 }
 .sb-vertical .sb-toggle {
-  padding: 6px 10px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 3px;
+}
+.sb-toggleable.sb-vertical .sb-toggle {
+  font-family: var(--sans);
 }
 .sb-vertical .sb-text {
   margin-left: 16px;
