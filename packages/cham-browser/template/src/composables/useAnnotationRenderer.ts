@@ -147,9 +147,9 @@ export function useAnnotationTooltip() {
       const text = [...allTargets].map(t => {
         const clone = t.cloneNode(true) as HTMLElement
         clone.querySelectorAll('.ann-num, sup, rt, rp').forEach(n => n.remove())
-        return clone.textContent?.trim() || ''
+        return clone.textContent || ''
       }).join('')
-      headword.value = text || el.textContent?.trim() || ''
+      headword.value = text || el.textContent || ''
     } else {
       headword.value = ''
     }

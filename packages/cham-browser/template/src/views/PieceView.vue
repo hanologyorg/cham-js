@@ -276,6 +276,13 @@ const sectionNavItems = computed(() => {
   return items
 })
 
+function toggleAnnotationsPreserveScroll() {
+  const el = vPageRef.value
+  const scrollLeft = el?.scrollLeft ?? 0
+  annotationsVisible.value = !annotationsVisible.value
+  requestAnimationFrame(() => { if (el) el.scrollLeft = scrollLeft })
+}
+
 function scrollToSection(key: string) {
   const container = isVertical.value ? vPageRef.value : document.documentElement
   if (!container) return
@@ -532,7 +539,7 @@ function tcy(n: number): string {
             @annotation-hover="onAnnotationHover"
             @annotation-leave="onAnnotationLeave"
             @annotation-tap="onAnnotationTap"
-            @toggle-annotations="annotationsVisible = !annotationsVisible"
+            @toggle-annotations="toggleAnnotationsPreserveScroll"
           />
         </section>
 
@@ -563,7 +570,7 @@ function tcy(n: number): string {
           :toggleable="true"
           :toggled-on="annotationsVisible"
           class="v-section v-indent-1"
-          @toggle="annotationsVisible = !annotationsVisible"
+          @toggle="toggleAnnotationsPreserveScroll"
         >
           <template v-if="hasLayers" #header-actions>
             <div class="v-layer-toggles">
@@ -769,7 +776,7 @@ function tcy(n: number): string {
               @annotation-hover="interaction.onHover"
               @annotation-leave="interaction.onLeave"
               @annotation-tap="interaction.onTap"
-              @toggle-annotations="annotationsVisible = !annotationsVisible"
+              @toggle-annotations="toggleAnnotationsPreserveScroll"
             />
           </div>
 
@@ -927,6 +934,8 @@ function tcy(n: number): string {
   padding: var(--v-indent-0) var(--v-pad);
   border-right: 1px solid var(--border);
   scroll-snap-align: start;
+  position: relative;
+  z-index: 1;
 }
 .v-poem-title {
   font-size: 40px; font-weight: 900;
