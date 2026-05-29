@@ -147,6 +147,7 @@ export interface Piece {
   author: string
   authorId: string
   era: string
+  dynasty?: string
   genre: BookGenre
   verses: VerseLine[]
   sections: Record<string, string>

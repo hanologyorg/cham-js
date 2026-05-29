@@ -669,7 +669,7 @@ const authorDisplay = computed(() => {
           <div class="h-nav-inner">
             <button class="h-back" @click="goBack">← {{ t('nav.back') }}</button>
             <div class="h-nav-title-row">
-              <span v-if="piece.era" class="h-era">{{ piece.era }}</span>
+              <span v-if="piece.era || piece.dynasty" class="h-era">{{ piece.era || piece.dynasty }}</span>
               <span class="h-breadcrumb">
                 <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="h-source-link">
                   {{ meta?.title }} →
