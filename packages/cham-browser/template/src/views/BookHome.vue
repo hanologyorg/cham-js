@@ -7,17 +7,17 @@ import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useI18n } from '../composables/useI18n'
 import { tcy } from '../utils/tcy'
-import PoemCard from '../components/PoemCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
 import BackToTop from '../components/BackToTop.vue'
+import type { Piece } from '../types'
 
 const props = defineProps<{ bookId: string }>()
 const router = useRouter()
+
 const { pieces, meta, load } = useBook()
 await load(props.bookId)
 
-const searchQuery = ref('')
 useTitle(meta.value?.title || '')
 
 const { layout } = useReadingMode()
@@ -25,6 +25,8 @@ const isVertical = computed(() => layout.value === 'vertical')
 const vPageRef = ref<HTMLElement | null>(null)
 useHorizontalScroll(vPageRef)
 const { t } = useI18n()
+
+const searchQuery = ref('')
 
 const filtered = computed(() => {
   const q = searchQuery.value.toLowerCase()
@@ -38,56 +40,73 @@ const filtered = computed(() => {
 
 const authorCount = computed(() => new Set(pieces.value.map(p => p.author)).size)
 
-function heroHtml(template: string): string {
-  return template
-    .replace('{count}', tcy(pieces.value.length))
-    .replace('{authorCount}', tcy(authorCount.value))
+interface AuthorGroup {
+  author: string
+  era: string
+  pieces: Piece[]
 }
+
+const groupedByAuthor = computed<AuthorGroup[]>(() => {
+  const map = new Map<string, AuthorGroup>()
+  for (const piece of filtered.value) {
+    if (!map.has(piece.author)) {
+      map.set(piece.author, { author: piece.author, era: piece.era, pieces: [] })
+    }
+    map.get(piece.author)!.pieces.push(piece)
+  }
+  return Array.from(map.values())
+})
 
 function openPiece(num: number) {
   router.push(`/${props.bookId}/${num}`)
-}
-
-function scrollToCatalog() {
-  document.querySelector('.h-catalog')?.scrollIntoView({ behavior: 'smooth' })
 }
 </script>
 
 <template>
   <!-- ═══════ 直排模式 ═══════ -->
-  <div v-if="isVertical" class="v-root">
+  <div v-if="isVertical && meta" class="v-root">
     <SideNav @home="router.push('/')" @back="router.push('/')" />
     <div ref="vPageRef" class="v-page">
-      <section class="v-hero">
-        <div class="v-ornament">◆ ◇ ◆</div>
-        <h1 class="v-title">{{ meta?.title }}</h1>
-        <p class="v-subtitle">{{ meta?.subtitle }}</p>
-        <span v-if="meta?.publisher" class="v-publisher">{{ meta.publisher }}</span>
-        <div class="v-divider"></div>
-        <div v-if="meta?.hero?.length" class="v-stats">
-          <span v-for="line in meta.hero" :key="line" class="v-stat" v-html="heroHtml(line)" />
+      <section class="v-info">
+        <h1 class="v-info-title">{{ meta.title }}</h1>
+        <p v-if="meta.subtitle" class="v-info-sub">{{ meta.subtitle }}</p>
+        <div class="v-info-divider"></div>
+        <div class="v-info-stats">
+          <span class="v-info-stat" v-html="tcy(pieces.length) + ' ' + t('stat.piecePoems')" />
+          <span class="v-info-stat" v-html="tcy(authorCount) + ' ' + t('stat.authorsLabel')" />
         </div>
-      </section>
-
-      <section class="v-catalog-col">
-        <span class="v-ch-title">{{ t('catalog.title') }}</span>
-        <span class="v-ch-line"> </span>
-        <span class="v-count">{{ t('catalog.total', { count: filtered.length }) }}</span>
         <span class="v-search-wrap">
           <input v-model="searchQuery" class="v-search" :placeholder="t('catalog.search')" :aria-label="t('catalog.search')" />
         </span>
       </section>
 
-      <div class="v-cards-col">
-        <PoemCard
-          v-for="piece in filtered"
-          :key="piece.num"
-          :poem="piece"
-          :vertical="true"
-          class="v-card"
-          @click="openPiece(piece.num)"
-        />
+      <div class="v-shelf">
+        <template v-for="group in groupedByAuthor" :key="group.author">
+          <div class="v-author-sep">
+            <span class="v-author-name">{{ group.author }}</span>
+            <span class="v-author-era">{{ group.era }}</span>
+            <span class="v-author-count">{{ group.pieces.length }}</span>
+          </div>
+          <router-link
+            v-for="piece in group.pieces"
+            :key="piece.num"
+            custom
+            :to="`/${bookId}/${piece.num}`"
+            v-slot="{ navigate }"
+          >
+            <div
+              class="v-spine v-spine-anim"
+              tabindex="0"
+              @click="navigate"
+              @keydown.enter="navigate"
+              @keydown.space.prevent="navigate"
+            >
+              <span class="v-spine-title">{{ piece.title }}</span>
+            </div>
+          </router-link>
+        </template>
       </div>
+
       <div v-if="searchQuery && filtered.length === 0" class="v-empty">
         <span class="v-empty-text">{{ t('catalog.noResults', { query: searchQuery }) }}</span>
       </div>
@@ -95,54 +114,53 @@ function scrollToCatalog() {
   </div>
 
   <!-- ═══════ 橫排模式 ═══════ -->
-  <div v-else class="h-root">
-    <section class="h-hero">
-      <div class="h-hero-inner">
-        <div class="h-ornament">◆ ◇ ◆</div>
-        <h1 class="h-title">{{ meta?.title }}</h1>
-        <p class="h-subtitle">{{ meta?.subtitle }}</p>
-        <div class="h-divider"></div>
-        <div class="h-stats">
-          <div class="h-stat-block">
-            <div class="h-stat-num">{{ pieces.length }}</div>
-            <div class="h-stat-label">{{ t('stat.piecePoems') }}</div>
-          </div>
-          <div class="h-stat-block">
-            <div class="h-stat-num">{{ authorCount }}</div>
-            <div class="h-stat-label">{{ t('stat.authorsLabel') }}</div>
+  <div v-else-if="meta" class="h-root">
+    <header class="h-header">
+      <h1 class="h-title">{{ meta.title }}</h1>
+      <p v-if="meta.subtitle" class="h-subtitle">{{ meta.subtitle }}</p>
+      <div class="h-stats">
+        <span>{{ pieces.length }} {{ t('stat.piecePoems') }}</span>
+        <span class="h-stat-sep">·</span>
+        <span>{{ authorCount }} {{ t('stat.authorsLabel') }}</span>
+      </div>
+    </header>
+
+    <div class="h-search-wrap">
+      <input v-model="searchQuery" class="h-search" :placeholder="t('catalog.search')" :aria-label="t('catalog.search')" />
+    </div>
+
+    <div class="h-grid">
+      <router-link
+        v-for="(piece, idx) in filtered"
+        :key="piece.num"
+        custom
+        :to="`/${bookId}/${piece.num}`"
+        v-slot="{ navigate }"
+      >
+        <div
+          class="h-card h-card-anim"
+          tabindex="0"
+          :style="{ animationDelay: Math.min(idx * 0.03, 0.6) + 's' }"
+          @click="navigate"
+          @keydown.enter="navigate"
+          @keydown.space.prevent="navigate"
+        >
+          <div class="h-card-accent"></div>
+          <div class="h-card-body">
+            <span class="h-card-num">{{ String(piece.num).padStart(3, '0') }}</span>
+            <h3 class="h-card-title">{{ piece.title }}</h3>
+            <div class="h-card-meta">
+              <span class="h-card-author">{{ piece.author }}</span>
+              <span class="h-card-era">{{ piece.era }}</span>
+            </div>
           </div>
         </div>
-        <p v-if="meta?.publisher" class="h-publisher">{{ meta.publisher }}</p>
-        <button class="h-cta" @click="scrollToCatalog">
-          {{ t('catalog.enterLibrary') }}
-        </button>
-      </div>
-    </section>
+      </router-link>
+    </div>
 
-    <section class="h-catalog">
-      <div class="h-catalog-header">
-        <h2>{{ t('catalog.title') }}</h2>
-        <div class="h-line"></div>
-        <p v-if="meta?.publisher">{{ meta.publisher }}</p>
-      </div>
-      <div class="h-filter">
-        <input v-model="searchQuery" class="h-search" :placeholder="t('catalog.search')" :aria-label="t('catalog.search')" />
-      </div>
-      <div class="h-grid">
-        <PoemCard
-          v-for="(piece, idx) in filtered"
-          :key="piece.num"
-          :poem="piece"
-          :style="{ animationDelay: Math.min(idx * 0.04, 0.8) + 's' }"
-          class="h-card-anim"
-          @click="openPiece(piece.num)"
-        />
-      </div>
-      <div v-if="searchQuery && filtered.length === 0" class="h-empty">
-        <span class="h-empty-icon">🔍</span>
-        <p>{{ t('catalog.noResults', { query: searchQuery }) }}</p>
-      </div>
-    </section>
+    <div v-if="searchQuery && filtered.length === 0" class="h-empty">
+      <p>{{ t('catalog.noResults', { query: searchQuery }) }}</p>
+    </div>
 
     <BackToTop />
     <ReadingToolbar />
@@ -152,12 +170,7 @@ function scrollToCatalog() {
 <style scoped>
 /* ═══════ 直排模式 ═══════ */
 
-.v-page {
-  padding: 0 32px;
-  background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
-}
-
-.v-hero {
+.v-info {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
@@ -166,74 +179,61 @@ function scrollToCatalog() {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 40px 20px;
-}
-.v-ornament {
-  font-size: 36px; color: var(--vermillion);
-  opacity: 0.6; letter-spacing: 12px; margin-left: 24px;
-}
-.v-title {
-  font-size: 56px; font-weight: 900;
-  letter-spacing: 16px; color: var(--ink);
-  margin-left: 20px; padding-left: 20px;
-  border-left: 4px solid var(--vermillion);
-  line-height: 1.6;
-}
-.v-subtitle {
-  font-size: 18px; font-weight: 300;
-  color: var(--ink-light); letter-spacing: 6px;
-  margin-left: 16px; font-family: var(--sans);
-}
-.v-divider {
-  width: 2px; height: 80px;
-  background: linear-gradient(180deg, transparent, var(--gold), transparent);
-  margin-left: 20px;
-}
-.v-stats { display: flex; flex-direction: column; gap: 16px; margin-left: 16px; }
-.v-stat {
-  font-size: 22px; font-weight: 200;
-  color: var(--ink); letter-spacing: 4px; white-space: nowrap;
-}
-.v-stat :deep(.tcy) {
-  text-combine-upright: all;
-}
-.v-publisher {
-  font-size: 14px; font-weight: 300;
-  color: var(--ink-faint); letter-spacing: 3px;
-  margin-left: 16px; font-family: var(--sans);
+  padding: 32px 20px;
+  border-left: 1px solid var(--border-light);
 }
 
-.v-catalog-col {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-shrink: 0;
-  height: 100dvh;
-  padding: 40px 16px;
-  border-right: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-}
-.v-ch-title {
-  font-size: 28px; font-weight: 700;
-  letter-spacing: 8px; color: var(--ink);
+.v-info-title {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--ink);
   margin-left: 16px;
+  padding-left: 16px;
+  border-left: 3px solid var(--vermillion);
+  line-height: 1.4;
 }
-.v-ch-line {
-  display: inline-block;
-  width: 2px; height: 40px;
-  background: var(--vermillion);
-  margin-left: 16px;
-}
-.v-count {
-  font-size: 14px; color: var(--ink-light);
-  letter-spacing: 2px;
+
+.v-info-sub {
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink-light);
+  letter-spacing: 3px;
   margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid var(--border);
+  font-family: var(--sans);
 }
+
+.v-info-divider {
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(180deg, transparent, var(--gold), transparent);
+  margin-left: 16px;
+}
+
+.v-info-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 12px;
+}
+
+.v-info-stat {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink-light);
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.v-info-stat :deep(.tcy) {
+  text-combine-upright: all;
+}
+
 .v-search-wrap {
   margin-left: 12px;
+  margin-top: 16px;
 }
+
 .v-search {
   writing-mode: vertical-rl;
   text-orientation: mixed;
@@ -244,138 +244,125 @@ function scrollToCatalog() {
   font-family: var(--sans);
   font-size: 13px;
   color: var(--ink);
-  height: 200px;
+  height: 160px;
   width: 36px;
   outline: none;
   text-align: start;
 }
-.v-search:focus { border-color: var(--gold); }
+
+.v-search:focus {
+  border-color: var(--gold);
+}
+
 .v-search::placeholder {
   color: var(--ink-faint);
 }
 
-.v-cards-col {
+.v-shelf {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
   flex-shrink: 0;
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat(auto-fill, 180px);
-  gap: 10px;
-  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
-  box-sizing: border-box;
-  direction: rtl;
-  align-items: start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
 }
 
-.v-card {
+.v-shelf::-webkit-scrollbar { height: 3px; }
+.v-shelf::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+.v-author-sep {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
   flex-shrink: 0;
+  gap: 6px;
 }
 
-/* ═══════ 橫排模式 ═══════ */
+.v-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--ink-light);
+}
 
-.h-hero {
-  position: relative;
-  height: 100dvh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  background: linear-gradient(180deg, var(--paper) 0%, var(--paper-warm) 100%);
-  overflow: hidden;
-}
-.h-hero::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0v60M0 30h60' stroke='%23d8cdb8' stroke-width='.3' fill='none'/%3E%3C/svg%3E") repeat;
-  opacity: 0.3;
-  pointer-events: none;
-}
-.h-hero-inner { position: relative; z-index: 1; text-align: center; }
-.h-ornament {
-  font-size: 48px; color: var(--vermillion);
-  opacity: 0.6; letter-spacing: 20px; margin-bottom: 32px;
-}
-.h-title {
-  font-size: clamp(36px, 6vw, 64px);
-  font-weight: 900; letter-spacing: 12px;
-  color: var(--ink); margin-bottom: 12px;
-}
-.h-subtitle {
-  font-size: clamp(14px, 2vw, 18px);
-  font-weight: 300; color: var(--ink-light);
-  letter-spacing: 6px; margin-bottom: 48px;
+.v-author-era {
+  font-size: 10px;
   font-family: var(--sans);
-}
-.h-divider {
-  width: 120px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 0 auto 48px;
-}
-.h-stats { display: flex; gap: 48px; justify-content: center; margin-bottom: 48px; }
-.h-stat-num { font-size: 36px; font-weight: 200; color: var(--ink); letter-spacing: 2px; }
-.h-stat-label {
-  font-size: 12px; color: var(--ink-faint);
-  letter-spacing: 4px; font-family: var(--sans);
-  margin-top: 4px; text-align: center;
-}
-.h-publisher {
-  font-size: 14px; color: var(--ink-faint);
-  font-family: var(--sans); letter-spacing: 3px;
-  margin-bottom: 48px;
-}
-.h-cta {
-  display: inline-flex; align-items: center; gap: 12px;
-  padding: 14px 40px;
-  background: var(--ink); color: var(--paper);
-  font-family: var(--sans); font-size: 15px;
-  font-weight: 500; letter-spacing: 3px;
-  border: none; border-radius: 2px; cursor: pointer;
-  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.h-cta:hover {
-  background: var(--vermillion);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(var(--shadow-rgb), 0.12);
-}
-.h-cta:active {
-  transform: scale(0.97);
-  box-shadow: 0 4px 12px rgba(var(--shadow-rgb), 0.08);
-}
-
-.h-catalog { max-width: 1200px; margin: 0 auto; padding: 80px 40px; }
-.h-catalog-header { text-align: center; margin-bottom: 60px; }
-.h-catalog-header h2 { font-size: 28px; font-weight: 700; letter-spacing: 8px; color: var(--ink); margin-bottom: 8px; }
-.h-catalog-header .h-line { width: 60px; height: 2px; background: var(--vermillion); margin: 16px auto; }
-.h-catalog-header p { font-size: 14px; color: var(--ink-faint); font-family: var(--sans); letter-spacing: 2px; }
-.h-filter { display: flex; justify-content: center; margin-bottom: 40px; }
-.h-search {
-  padding: 10px 20px; border: 1px solid var(--border);
-  border-radius: 2px; background: var(--surface);
-  font-family: var(--sans); font-size: 14px;
-  color: var(--ink); width: 320px; outline: none;
-}
-.h-search:focus { border-color: var(--gold); }
-.h-search::placeholder { color: var(--ink-faint); }
-.h-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-.h-card-anim {
-  animation: cardEnter 0.4s var(--ease-out-expo) both;
-}
-
-.h-empty {
-  text-align: center;
-  padding: 60px 20px;
   color: var(--ink-faint);
-  font-family: var(--sans);
-  font-size: 15px;
   letter-spacing: 1px;
 }
-.h-empty-icon {
-  display: block;
-  font-size: 40px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+
+.v-author-count {
+  writing-mode: horizontal-tb;
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 1px 5px;
+}
+
+.v-spine {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100dvh;
+  width: 40px;
+  padding: 20px 0;
+  border-left: 1px solid var(--border-light);
+  cursor: pointer;
+  position: relative;
+  box-sizing: border-box;
+  transition: background 0.25s ease, width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.v-spine:hover {
+  background: linear-gradient(90deg, rgba(var(--shadow-rgb), 0.04), rgba(var(--shadow-rgb), 0.01));
+  width: 52px;
+}
+
+.v-spine:active {
+  transform: scale(0.97);
+}
+
+.v-spine-anim {
+  animation: spineEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes spineEnter {
+  from { opacity: 0; transform: scaleX(0.6); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+.v-spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--ink);
+  line-height: 1.5;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.v-spine:hover .v-spine-title {
+  color: var(--vermillion);
 }
 
 .v-empty {
@@ -388,6 +375,7 @@ function scrollToCatalog() {
   justify-content: center;
   padding: 40px 20px;
 }
+
 .v-empty-text {
   font-size: 14px;
   color: var(--ink-faint);
@@ -395,31 +383,213 @@ function scrollToCatalog() {
   font-family: var(--sans);
 }
 
+/* ═══════ 橫排模式 ═══════ */
+
+.h-root {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 24px 120px;
+}
+
+.h-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.h-title {
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 900;
+  letter-spacing: 8px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.h-subtitle {
+  font-size: 14px;
+  font-family: var(--sans);
+  font-weight: 300;
+  color: var(--ink-light);
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+}
+
+.h-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-faint);
+  letter-spacing: 2px;
+}
+
+.h-stat-sep {
+  color: var(--border);
+}
+
+.h-search-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.h-search {
+  padding: 10px 20px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--ink);
+  width: 320px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.h-search:focus {
+  border-bottom-color: var(--gold);
+}
+
+.h-search::placeholder {
+  color: var(--ink-faint);
+}
+
+.h-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.h-card-anim {
+  animation: cardEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.h-card {
+  display: flex;
+  position: relative;
+  padding: 16px 16px 16px 20px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.h-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 20px rgba(var(--shadow-rgb), 0.08);
+  transform: translateY(-2px);
+}
+
+.h-card:active {
+  transform: scale(0.98);
+}
+
+.h-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, var(--vermillion), var(--gold));
+  transition: height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.h-card:hover .h-card-accent {
+  height: 100%;
+}
+
+.h-card:hover .h-card-title {
+  color: var(--vermillion);
+}
+
+.h-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.h-card-num {
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  letter-spacing: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 5px;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  background: var(--surface-warm);
+  width: fit-content;
+}
+
+.h-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--ink);
+  transition: color 0.2s ease;
+}
+
+.h-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--sans);
+}
+
+.h-card-author {
+  color: var(--ink-light);
+  letter-spacing: 1px;
+}
+
+.h-card-era {
+  color: var(--ink-faint);
+  letter-spacing: 0.5px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-light);
+}
+
+.h-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-faint);
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
 @media (max-width: 768px) {
-  .h-hero { min-height: 80vh; height: auto; padding: 60px 16px; }
-  .h-ornament { font-size: 32px; letter-spacing: 12px; margin-bottom: 20px; }
-  .h-subtitle { margin-bottom: 32px; }
-  .h-divider { margin-bottom: 32px; }
-  .h-stats { gap: 24px; margin-bottom: 32px; }
-  .h-stat-num { font-size: 28px; }
-  .h-publisher { margin-bottom: 32px; }
-  .h-cta { padding: 12px 32px; font-size: 14px; letter-spacing: 2px; }
-  .h-catalog { padding: 40px 16px; }
-  .h-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-  .h-search { width: 100%; }
-  .v-page { padding: 0 16px; }
-  .v-cards-col {
-    padding: 16px 8px;
-    gap: 10px;
+  .v-info { padding: 20px 12px; }
+  .v-info-title { font-size: 28px; letter-spacing: 5px; }
+  .v-spine { width: 36px; }
+  .v-spine:hover { width: 46px; }
+  .v-spine-title { font-size: 12px; letter-spacing: 2px; }
+  .v-search { height: 120px; }
+
+  .h-root { padding: 32px 16px 80px; }
+  .h-header { margin-bottom: 20px; padding-bottom: 20px; }
+  .h-title { letter-spacing: 4px; }
+  .h-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
   }
-  .v-search { height: 160px; }
+  .h-card { padding: 12px 12px 12px 16px; }
+  .h-card-title { font-size: 16px; letter-spacing: 2px; }
+  .h-card-era { display: none; }
+  .h-search { width: 100%; }
 }
 
 @media (max-width: 480px) {
-  .h-hero { min-height: 70vh; }
-  .h-title { letter-spacing: 6px; }
-  .h-cta { width: 80%; justify-content: center; }
-  .h-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .h-catalog-header h2 { font-size: 22px; }
+  .h-grid { grid-template-columns: 1fr 1fr; }
+  .h-card-title { font-size: 15px; }
+  .h-card-num { display: none; }
 }
 </style>
