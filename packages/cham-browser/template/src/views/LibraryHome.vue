@@ -349,10 +349,9 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   display: grid;
   grid-auto-flow: row;
   grid-auto-columns: 160px;
-  grid-template-rows: repeat(auto-fill, 200px);
+  grid-template-rows: repeat(4, 200px);
   gap: 12px;
   padding: 24px 16px;
-  direction: rtl;
   align-items: start;
   height: 100dvh;
   box-sizing: border-box;
