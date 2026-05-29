@@ -7,7 +7,6 @@ import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useI18n } from '../composables/useI18n'
-import BookCard from '../components/BookCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
 import BackToTop from '../components/BackToTop.vue'
@@ -69,12 +68,27 @@ const groupedBooks = computed(() => {
   }
   return order
     .filter(cat => groups.has(cat))
-    .map(cat => ({ category: cat, books: groups.get(cat)! }))
+    .map(cat => ({ category: cat, key: order.indexOf(cat) === 0 ? 'textbooks' : order.indexOf(cat) === 1 ? 'classicalText' : 'fourTreasuries', books: groups.get(cat)! }))
 })
 
 const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count, 0))
 
 const spacedTitle = computed(() => displayTitle.split('').join(' '))
+
+const openCategories = ref<string[]>([])
+
+function isOpen(key: string): boolean {
+  return openCategories.value.includes(key)
+}
+
+function toggleCategory(key: string) {
+  const idx = openCategories.value.indexOf(key)
+  if (idx >= 0) {
+    openCategories.value.splice(idx, 1)
+  } else {
+    openCategories.value.push(key)
+  }
+}
 
 function openBook(bookId: string) {
   router.push(`/${bookId}`)
@@ -91,38 +105,62 @@ function openBook(bookId: string) {
     <div v-if="isVertical" class="v-root">
       <SideNav @home="router.push('/')" @back="router.push('/')" />
       <div ref="vPageRef" class="v-page">
+        <!-- Hero — top-aligned -->
         <section class="v-hero">
+          <div v-if="logoUrl" class="v-logo"><img :src="logoUrl" alt="" /></div>
+          <div v-else class="v-seal">{{ displayTitle.slice(0, 2) }}</div>
           <h1 class="v-title">{{ spacedTitle }}</h1>
           <p v-if="siteSubtitle" class="v-subtitle">{{ siteSubtitle }}</p>
           <div class="v-divider"></div>
+          <div class="v-hero-stats">
+            <span class="v-hero-stat">{{ books.length }} {{ t('stat.books') }}</span>
+            <span class="v-hero-stat-sep">·</span>
+            <span class="v-hero-stat">{{ totalPieces }} {{ t('stat.pieces') }}</span>
+          </div>
         </section>
 
-        <section class="v-shelf">
-          <template v-for="group in groupedBooks" :key="group.category">
-            <div class="v-shelf-cat">
-              <span class="v-cat-label">{{ group.category }}</span>
-            </div>
-          <router-link v-for="(book, bi) in group.books"
-            :key="book.id"
-            custom
-            :to="`/${book.id}`"
-            v-slot="{ navigate }"
+        <!-- Category sections -->
+        <section
+          v-for="group in groupedBooks"
+          :key="group.key"
+          class="v-section"
+        >
+          <button
+            class="v-section-header"
+            :class="{ open: isOpen(group.key), [group.key]: true }"
+            @click="toggleCategory(group.key)"
           >
-            <div
-              class="v-spine v-spine-anim"
-              :data-cat="bookCategoryKey(book)"
-              tabindex="0"
-              :style="{ animationDelay: bi * 0.04 + 's' }"
-              @click="navigate"
-              @keydown.enter="navigate"
-              @keydown.space.prevent="navigate"
+            <span class="v-section-accent"></span>
+            <span class="v-section-title">{{ group.category }}</span>
+            <span class="v-section-count">{{ group.books.length }} {{ t('stat.books') }}</span>
+            <span class="v-section-arrow">{{ isOpen(group.key) ? '◂' : '▾' }}</span>
+          </button>
+          <div v-if="isOpen(group.key)" class="v-section-cards">
+            <router-link
+              v-for="(book, bi) in group.books"
+              :key="book.id"
+              custom
+              :to="`/${book.id}`"
+              v-slot="{ navigate }"
             >
-              <span class="v-spine-accent"></span>
-              <span class="v-spine-title">{{ book.title }}</span>
-              <span class="v-spine-badge">{{ book.count }}</span>
-            </div>
-          </router-link>
-          </template>
+              <div
+                class="v-card v-card-anim"
+                :data-cat="group.key"
+                tabindex="0"
+                :style="{ animationDelay: bi * 0.05 + 's' }"
+                @click="navigate"
+                @keydown.enter="navigate"
+                @keydown.space.prevent="navigate"
+              >
+                <div class="v-card-accent"></div>
+                <div class="v-card-body">
+                  <h3 class="v-card-title">{{ book.title }}</h3>
+                  <span v-if="book.subtitle" class="v-card-sub">{{ book.subtitle }}</span>
+                  <span class="v-card-badge">{{ t('stat.pieceCount', { count: book.count }) }}</span>
+                </div>
+              </div>
+            </router-link>
+          </div>
         </section>
       </div>
     </div>
@@ -187,163 +225,271 @@ function openBook(bookId: string) {
   background: linear-gradient(90deg, var(--paper) 0%, var(--paper-warm) 100%);
 }
 
+/* Hero — top-aligned, no vertical centering */
 .v-hero {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   flex-shrink: 0;
-  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  padding: 40px 20px;
+  justify-content: flex-start;
+  padding: 40px 24px;
 }
+
+.v-logo {
+  margin-bottom: 16px;
+  margin-left: 0;
+}
+.v-logo img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.v-seal {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 48px;
+  border: 2px solid var(--vermillion);
+  color: var(--vermillion);
+  font-size: 18px;
+  font-family: var(--serif);
+  letter-spacing: 2px;
+  border-radius: 4px;
+  line-height: 1;
+  margin-left: 12px;
+}
+
 .v-title {
-  font-size: 48px; font-weight: 900;
-  letter-spacing: 16px; color: var(--ink);
-  margin-left: 20px; padding-left: 20px;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 16px;
+  color: var(--ink);
+  margin-left: 20px;
+  padding-left: 20px;
   border-left: 4px solid var(--vermillion);
   line-height: 1.6;
 }
+
 .v-subtitle {
-  font-size: 14px; font-weight: 300;
-  color: var(--ink-faint); letter-spacing: 3px;
-  margin-left: 16px; font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink-faint);
+  letter-spacing: 3px;
+  margin-left: 16px;
+  font-family: var(--sans);
 }
+
 .v-divider {
-  width: 2px; height: 80px;
+  width: 2px;
+  height: 60px;
   background: linear-gradient(180deg, transparent, var(--gold), transparent);
   margin-left: 20px;
 }
 
-.v-shelf {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  flex-shrink: 0;
+.v-hero-stats {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
+  gap: 4px;
+  margin-left: 12px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
 }
-.v-shelf::-webkit-scrollbar { height: 3px; }
-.v-shelf::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
 
-/* ─── Category separator ─── */
-.v-shelf-cat {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 6px;
-  flex-shrink: 0;
-}
-.v-cat-label {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+.v-hero-stat {
   font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 4px;
-  color: var(--ink-faint);
-  padding: 8px 3px;
-  border-left: 1px solid var(--border-light);
-  border-right: 1px solid var(--border-light);
-  white-space: nowrap;
+  font-size: 13px;
+  color: var(--ink-light);
+  letter-spacing: 2px;
 }
 
-/* ─── Book spine ─── */
-.v-spine {
+.v-hero-stat-sep {
+  font-size: 10px;
+  color: var(--border);
+}
+
+/* ─── Category sections ─── */
+.v-section {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.v-section-header {
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100dvh;
-  width: 44px;
-  padding: 16px 0;
+  padding: 24px 10px;
+  background: none;
+  border: none;
   border-left: 1px solid var(--border-light);
   cursor: pointer;
   position: relative;
-  box-sizing: border-box;
-  transition: background 0.25s ease, width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
+  gap: 6px;
+  min-height: 200px;
+  width: 40px;
+  transition: background 0.2s ease;
+}
+.v-section-header:hover {
+  background: rgba(var(--shadow-rgb), 0.03);
+}
+
+.v-section-accent {
+  display: block;
+  width: 2px;
+  height: 24px;
+  background: var(--vermillion);
+  border-radius: 1px;
   flex-shrink: 0;
 }
-.v-spine:hover {
-  background: linear-gradient(90deg, rgba(var(--shadow-rgb), 0.04), rgba(var(--shadow-rgb), 0.01));
-  width: 56px;
-}
-.v-spine:active {
-  transform: scale(0.97);
-}
+.v-section-header.textbooks .v-section-accent { background: var(--gold); }
+.v-section-header.fourTreasuries .v-section-accent { background: var(--jade); }
 
-.v-spine-anim {
-  animation: spineEnter 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
-}
-@keyframes spineEnter {
-  from { opacity: 0; transform: scaleX(0.6); }
-  to { opacity: 1; transform: scaleX(1); }
-}
-
-.v-spine-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 0;
-  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.v-spine:hover .v-spine-accent {
-  height: 100%;
-}
-
-/* Accent colors per category */
-.v-spine .v-spine-accent { background: var(--vermillion); }
-.v-spine[data-cat="textbooks"] .v-spine-accent { background: var(--gold); }
-.v-spine[data-cat="fourTreasuries"] .v-spine-accent { background: var(--jade); }
-
-.v-spine-title {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
+.v-section-title {
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   color: var(--ink);
-  line-height: 1.6;
-  margin: 12px 0;
   white-space: nowrap;
-  transition: color 0.2s ease;
+  line-height: 1.8;
 }
-.v-spine:hover .v-spine-title {
-  color: var(--vermillion);
-}
-.v-spine[data-cat="textbooks"]:hover .v-spine-title { color: var(--gold); }
-.v-spine[data-cat="fourTreasuries"]:hover .v-spine-title { color: var(--jade); }
 
-.v-spine-badge {
-  writing-mode: horizontal-tb;
+.v-section-count {
   font-family: var(--sans);
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 11px;
   color: var(--ink-faint);
-  background: var(--surface-warm);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.v-section-arrow {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  writing-mode: horizontal-tb;
+  transition: opacity 0.2s ease;
+}
+
+/* ─── Cards grid (vertical mode) ─── */
+.v-section-cards {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(auto-fill, 200px);
+  gap: 12px;
+  padding: 24px 16px;
+  direction: rtl;
+  align-items: start;
+}
+
+.v-card {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  direction: ltr;
+  position: relative;
+  background: var(--surface);
   border: 1px solid var(--border-light);
   border-radius: 8px;
-  padding: 1px 6px;
-  margin-top: auto;
-  opacity: 0;
-  transition: opacity 0.25s ease;
+  cursor: pointer;
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  width: 160px;
+  min-height: 200px;
+  flex-shrink: 0;
+  align-self: start;
+  justify-self: start;
 }
-.v-spine:hover .v-spine-badge {
-  opacity: 1;
+
+.v-card:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 8px 28px rgba(var(--shadow-rgb), 0.1);
+  border-color: var(--gold);
+}
+
+.v-card:active { transform: scale(0.98); }
+
+.v-card-accent {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--vermillion), var(--gold));
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.v-card:hover .v-card-accent { width: 100%; }
+.v-card:hover .v-card-title { color: var(--vermillion); }
+
+.v-card[data-cat="textbooks"] .v-card-accent { background: linear-gradient(90deg, var(--gold), var(--vermillion)); }
+.v-card[data-cat="textbooks"]:hover .v-card-title { color: var(--gold); }
+.v-card[data-cat="fourTreasuries"] .v-card-accent { background: linear-gradient(90deg, var(--jade), var(--gold)); }
+.v-card[data-cat="fourTreasuries"]:hover .v-card-title { color: var(--jade); }
+
+.v-card-body {
+  padding: 20px 18px 24px;
+  box-sizing: border-box;
+  overflow: hidden;
+  height: auto;
+  -webkit-mask-image: linear-gradient(to left, black 85%, transparent);
+  mask-image: linear-gradient(to left, black 85%, transparent);
+}
+
+.v-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--ink);
+  margin-bottom: 0;
+  margin-left: 4px;
+  display: block;
+  transition: color 0.25s ease;
+  line-height: 1.5;
+}
+
+.v-card-sub {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  letter-spacing: 1px;
+  margin-top: 0;
+  margin-left: 2px;
+  display: block;
+  line-height: 1.6;
+}
+
+.v-card-badge {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 1px;
+  background: var(--surface-warm);
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  padding: 2px 8px;
+  margin-top: 0;
+  margin-left: 2px;
+  display: inline-block;
+}
+
+.v-card-anim {
+  animation: cardEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ═══════ 橫排模式 ═══════ */
@@ -454,6 +600,9 @@ function openBook(bookId: string) {
 }
 .lib-card:hover .lib-card-accent { height: 100%; }
 .lib-card:hover .lib-card-title { color: var(--vermillion); }
+.lib-card-body {
+  padding: 0;
+}
 .lib-card-top {
   display: flex;
   align-items: baseline;
@@ -492,10 +641,15 @@ function openBook(bookId: string) {
 
 @media (max-width: 768px) {
   .v-page { padding: 0 16px; }
+  .v-hero { padding: 24px 16px; }
   .v-title { font-size: 36px; letter-spacing: 10px; }
-  .v-spine { width: 38px; }
-  .v-spine:hover { width: 48px; }
-  .v-spine-title { font-size: 13px; letter-spacing: 2px; }
+  .v-section-header { padding: 16px 8px; min-height: 160px; width: 36px; }
+  .v-section-title { font-size: 13px; letter-spacing: 3px; }
+  .v-section-cards { gap: 8px; padding: 16px 8px; }
+  .v-card { width: 140px; min-height: 180px; }
+  .v-card-title { font-size: 20px; letter-spacing: 3px; }
+  .v-card-body { padding: 16px 14px 20px; }
+
   .lib-root { padding: 40px 16px 80px; }
   .lib-hero { margin-bottom: 32px; }
   .lib-hero h1 { font-size: 28px; letter-spacing: 4px; }
@@ -512,6 +666,9 @@ function openBook(bookId: string) {
 }
 
 @media (max-width: 480px) {
+  .v-card { width: 120px; min-height: 160px; }
+  .v-card-title { font-size: 18px; }
+  .v-card-sub { display: none; }
   .lib-grid { grid-template-columns: 1fr; }
 }
 </style>
