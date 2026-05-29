@@ -73,26 +73,6 @@ const groupedBooks = computed(() => {
 
 const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count, 0))
 
-const spacedTitle = computed(() => displayTitle.split('').join(' '))
-
-const openCategories = ref<string[]>([])
-
-function isOpen(key: string): boolean {
-  return openCategories.value.includes(key)
-}
-
-function toggleCategory(key: string) {
-  const idx = openCategories.value.indexOf(key)
-  if (idx >= 0) {
-    openCategories.value.splice(idx, 1)
-  } else {
-    openCategories.value.push(key)
-  }
-}
-
-function openBook(bookId: string) {
-  router.push(`/${bookId}`)
-}
 </script>
 
 <template>
@@ -109,7 +89,7 @@ function openBook(bookId: string) {
         <section class="v-hero">
           <div v-if="logoUrl" class="v-logo"><img :src="logoUrl" alt="" /></div>
           <div v-else class="v-seal">{{ displayTitle.slice(0, 2) }}</div>
-          <h1 class="v-title">{{ spacedTitle }}</h1>
+          <h1 class="v-title">{{ displayTitle.split('').join(' ') }}</h1>
           <p v-if="siteSubtitle" class="v-subtitle">{{ siteSubtitle }}</p>
           <div class="v-divider"></div>
           <div class="v-hero-stats">
@@ -125,17 +105,12 @@ function openBook(bookId: string) {
           :key="group.key"
           class="v-section"
         >
-          <button
-            class="v-section-header"
-            :class="{ open: isOpen(group.key), [group.key]: true }"
-            @click="toggleCategory(group.key)"
-          >
+          <div class="v-section-header" :class="group.key">
             <span class="v-section-accent"></span>
             <span class="v-section-title">{{ group.category }}</span>
             <span class="v-section-count">{{ group.books.length }} {{ t('stat.books') }}</span>
-            <span class="v-section-arrow">{{ isOpen(group.key) ? '◂' : '▾' }}</span>
-          </button>
-          <div v-if="isOpen(group.key)" class="v-section-cards">
+          </div>
+          <div class="v-section-cards">
             <router-link
               v-for="(book, bi) in group.books"
               :key="book.id"
@@ -333,18 +308,10 @@ function openBook(bookId: string) {
   align-items: center;
   justify-content: flex-start;
   padding: 24px 10px;
-  background: none;
-  border: none;
   border-left: 1px solid var(--border-light);
-  cursor: pointer;
-  position: relative;
   gap: 6px;
   min-height: 200px;
   width: 40px;
-  transition: background 0.2s ease;
-}
-.v-section-header:hover {
-  background: rgba(var(--shadow-rgb), 0.03);
 }
 
 .v-section-accent {
@@ -373,14 +340,6 @@ function openBook(bookId: string) {
   color: var(--ink-faint);
   letter-spacing: 1px;
   white-space: nowrap;
-}
-
-.v-section-arrow {
-  font-family: var(--sans);
-  font-size: 10px;
-  color: var(--ink-faint);
-  writing-mode: horizontal-tb;
-  transition: opacity 0.2s ease;
 }
 
 /* ─── Cards grid (vertical mode) ─── */
