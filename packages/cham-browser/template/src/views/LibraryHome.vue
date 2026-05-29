@@ -297,6 +297,7 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  height: 100dvh;
   padding: 0;
 }
 
@@ -306,29 +307,27 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 24px 10px;
-  border-left: 1px solid var(--border-light);
-  gap: 6px;
-  min-height: 200px;
-  width: 40px;
+  justify-content: center;
+  padding: 0 14px;
+  gap: 12px;
+  width: 64px;
+  height: 100dvh;
+  flex-shrink: 0;
+  border-left: 3px solid var(--vermillion);
+  background: linear-gradient(to left, var(--surface-warm), var(--paper));
+  box-sizing: border-box;
 }
+.v-section-header.textbooks { border-left-color: var(--gold); }
+.v-section-header.fourTreasuries { border-left-color: var(--jade); }
 
 .v-section-accent {
-  display: block;
-  width: 2px;
-  height: 24px;
-  background: var(--vermillion);
-  border-radius: 1px;
-  flex-shrink: 0;
+  display: none;
 }
-.v-section-header.textbooks .v-section-accent { background: var(--gold); }
-.v-section-header.fourTreasuries .v-section-accent { background: var(--jade); }
 
 .v-section-title {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 4px;
+  letter-spacing: 8px;
   color: var(--ink);
   white-space: nowrap;
   line-height: 1.8;
@@ -338,8 +337,12 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   font-family: var(--sans);
   font-size: 11px;
   color: var(--ink-faint);
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  padding: 2px 6px;
 }
 
 /* ─── Cards grid (vertical mode) ─── */
@@ -603,8 +606,8 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   .v-page { padding: 0 16px; }
   .v-hero { padding: 24px 16px; }
   .v-title { font-size: 36px; letter-spacing: 10px; }
-  .v-section-header { padding: 16px 8px; min-height: 160px; width: 36px; }
-  .v-section-title { font-size: 13px; letter-spacing: 3px; }
+  .v-section-header { width: 48px; padding: 0 8px; }
+  .v-section-title { font-size: 15px; letter-spacing: 5px; }
   .v-section-cards { gap: 8px; padding: 16px 8px; }
   .v-card { width: 140px; min-height: 180px; }
   .v-card-title { font-size: 20px; letter-spacing: 3px; }
