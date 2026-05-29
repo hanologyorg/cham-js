@@ -346,13 +346,12 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
 .v-section-cards {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  display: grid;
-  grid-auto-flow: row;
-  grid-auto-columns: 160px;
-  grid-template-rows: repeat(4, 200px);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 12px;
   padding: 24px 16px;
-  align-items: start;
+  align-content: flex-start;
   height: 100dvh;
   box-sizing: border-box;
 }
