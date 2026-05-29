@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
       >
         <div class="ann-card-inner">
           <div class="ann-card-main">
-            <div v-if="headword" class="ann-card-head" :class="dominantKind()">
+            <div v-if="headword" class="ann-card-head" :class="dominantKind">
               <div class="ann-headword">{{ headword }}</div>
               <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
             </div>
@@ -181,7 +181,7 @@ onBeforeUnmount(() => {
           <span class="ann-handle-bar" />
         </button>
         <div class="ann-sheet-body" :class="{ vertical }">
-          <div v-if="headword" class="ann-sheet-head" :class="dominantKind()">
+          <div v-if="headword" class="ann-sheet-head" :class="dominantKind">
             <div class="ann-headword">{{ headword }}</div>
             <div class="ann-badge-count" v-if="annotations.length > 1">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</div>
           </div>
@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
-          <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind()">
+          <div v-if="headword" class="ann-sheet-v-head" :class="dominantKind">
             <span class="ann-sheet-v-word">{{ headword }}</span>
             <span v-if="annotations.length > 1" class="ann-badge-count-v">{{ t('annotation.noteCount', { count: toChineseNumber(annotations.length) }) }}</span>
           </div>
