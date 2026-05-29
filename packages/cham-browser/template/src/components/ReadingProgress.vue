@@ -68,7 +68,6 @@ onUnmounted(detach)
   position: fixed;
   z-index: 1001;
   pointer-events: none;
-  will-change: width, height;
   transition: width 0.08s linear, height 0.08s linear;
 }
 .rp:not(.rp-v) {
@@ -76,11 +75,13 @@ onUnmounted(detach)
   height: 3px;
   background: linear-gradient(90deg, var(--vermillion), var(--gold));
   box-shadow: 0 0 8px rgba(var(--shadow-rgb), 0.15);
+  will-change: width;
 }
 .rp-v {
   top: 0; left: 0;
   width: 3px;
   background: linear-gradient(180deg, var(--vermillion), var(--gold));
   box-shadow: 0 0 8px rgba(var(--shadow-rgb), 0.15);
+  will-change: height;
 }
 </style>

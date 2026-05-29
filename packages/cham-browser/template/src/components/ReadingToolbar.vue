@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useReadingMode, THEMES, FONT_SIZES } from '../composables/useReadingMode'
-import type { LayoutMode, FontSize } from '../composables/useReadingMode'
-import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
+import { useI18n } from '../composables/useI18n'
+import SettingsPanel from './SettingsPanel.vue'
 
-const { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, annotationPane, setTheme, setLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible, setAnnotationPane } = useReadingMode()
-const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
+const { t } = useI18n()
 const open = ref(false)
 
 function toggle() { open.value = !open.value }
@@ -19,96 +17,7 @@ function close() { open.value = false }
       <span v-else class="rt-icon">✕</span>
     </button>
     <div v-if="open" class="rt-panel" @click.stop>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.layout') }}</div>
-        <div class="rt-options">
-          <button
-            class="rt-opt"
-            :class="{ active: layout === 'horizontal' }"
-            @click="setLayout('horizontal' as LayoutMode)"
-          >{{ t('settings.horizontal') }}</button>
-          <button
-            class="rt-opt"
-            :class="{ active: layout === 'vertical' }"
-            @click="setLayout('vertical' as LayoutMode)"
-          >{{ t('settings.vertical') }}</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.annotations') }}</div>
-        <div class="rt-options">
-          <button
-            class="rt-opt"
-            :class="{ active: annotationsVisible }"
-            @click="setAnnotationsVisible(true)"
-          >{{ t('settings.show') }}</button>
-          <button
-            class="rt-opt"
-            :class="{ active: !annotationsVisible }"
-            @click="setAnnotationsVisible(false)"
-          >{{ t('settings.hide') }}</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.annotationPane') }}</div>
-        <div class="rt-options">
-          <button
-            class="rt-opt"
-            :class="{ active: annotationPane }"
-            @click="setAnnotationPane(true)"
-          >{{ t('settings.show') }}</button>
-          <button
-            class="rt-opt"
-            :class="{ active: !annotationPane }"
-            @click="setAnnotationPane(false)"
-          >{{ t('settings.hide') }}</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.theme') }}</div>
-        <div class="rt-options">
-          <button
-            v-for="th in THEMES"
-            :key="th"
-            class="rt-opt rt-theme"
-            :class="{ active: theme === th, ['theme-' + th]: true }"
-            @click="setTheme(th)"
-          >{{ t('theme.' + th) }}</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.mainFontSize') }}</div>
-        <div class="rt-size-row">
-          <button class="rt-size-btn" @click="setMainFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(mainFontSize) - 1)] as FontSize)">−</button>
-          <span class="rt-size-val">{{ mainFontSize }}</span>
-          <button class="rt-size-btn" @click="setMainFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(mainFontSize) + 1)] as FontSize)">+</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.bodyFontSize') }}</div>
-        <div class="rt-size-row">
-          <button class="rt-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(bodyFontSize) - 1)] as FontSize)">−</button>
-          <span class="rt-size-val">{{ bodyFontSize }}</span>
-          <button class="rt-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(bodyFontSize) + 1)] as FontSize)">+</button>
-        </div>
-      </div>
-      <div class="rt-group">
-        <div class="rt-label">{{ t('settings.language') }}</div>
-        <div class="rt-options">
-          <button
-            v-for="loc in availableLocales"
-            :key="loc"
-            class="rt-opt"
-            :class="{ active: locale === loc }"
-            @click="setLocale(loc as Locale)"
-          >{{ localeLabels[loc] }}</button>
-        </div>
-      </div>
-      <div class="rt-shortcuts">
-        <div class="rt-sc"><kbd>V</kbd> {{ t('shortcut.toggleLayout') }}</div>
-        <div class="rt-sc"><kbd>T</kbd> {{ t('shortcut.toggleTheme') }}</div>
-        <div class="rt-sc"><kbd>Esc</kbd> {{ t('shortcut.goHome') }}</div>
-      </div>
+      <SettingsPanel :show-annotation-pane="true" />
     </div>
     <div v-if="open" class="rt-backdrop" @click="close" />
   </div>
@@ -181,112 +90,8 @@ function close() { open.value = false }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.rt-group { margin-bottom: 14px; }
-.rt-group:last-child { margin-bottom: 0; }
-.rt-label {
-  font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-faint);
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
-.rt-options { display: flex; gap: 6px; }
-.rt-opt {
-  flex: 1;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink-mid);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-.rt-opt:hover { border-color: var(--ink); color: var(--ink); }
-.rt-opt.rt-theme {
-  position: relative;
-  padding-left: 22px;
-}
-.rt-opt.rt-theme::before {
-  content: '';
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-}
-.rt-opt.theme-light::before { background: #faf6ee; }
-.rt-opt.theme-sepia::before { background: #f0e4c8; }
-.rt-opt.theme-dark::before { background: #1c1c1e; border-color: #48484a; }
-.rt-opt.theme-oled::before { background: #000; border-color: #333; }
-.rt-opt.active {
-  background: var(--ink);
-  color: var(--paper);
-  border-color: var(--ink);
-}
-.rt-size-row {
-  display: flex; align-items: center; gap: 6px; justify-content: center;
-}
-.rt-size-btn {
-  width: 28px; height: 28px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--ink-mid);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-.rt-size-btn:hover { border-color: var(--ink); color: var(--ink); }
-.rt-size-val {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink);
-  min-width: 32px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
 .rt-backdrop {
   position: fixed; inset: 0;
   z-index: -1;
-}
-.rt-shortcuts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-  margin-top: 2px;
-}
-.rt-sc {
-  font-family: var(--sans);
-  font-size: 10px;
-  color: var(--ink-faint);
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-.rt-sc kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 16px;
-  padding: 0 3px;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  font-family: var(--sans);
-  font-size: 9px;
-  color: var(--ink-light);
-  background: var(--surface);
 }
 </style>

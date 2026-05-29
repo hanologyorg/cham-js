@@ -22,6 +22,7 @@ if (!import.meta.env.SSR) {
     if (loader) {
       loader.classList.add('fade-out')
       loader.addEventListener('transitionend', () => loader.remove())
+      setTimeout(() => loader.remove(), 500)
     }
   })
 }

@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, toRef, watch } from 'vue'
 import { useI18n } from '../composables/useI18n'
+import { useFocusTrap } from '../composables/useFocusTrap'
+import { useAnnounce } from '../composables/useAnnounce'
 import type { Author } from '../types'
 
 const { t } = useI18n()
+const { announce } = useAnnounce()
 
 const props = defineProps<{
   open: boolean
@@ -18,6 +21,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
+
+const paneRef = ref<HTMLElement | null>(null)
+useFocusTrap(paneRef, toRef(props, 'open'))
+
+watch(() => props.open, (on) => {
+  announce(on ? t('author.panelOpened', { name: props.name }) : t('author.panelClosed'))
+})
 
 const courtesyName = computed(() => props.author?.courtesyName)
 const artName = computed(() => props.author?.artName)
@@ -39,7 +49,7 @@ const links = computed(() => {
   <Teleport to="body">
     <Transition name="overlay">
       <div v-if="open" class="ap-overlay" :class="{ 'ap-overlay--vertical': vertical }" @click="emit('close')">
-        <div class="ap-pane" :class="{ 'ap-pane--vertical': vertical }" @click.stop>
+        <div ref="paneRef" class="ap-pane" :class="{ 'ap-pane--vertical': vertical }" @click.stop @keydown.escape="emit('close')">
           <button class="ap-close unstyled" @click="emit('close')" :aria-label="t('action.close')">✕</button>
           <div class="ap-header" :class="{ 'ap-header--vertical': vertical }">
             <div class="ap-name">{{ name }}</div>

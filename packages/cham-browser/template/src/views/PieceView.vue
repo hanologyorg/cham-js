@@ -6,7 +6,7 @@ import { useTitle } from '../composables/useTitle'
 import { useReadingMode, FONT_SIZES } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
-import { useData } from '../composables/useData'
+import { useAuthorPane } from '../composables/useAuthorPane'
 import { useI18n } from '../composables/useI18n'
 import VerticalScroll from '../components/VerticalScroll.vue'
 import HorizontalDisplay from '../components/HorizontalDisplay.vue'
@@ -20,6 +20,7 @@ import ReadingProgress from '../components/ReadingProgress.vue'
 import BackToTop from '../components/BackToTop.vue'
 import AuthorPane from '../components/AuthorPane.vue'
 import { toChineseNumber } from '../utils/chineseNumber'
+import { tcy } from '../utils/tcy'
 import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
@@ -32,8 +33,6 @@ const vPageRef = ref<HTMLElement | null>(null)
 const vScroll = useHorizontalScroll(vPageRef)
 const { t } = useI18n()
 
-const authorPaneOpen = ref(false)
-const selectedAuthorId = ref('')
 const interaction = reactive(useAnnotationInteraction())
 const titleCollapsed = ref(false)
 const vTitleRef = ref<HTMLElement | null>(null)
@@ -408,52 +407,20 @@ const proseSections = computed(() => {
 })
 
 
-const { getAuthor, getAuthorIndex, loadAuthorDetail, loadShared } = useData()
-await loadShared()
+const {
+  authorPaneOpen,
+  selectedAuthorName,
+  selectedAuthorEra,
+  selectedAuthorWorkCount,
+  selectedAuthorData,
+  authorLifespan,
+  openAuthorPane,
+  closeAuthorPane,
+  loadShared: loadAuthorShared,
+} = useAuthorPane(piece)
+await loadAuthorShared()
 
 const CHAM_LOGO_URL = import.meta.env.CHAM_LOGO_URL || ''
-
-const selectedAuthorName = computed(() => {
-  if (!selectedAuthorId.value) return piece.value?.author || ''
-  const c = piece.value?.contributors?.find(x => x.id === selectedAuthorId.value)
-  return c?.name || piece.value?.author || ''
-})
-const selectedAuthorBio = computed(() => {
-  const name = selectedAuthorName.value
-  const a = getAuthor(name)
-  return a?.bio || piece.value?.sections?.author_bio || ''
-})
-
-const selectedAuthorEra = computed(() => {
-  const name = selectedAuthorName.value
-  const a = getAuthor(name)
-  return a?.era || getAuthorIndex(name)?.era || piece.value?.era || ''
-})
-
-const selectedAuthorWorkCount = computed(() => {
-  const name = selectedAuthorName.value
-  const a = getAuthor(name)
-  return a?.workCount || getAuthorIndex(name)?.workCount || 0
-})
-
-const selectedAuthorData = computed(() => {
-  const name = selectedAuthorName.value
-  return getAuthor(name)
-})
-
-const authorLifespan = computed(() => {
-  const a = selectedAuthorData.value
-  if (!a?.born && !a?.died) return ''
-  if (a.born && a.died) return `${a.born}–${a.died}`
-  return a.born ? `${a.born}–` : `?–${a.died}`
-})
-
-function openAuthorPane(id?: string) {
-  selectedAuthorId.value = id || piece.value?.authorId || ''
-  authorPaneOpen.value = true
-  loadAuthorDetail(selectedAuthorId.value)
-}
-function closeAuthorPane() { authorPaneOpen.value = false; selectedAuthorId.value = '' }
 function goBack() { router.push(`/${props.bookId}`) }
 function goHome() { router.push('/') }
 
@@ -476,9 +443,9 @@ const contributorGroups = computed(() => {
   if (!c || c.length <= 1) return []
   const groups = new Map<string, string[]>()
   for (const x of c) {
-    const t = x.title || ROLE_LABELS.value[x.role] || t('role.defaultAuthor')
-    if (!groups.has(t)) groups.set(t, [])
-    groups.get(t)!.push(x.name)
+    const label = x.title || ROLE_LABELS.value[x.role] || t('role.defaultAuthor')
+    if (!groups.has(label)) groups.set(label, [])
+    groups.get(label)!.push(x.name)
   }
   return [...groups.entries()].map(([title, names]) => ({ title, names }))
 })
@@ -489,10 +456,6 @@ const authorDisplay = computed(() => {
   return contributorGroups.value.map(g => `${g.title} ${g.names.join(' ')}`).join(' ')
 })
 
-function tcy(n: number): string {
-  const s = String(n)
-  return s.length <= 2 ? `<span style="text-combine-upright:all">${s}</span>` : s
-}
 </script>
 
 <template>

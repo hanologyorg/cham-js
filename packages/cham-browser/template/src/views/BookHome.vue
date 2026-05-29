@@ -6,6 +6,7 @@ import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useI18n } from '../composables/useI18n'
+import { tcy } from '../utils/tcy'
 import PoemCard from '../components/PoemCard.vue'
 import SideNav from '../components/SideNav.vue'
 import ReadingToolbar from '../components/ReadingToolbar.vue'
@@ -36,11 +37,6 @@ const filtered = computed(() => {
 })
 
 const authorCount = computed(() => new Set(pieces.value.map(p => p.author)).size)
-
-function tcy(n: number): string {
-  const s = String(n)
-  return `<span class="tcy">${s}</span>`
-}
 
 function heroHtml(template: string): string {
   return template

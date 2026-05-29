@@ -3,21 +3,28 @@ import type { LibraryIndex, LibraryScale, BookMeta } from '../types'
 
 const library: Ref<LibraryIndex | null> = ref(null)
 const loaded = ref(false)
+let libraryPromise: Promise<void> | null = null
 
 async function loadLibrary(): Promise<void> {
   if (loaded.value) return
-
-  if (import.meta.env.SSR) {
-    const { readFileSync } = await import('fs')
-    const { resolve, join } = await import('path')
-    const base = process.env.CHAM_DATA_DIR || resolve('public/data')
-    library.value = JSON.parse(readFileSync(join(base, 'library.json'), 'utf-8'))
-  } else {
-    const res = await fetch('/data/library.json')
-    library.value = await res.json()
-  }
-
-  loaded.value = true
+  if (libraryPromise) return libraryPromise
+  libraryPromise = (async () => {
+    try {
+      if (import.meta.env.SSR) {
+        const { readFileSync } = await import('fs')
+        const { resolve, join } = await import('path')
+        const base = process.env.CHAM_DATA_DIR || resolve('public/data')
+        library.value = JSON.parse(readFileSync(join(base, 'library.json'), 'utf-8'))
+      } else {
+        const res = await fetch('/data/library.json')
+        library.value = await res.json()
+      }
+      loaded.value = true
+    } finally {
+      libraryPromise = null
+    }
+  })()
+  return libraryPromise
 }
 
 export function useLibrary(): {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { toRef } from 'vue'
 import type { Annotation, VerseLine } from '../types'
-import { buildVerseAnnotations, renderAnnotatedText, resolveHoveredAnnotations } from '../composables/useAnnotationRenderer'
+import { useAnnotatedVerses } from '../composables/useAnnotatedVerses'
 
 const props = defineProps<{
   title: string
@@ -18,27 +18,10 @@ const emit = defineEmits<{
   openAuthor: [name: string]
 }>()
 
-const allVerseSpans = computed(() =>
-  props.verses.map((_, i) => buildVerseAnnotations(props.annotations, i))
-)
-
-const verseOffsets = computed(() => {
-  const offsets: number[] = []
-  let acc = 0
-  for (const spans of allVerseSpans.value) {
-    offsets.push(acc)
-    acc += spans.length
-  }
-  return offsets
-})
-
-function verseHtml(index: number): string {
-  const spans = allVerseSpans.value[index]
-  return renderAnnotatedText(props.verses[index].text, spans, true, verseOffsets.value[index])
-}
+const { verseHtml, resolveAnnotations } = useAnnotatedVerses(toRef(props, 'verses'), toRef(props, 'annotations'), true)
 
 function onHover(event: MouseEvent) {
-  const matched = resolveHoveredAnnotations(event, props.annotations)
+  const matched = resolveAnnotations(event)
   if (matched) emit('annotationHover', event, matched)
 }
 
@@ -47,7 +30,7 @@ function onLeave() {
 }
 
 function onTap(event: MouseEvent) {
-  const matched = resolveHoveredAnnotations(event, props.annotations)
+  const matched = resolveAnnotations(event)
   if (matched) emit('annotationTap', event, matched)
 }
 </script>

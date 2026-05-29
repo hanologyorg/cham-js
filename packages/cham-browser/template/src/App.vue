@@ -6,12 +6,15 @@ import { useI18n } from './composables/useI18n'
 import ReadingToolbar from './components/ReadingToolbar.vue'
 import { computed, ref, watch, provide } from 'vue'
 import { useFocusTrap } from './composables/useFocusTrap'
+import { useAnnounce } from './composables/useAnnounce'
 
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
 const { logoUrl, aboutHtml } = useSiteConfig()
 const { locale } = useI18n()
 const isVertical = computed(() => layout.value === 'vertical')
+
+const { message: announceMessage } = useAnnounce()
 
 const CHAM_VERSION = import.meta.env.CHAM_VERSION || ''
 const CHAM_BROWSER_VERSION = import.meta.env.CHAM_BROWSER_VERSION || ''
@@ -70,6 +73,7 @@ function onKey(event: KeyboardEvent) {
     <ReadingToolbar v-if="!isVertical" />
 
     <!-- About overlay (only if about content is configured) -->
+    <div aria-live="polite" aria-atomic="true" class="sr-only">{{ announceMessage }}</div>
     <Teleport v-if="aboutHtml" to="body">
       <div v-if="aboutOpen" class="about-overlay" @click="closeAbout">
         <div v-if="isVertical" ref="aboutPaneRef" class="about-pane-v" @click.stop>
@@ -88,6 +92,11 @@ function onKey(event: KeyboardEvent) {
 </template>
 
 <style>
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
 .page-fade-enter-active { transition: opacity 0.15s ease, transform 0.2s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)); }
 .page-fade-leave-active { transition: opacity 0.1s ease; }
 .page-fade-enter-from { opacity: 0; transform: translateY(8px); }

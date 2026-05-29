@@ -4,6 +4,7 @@ import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
+import { useWindowSize } from '../composables/useWindowSize'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
 
@@ -24,10 +25,8 @@ const emit = defineEmits<{
   tooltipLeave: []
 }>()
 
-const ww = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
+const { width: ww } = useWindowSize()
 const isMobile = computed(() => ww.value < 768)
-
-function onResize() { ww.value = window.innerWidth }
 
 const stickyVisible = ref(false)
 const sheetRef = ref<HTMLElement | null>(null)
@@ -88,14 +87,14 @@ function layerLabel(ann: Annotation): string {
   return ''
 }
 
-function dominantKind(): string {
+const dominantKind = computed(() => {
   if (!props.annotations.length) return ''
   const counts: Record<string, number> = {}
   for (const a of props.annotations) {
     counts[a.kind] = (counts[a.kind] || 0) + 1
   }
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
-}
+})
 
 function onDocClick(e: MouseEvent) {
   if (!stickyVisible.value) return
@@ -120,14 +119,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-  window.addEventListener('resize', onResize, { passive: true })
   document.addEventListener('click', onDocClick, true)
   document.addEventListener('touchmove', onDocTouchMove, { passive: true })
   document.addEventListener('keydown', onKeydown)
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', onResize)
   document.removeEventListener('click', onDocClick, true)
   document.removeEventListener('touchmove', onDocTouchMove)
   document.removeEventListener('keydown', onKeydown)

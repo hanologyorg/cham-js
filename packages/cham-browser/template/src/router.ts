@@ -4,16 +4,12 @@ import {
   createMemoryHistory,
   type RouteRecordRaw,
 } from 'vue-router'
-import LibraryHome from './views/LibraryHome.vue'
-import BookHome from './views/BookHome.vue'
-import PieceView from './views/PieceView.vue'
-import AuthorView from './views/AuthorView.vue'
 
 export const routes: RouteRecordRaw[] = [
-  { path: '/', component: LibraryHome },
-  { path: '/author/:name', component: AuthorView, props: true },
-  { path: '/:bookId', component: BookHome, props: true },
-  { path: '/:bookId/:num', component: PieceView, props: true },
+  { path: '/', component: () => import('./views/LibraryHome.vue') },
+  { path: '/author/:name', component: () => import('./views/AuthorView.vue'), props: true },
+  { path: '/:bookId', component: () => import('./views/BookHome.vue'), props: true },
+  { path: '/:bookId/:num', component: () => import('./views/PieceView.vue'), props: true },
 ]
 
 export function createRouterInstance() {

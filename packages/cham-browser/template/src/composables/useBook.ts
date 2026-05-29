@@ -61,10 +61,14 @@ export function useBook(): {
 
   // Index maps (rebuilt on load)
   let byNum = new Map<number, Piece>()
+  let loadVersion = 0
 
   async function load(id: string): Promise<void> {
+    const myVersion = ++loadVersion
     bookId.value = id
     const data = await fetchBook(id)
+    if (loadVersion !== myVersion) return
+
     pieces.value = data.pieces
     meta.value = data.meta
 
@@ -80,8 +84,10 @@ export function useBook(): {
     return pieces.value.filter(p => p.author === name)
   }
 
+  const sortedNums = computed(() => pieces.value.map(p => p.num).sort((a, b) => a - b))
+
   function getAdjacentNums(num: number): { prev: number | null; next: number | null } {
-    const nums = pieces.value.map(p => p.num).sort((a, b) => a - b)
+    const nums = sortedNums.value
     const idx = nums.indexOf(num)
     return {
       prev: idx > 0 ? nums[idx - 1] : null,

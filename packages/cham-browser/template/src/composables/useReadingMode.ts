@@ -21,10 +21,10 @@ if (!import.meta.env.SSR) {
   if (savedTheme && THEMES.includes(savedTheme)) theme.value = savedTheme
 
   const savedMain = parseInt(localStorage.getItem('mainFontSize') || '', 10)
-  if (FONT_SIZES.includes(savedMain as any)) mainFontSize.value = savedMain as FontSize
+  if ((FONT_SIZES as readonly number[]).includes(savedMain)) mainFontSize.value = savedMain as FontSize
 
   const savedBody = parseInt(localStorage.getItem('bodyFontSize') || '', 10)
-  if (FONT_SIZES.includes(savedBody as any)) bodyFontSize.value = savedBody as FontSize
+  if ((FONT_SIZES as readonly number[]).includes(savedBody)) bodyFontSize.value = savedBody as FontSize
 
   const savedAnnVis = localStorage.getItem('annotationsVisible')
   if (savedAnnVis === 'false') annotationsVisible.value = false

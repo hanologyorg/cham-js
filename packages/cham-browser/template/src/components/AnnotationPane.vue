@@ -4,6 +4,7 @@ import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
+import { useWindowSize } from '../composables/useWindowSize'
 import PronunciationGroup from './PronunciationGroup.vue'
 import type { Annotation } from '../types'
 
@@ -24,8 +25,7 @@ const emit = defineEmits<{
 const bodyRef = ref<HTMLElement | null>(null)
 
 const { t } = useI18n()
-const ww = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
-function onResize() { ww.value = window.innerWidth }
+const { width: ww } = useWindowSize()
 
 // ─── Resize ───
 const paneWidth = ref(320)
@@ -125,12 +125,10 @@ watch(() => props.activeId, async (id) => {
 onMounted(() => {
   initWidth()
   document.addEventListener('keydown', onKeydown)
-  window.addEventListener('resize', onResize, { passive: true })
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
-  window.removeEventListener('resize', onResize)
   if (moveFn) {
     document.removeEventListener('mousemove', moveFn)
     document.removeEventListener('touchmove', moveFn)

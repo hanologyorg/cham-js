@@ -153,8 +153,8 @@ export function useAnnotationTooltip() {
     } else {
       headword.value = ''
     }
-    const vw = window.innerWidth
-    const vh = window.innerHeight
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1024
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 768
 
     if (vw < 768) {
       // Mobile: bottom sheet
@@ -215,7 +215,7 @@ export function useAnnotationTooltip() {
       const currentIds = items.value.map(a => a.id).sort().join(',')
       const newIds = annotations.map(a => a.id).sort().join(',')
       if (currentIds === newIds) {
-        if (window.innerWidth < 768) hide()
+        if (typeof window !== 'undefined' && window.innerWidth < 768) hide()
       } else {
         show(event, annotations)
       }

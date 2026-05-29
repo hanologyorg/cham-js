@@ -16,7 +16,7 @@ const preview = computed(() => {
 
 <template>
   <router-link custom :to="`/poem/${poem.id}`" v-slot="{ navigate }">
-    <div class="pc-root" :class="{ 'pc-vertical': vertical }" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
+    <div class="pc-root" :class="{ 'pc-vertical': vertical }" role="link" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
       <div class="pc-accent"></div>
       <div class="pc-body">
         <div class="pc-num">{{ String(poem.num).padStart(3, '0') }}</div>

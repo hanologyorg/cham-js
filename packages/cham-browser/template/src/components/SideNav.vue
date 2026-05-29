@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, inject } from 'vue'
 import { useRouter } from 'vue-router'
-import { useReadingMode, THEMES, FONT_SIZES } from '../composables/useReadingMode'
-import type { LayoutMode, FontSize } from '../composables/useReadingMode'
-import { useI18n, LOCALE_LABELS, type Locale } from '../composables/useI18n'
+import { useReadingMode } from '../composables/useReadingMode'
+import { useI18n } from '../composables/useI18n'
 import { useSiteConfig } from '../composables/useSiteConfig'
+import SettingsPanel from './SettingsPanel.vue'
 
 defineProps<{
   context?: string
@@ -21,8 +21,8 @@ const emit = defineEmits<{
   navigate: [delta: number]
 }>()
 
-const { theme, layout, mainFontSize, bodyFontSize, annotationsVisible, setTheme, setLayout, setMainFontSize, setBodyFontSize, setAnnotationsVisible } = useReadingMode()
-const { t, setLocale, locale, availableLocales, localeLabels } = useI18n()
+const { layout } = useReadingMode()
+const { t } = useI18n()
 const { logoUrl, aboutHtml } = useSiteConfig()
 const router = useRouter()
 const settingsOpen = ref(false)
@@ -78,65 +78,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
 
     <Transition name="slide-left">
       <div v-if="settingsOpen" class="sn-settings" @click.stop>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.layout') }}</div>
-          <div class="ss-options">
-            <button class="ss-opt" :class="{ active: layout === 'horizontal' }" @click="setLayout('horizontal' as LayoutMode)">{{ t('settings.horizontal') }}</button>
-            <button class="ss-opt" :class="{ active: layout === 'vertical' }" @click="setLayout('vertical' as LayoutMode)">{{ t('settings.vertical') }}</button>
-          </div>
-        </div>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.theme') }}</div>
-          <div class="ss-options">
-            <button
-              v-for="th in THEMES"
-              :key="th"
-              class="ss-opt"
-              :class="{ active: theme === th }"
-              @click="setTheme(th)"
-            >{{ t('theme.' + th) }}</button>
-          </div>
-        </div>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.mainFontSize') }}</div>
-          <div class="ss-size-row">
-            <button class="ss-size-btn" @click="setMainFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(mainFontSize) - 1)] as FontSize)">−</button>
-            <span class="ss-size-val">{{ mainFontSize }}</span>
-            <button class="ss-size-btn" @click="setMainFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(mainFontSize) + 1)] as FontSize)">+</button>
-          </div>
-        </div>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.bodyFontSize') }}</div>
-          <div class="ss-size-row">
-            <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.max(0, FONT_SIZES.indexOf(bodyFontSize) - 1)] as FontSize)">−</button>
-            <span class="ss-size-val">{{ bodyFontSize }}</span>
-            <button class="ss-size-btn" @click="setBodyFontSize(FONT_SIZES[Math.min(FONT_SIZES.length - 1, FONT_SIZES.indexOf(bodyFontSize) + 1)] as FontSize)">+</button>
-          </div>
-        </div>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.annotations') }}</div>
-          <div class="ss-options">
-            <button class="ss-opt" :class="{ active: annotationsVisible }" @click="setAnnotationsVisible(true)">{{ t('settings.show') }}</button>
-            <button class="ss-opt" :class="{ active: !annotationsVisible }" @click="setAnnotationsVisible(false)">{{ t('settings.hide') }}</button>
-          </div>
-        </div>
-        <div class="ss-group">
-          <div class="ss-label">{{ t('settings.language') }}</div>
-          <div class="ss-options">
-            <button
-              v-for="loc in availableLocales"
-              :key="loc"
-              class="ss-opt"
-              :class="{ active: locale === loc }"
-              @click="setLocale(loc as Locale)"
-            >{{ localeLabels[loc] }}</button>
-          </div>
-        </div>
-        <div class="ss-shortcuts">
-          <span class="ss-sc"><kbd>V</kbd> {{ t('shortcut.toggleLayout') }}</span>
-          <span class="ss-sc"><kbd>T</kbd> {{ t('shortcut.toggleTheme') }}</span>
-          <span class="ss-sc"><kbd>Esc</kbd> {{ t('shortcut.goHome') }}</span>
-        </div>
+        <SettingsPanel />
       </div>
     </Transition>
 
@@ -290,89 +232,9 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
   transform: translateY(-50%) translateX(12px);
 }
 
-.ss-group { margin-bottom: 14px; }
-.ss-group:last-child { margin-bottom: 0; }
-.ss-label {
-  font-family: var(--sans);
-  font-size: 11px; font-weight: 600;
-  color: var(--ink-faint);
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-}
-.ss-options { display: flex; gap: 6px; }
-.ss-opt {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--ink-mid);
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
-}
-.ss-opt:hover { border-color: var(--ink); color: var(--ink); }
-.ss-opt.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.ss-size-row {
-  display: flex; align-items: center; gap: 6px; justify-content: center;
-}
-.ss-size-btn {
-  width: 28px; height: 28px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--ink-mid);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-.ss-size-btn:hover { border-color: var(--ink); color: var(--ink); }
-.ss-size-val {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--ink);
-  min-width: 32px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
 .sn-overlay {
   position: fixed; inset: 0;
   z-index: -1;
-}
-.ss-shortcuts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-light);
-  margin-top: 2px;
-}
-.ss-sc {
-  font-family: var(--sans);
-  font-size: 10px;
-  color: var(--ink-faint);
-  letter-spacing: 1px;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.ss-sc kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 16px;
-  padding: 0 3px;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  font-family: var(--sans);
-  font-size: 9px;
-  color: var(--ink-light);
-  background: var(--surface);
 }
 
 @media (max-width: 768px) {

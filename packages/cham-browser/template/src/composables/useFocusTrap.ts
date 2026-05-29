@@ -32,6 +32,7 @@ export function useFocusTrap(container: Ref<HTMLElement | null>, active: Ref<boo
   }
 
   watch(active, (on) => {
+    if (import.meta.env.SSR) return
     if (on) {
       saved = document.activeElement as HTMLElement
       document.addEventListener('keydown', onKeydown, true)

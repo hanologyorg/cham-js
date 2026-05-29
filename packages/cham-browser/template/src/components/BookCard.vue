@@ -12,7 +12,7 @@ function genreLabel(genre: string): string {
 
 <template>
   <router-link custom :to="`/${props.book.id}`" v-slot="{ navigate }">
-    <div class="bc-root" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
+    <div class="bc-root" role="link" tabindex="0" @click="navigate" @keydown.enter="navigate" @keydown.space.prevent="navigate">
       <div class="bc-accent"></div>
       <div class="bc-body">
         <h2 class="bc-title">{{ props.book.title }}</h2>
