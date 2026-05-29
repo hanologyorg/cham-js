@@ -347,7 +347,8 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   writing-mode: vertical-rl;
   text-orientation: mixed;
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: row;
+  grid-auto-columns: 160px;
   grid-template-rows: repeat(auto-fill, 200px);
   gap: 12px;
   padding: 24px 16px;
@@ -355,7 +356,6 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   align-items: start;
   height: 100dvh;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 .v-card {
