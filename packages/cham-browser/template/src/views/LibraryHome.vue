@@ -353,6 +353,9 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
   padding: 24px 16px;
   direction: rtl;
   align-items: start;
+  height: 100dvh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .v-card {
