@@ -296,8 +296,7 @@ button:focus-visible {
 .v-page {
   height: 100dvh;
   display: flex;
-  flex-direction: column;
-  writing-mode: vertical-rl;
+  flex-direction: row-reverse;
   overflow-x: auto;
   overflow-y: hidden;
   margin-right: calc(var(--nav-width, 56px) + env(safe-area-inset-right, 0px));

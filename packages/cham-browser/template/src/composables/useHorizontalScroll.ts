@@ -8,12 +8,15 @@ export function useHorizontalScroll(container: Ref<HTMLElement | null>) {
     const el = container.value
     if (!el) return
 
-    // Ignore pure horizontal deltas (already horizontal)
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
+    const dx = Math.abs(e.deltaX)
+    const dy = Math.abs(e.deltaY)
+    if (dx === 0 && dy === 0) return
 
-    // Convert vertical wheel to horizontal scroll
     e.preventDefault()
-    el.scrollBy({ left: -e.deltaY, behavior: 'instant' as ScrollBehavior })
+    el.scrollBy({
+      left: dx > dy ? e.deltaX : -e.deltaY,
+      behavior: 'instant' as ScrollBehavior,
+    })
   }
 
   function scrollToStart() {
