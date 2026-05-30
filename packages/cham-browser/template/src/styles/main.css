@@ -296,7 +296,8 @@ button:focus-visible {
 .v-page {
   height: 100dvh;
   display: flex;
-  direction: rtl;
+  flex-direction: column;
+  writing-mode: vertical-rl;
   overflow-x: auto;
   overflow-y: hidden;
   margin-right: calc(var(--nav-width, 56px) + env(safe-area-inset-right, 0px));
@@ -305,9 +306,6 @@ button:focus-visible {
   scroll-snap-type: x proximity;
   scroll-padding: 0 48px;
   overscroll-behavior-x: contain;
-}
-.v-page > * {
-  direction: ltr;
 }
 .v-page::-webkit-scrollbar { height: 3px; }
 .v-page::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
