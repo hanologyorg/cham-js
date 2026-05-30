@@ -302,8 +302,6 @@ button:focus-visible {
   margin-right: calc(var(--nav-width, 56px) + env(safe-area-inset-right, 0px));
   scrollbar-width: thin;
   scrollbar-color: var(--gold) transparent;
-  scroll-snap-type: x proximity;
-  scroll-padding: 0 48px;
   overscroll-behavior-x: contain;
 }
 .v-page::-webkit-scrollbar { height: 3px; }

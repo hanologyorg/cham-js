@@ -8,15 +8,14 @@ export function useHorizontalScroll(container: Ref<HTMLElement | null>) {
     const el = container.value
     if (!el) return
 
-    const dx = Math.abs(e.deltaX)
-    const dy = Math.abs(e.deltaY)
-    if (dx === 0 && dy === 0) return
+    if (e.deltaY === 0 && e.deltaX === 0) return
 
     e.preventDefault()
-    el.scrollBy({
-      left: dx > dy ? e.deltaX : -e.deltaY,
-      behavior: 'instant' as ScrollBehavior,
-    })
+
+    // Use deltaY as primary input; only use deltaX when deltaY is exactly 0
+    // This avoids direction flips from trackpad deltaX noise during momentum scrolling
+    const left = e.deltaY !== 0 ? -e.deltaY : e.deltaX
+    el.scrollBy({ left, behavior: 'instant' as ScrollBehavior })
   }
 
   function scrollToStart() {

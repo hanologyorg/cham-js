@@ -384,7 +384,7 @@ const tocItems = computed(() => {
   let secIdx = 1
   for (const sec of proseSections.value) {
     const isSpecial = SECTION_META[sec.key]?.special ?? false
-    items.push({ key: sec.key, label: sec.title, context: toChineseNumber(secIdx), level: isSpecial ? 2 : 1 })
+    items.push({ key: sec.key, label: sec.title, context: t('section.short.' + sec.key as any), level: isSpecial ? 2 : 1 })
     secIdx++
   }
   return items
@@ -857,7 +857,6 @@ const authorDisplay = computed(() => {
   gap: 16px;
   padding: var(--v-indent-0) var(--v-pad);
   border-right: 1px solid var(--border);
-  scroll-snap-align: start;
   position: relative;
   z-index: 1;
 }
@@ -937,7 +936,6 @@ const authorDisplay = computed(() => {
   justify-content: center;
   padding: var(--v-indent-0) var(--v-pad);
   gap: 32px;
-  scroll-snap-align: start;
   background: var(--surface);
   border-right: 1px solid var(--border-light);
   margin-right: auto;
@@ -1285,6 +1283,7 @@ const authorDisplay = computed(() => {
   cursor: pointer;
   color: var(--ink-faint);
   transition: background 0.15s, color 0.15s;
+  gap: 12px;
 }
 .v-toc-strip:hover { background: var(--surface-warm); color: var(--ink-mid); }
 .v-toc-strip.open { color: var(--vermillion); }
@@ -1296,7 +1295,7 @@ const authorDisplay = computed(() => {
   transition: color 0.2s ease;
 }
 .v-toc-breadcrumb {
-  padding-top: 8px;
+  padding-top: 0;
   font-family: var(--serif);
   font-size: 11px;
   letter-spacing: 3px;
@@ -1352,6 +1351,7 @@ const authorDisplay = computed(() => {
   color: var(--ink-faint);
   letter-spacing: 1px;
   margin-bottom: 6px;
+  min-height: 1.8em;
 }
 .toc-slide-enter-active { transition: opacity 0.2s ease; }
 .toc-slide-enter-active .v-toc-panel { transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
