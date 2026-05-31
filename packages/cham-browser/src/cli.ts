@@ -528,6 +528,15 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   const { logoUrl, logoDarkUrl } = copyLogos(config, configDir, outputDir)
   const { siteTitle, siteSubtitle, aboutHtml } = getSiteMeta(config, configDir)
 
+  // Symlink bundled fonts into template's public
+  const bundledFonts = join(templateDir, '..', 'fonts')
+  if (existsSync(bundledFonts)) {
+    const templateFonts = join(templateDir, 'public', 'fonts')
+    rmSync(templateFonts, { recursive: true, force: true })
+    symlinkSync(bundledFonts, templateFonts)
+    console.log(`Fonts: ${bundledFonts} → ${templateFonts}`)
+  }
+
   const { build: ssgBuild } = await import('vite-ssg/node')
   const vue = (await import('@vitejs/plugin-vue')).default
 
