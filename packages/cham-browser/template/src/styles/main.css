@@ -120,8 +120,8 @@
 
 /* ===== RESET ===== */
 :root {
-  --serif: 'Noto Serif TC', '宋體-繁', serif;
-  --sans: 'Noto Sans TC', 'PingFang TC', sans-serif;
+  --serif: 'Noto Serif TC', 'HanaMin', '宋體-繁', serif;
+  --sans: 'Noto Sans TC', 'HanaMin', 'PingFang TC', sans-serif;
   --nav-width: 56px;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);

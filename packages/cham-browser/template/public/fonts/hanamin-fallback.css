@@ -1,0 +1,638 @@
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-01.woff2') format('woff2');
+  unicode-range: U+4E27, U+4E3A, U+4E46, U+4E57, U+4EBE, U+4EED, U+4FA0, U+4FA3, U+5002, U+5024, U+5052, U+5079, U+50DE, U+511B, U+514A, U+514E, U+5150, U+517E, U+5185, U+518C, U+5190, U+519D, U+51A1, U+51A3, U+51A6, U+51A9, U+51BA, U+51C0, U+51C2, U+51D6, U+51D9, U+51F7;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-02.woff2') format('woff2');
+  unicode-range: U+5204, U+522B, U+5265, U+5270, U+528E, U+5292, U+52B3, U+52F2, U+5300, U+5303, U+5368, U+53AF, U+53CE, U+5415, U+5449;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-03.woff2') format('woff2');
+  unicode-range: U+56A2, U+56CF, U+56D8, U+56EC, U+56F3, U+570E-570F, U+5717, U+5721, U+57CA, U+5815, U+5861, U+588D, U+5897, U+58C4, U+58CA, U+58CD, U+58EE, U+5900, U+5918, U+5968;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-04.woff2') format('woff2');
+  unicode-range: U+5A2F, U+5A31, U+5BAB, U+5BBB-5BBC, U+5BDC-5BDD, U+5C02, U+5C06, U+5C19, U+5C2B, U+5C5B, U+5D9B, U+5DF8, U+5DFB;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-05.woff2') format('woff2');
+  unicode-range: U+5E2C, U+5E2F, U+5E77, U+5EBB, U+5EC0, U+5EEA, U+5EF5, U+5EFD, U+5F11, U+5F1C, U+5F34, U+5F39, U+5F5A, U+5F66, U+5F93, U+5FB3-5FB4, U+6060-6061, U+6071, U+6076, U+60AB, U+60AE, U+613C, U+617F, U+61D4;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-06.woff2') format('woff2');
+  unicode-range: U+6205, U+622F, U+6231, U+6238, U+6244, U+626A, U+6275, U+629B, U+62BA, U+631F, U+633F, U+635C, U+636A, U+63A6, U+63B2, U+63BB, U+63D4, U+63F7, U+63FA, U+6402, U+6447, U+6483, U+64D5, U+6505, U+6508, U+654E, U+6570;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-07.woff2') format('woff2');
+  unicode-range: U+6629-662A, U+662C, U+663E, U+6669, U+66E1, U+66F5, U+66FA, U+66FD, U+6765, U+67BD, U+685E, U+6931, U+6992, U+69DA;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-08.woff2') format('woff2');
+  unicode-range: U+6A2A, U+6A5C, U+6ABC, U+6B0E, U+6B69, U+6B70, U+6B73, U+6BB1, U+6BBB, U+6BCE, U+6C0A, U+6C97, U+6CA1, U+6D43-6D44, U+6D53;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-09.woff2') format('woff2');
+  unicode-range: U+6E07, U+6E09, U+6EF0, U+6F98, U+6FF5;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-10.woff2') format('woff2');
+  unicode-range: U+7232, U+723C, U+72A0, U+72B6, U+72E5, U+72ED, U+74C9, U+74EB, U+7523, U+7568, U+7571, U+7589, U+75E9;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-11.woff2') format('woff2');
+  unicode-range: U+76D7, U+7700, U+7718, U+7721, U+772A, U+7757, U+791F, U+7978, U+797B, U+7984, U+79C3;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-12.woff2') format('woff2');
+  unicode-range: U+7A38, U+7A6A, U+7AC6, U+7AD2, U+7ADE, U+7B5D, U+7BA7, U+7C2E, U+7C34, U+7C5E, U+7CA4, U+7D4C, U+7D76, U+7D82, U+7D98, U+7DEB;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-13.woff2') format('woff2');
+  unicode-range: U+7E01, U+7E26, U+7E4B, U+7E66, U+7EA7, U+7F3B, U+7F99, U+8009, U+8068, U+806A, U+8074, U+807C, U+808E, U+80AC, U+80B9, U+80BB, U+80F7, U+8192, U+81D3;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-14.woff2') format('woff2');
+  unicode-range: U+820E, U+831F, U+8346, U+8358, U+83AD, U+83B1, U+83B5, U+841F, U+8535, U+85AB, U+85AE;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-15.woff2') format('woff2');
+  unicode-range: U+8637, U+8657, U+865A, U+8675, U+8688, U+872F, U+8807, U+8812, U+883A, U+8858, U+8873, U+89B8, U+89F9, U+89FD;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-16.woff2') format('woff2');
+  unicode-range: U+8AB3, U+8B21, U+8B5B, U+8B72, U+8B87, U+8BD7, U+8C88, U+8C8E, U+8D35;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-17.woff2') format('woff2');
+  unicode-range: U+8E08, U+8E79, U+8E83, U+8EF0, U+8F28, U+8F9D-8F9E, U+8FC7, U+9013, U+9025, U+9028, U+9030, U+9039-903A, U+9045, U+9065, U+9089, U+90CF, U+90F7-90F8, U+9115, U+9137, U+913C, U+9154, U+91E1;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-18.woff2') format('woff2');
+  unicode-range: U+9274, U+9332, U+938B, U+9421, U+945A, U+9527, U+95B4, U+95D7-95D8;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-19.woff2') format('woff2');
+  unicode-range: U+9655, U+9665, U+9667, U+967F, U+9682, U+9690, U+969F-96A0, U+96D1, U+9759, U+9763, U+9767, U+980B, U+9825, U+982C, U+983C-983D, U+9854-9855, U+985A, U+9901, U+99DE;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-20.woff2') format('woff2');
+  unicode-range: U+9AD9, U+9AEA, U+9B2C, U+9B30, U+9B6D, U+9CEC, U+9CEF;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-21.woff2') format('woff2');
+  unicode-range: U+9E8F, U+9EB9, U+9ED2, U+9ED9, U+9EE3, U+9F03, U+9F0D, U+9F14, U+9F73, U+9F9E, U+9FB7;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-1.woff2') format('woff2');
+  unicode-range: U+342B, U+342D-342E, U+3432, U+3479, U+34BA, U+34C2, U+34D5, U+34D7, U+34D9, U+34DC, U+3536, U+3558, U+3628, U+3644, U+3760, U+3790;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-2.woff2') format('woff2');
+  unicode-range: U+382F, U+3835, U+384C, U+3858, U+386C, U+3898, U+38A4, U+38F2, U+3900, U+3917, U+3919, U+39AF, U+39D6, U+39DE, U+3A02, U+3A3F-3A40, U+3A8D, U+3A9A, U+3AC1, U+3AD6, U+3B09, U+3B30;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-3.woff2') format('woff2');
+  unicode-range: U+3C31, U+3CC2, U+3CCA, U+3CD9, U+3CDF, U+3CFA, U+3D1E, U+3D20, U+3D72, U+3DC0, U+3DED, U+3E03, U+3E10-3E11, U+3F5E, U+3FCA;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-4.woff2') format('woff2');
+  unicode-range: U+4008, U+4093, U+40B3, U+40F4, U+41E2, U+41FF, U+4225, U+422E, U+42E4, U+42F2, U+4367, U+43FB;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-5.woff2') format('woff2');
+  unicode-range: U+4432, U+443D, U+4453, U+4455, U+44C1, U+44F8, U+450D, U+4529, U+456B, U+4576, U+458D, U+458F, U+459D, U+459F, U+45BB, U+45DC, U+4616, U+462E, U+4632, U+465D, U+46B8, U+46D5, U+471B, U+471F, U+4734, U+473F, U+4749, U+47E6, U+47F1, U+47FD;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-6.woff2') format('woff2');
+  unicode-range: U+48D5, U+48E9, U+4904, U+498A, U+4995, U+49FA, U+4A49, U+4A5C, U+4A89, U+4AA5, U+4B2F;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinA.CJK-Unified-Ideographs-Extension-A-7.woff2') format('woff2');
+  unicode-range: U+4C1F, U+4CAD, U+4CD8, U+4D21, U+4D85;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-01.woff2') format('woff2');
+  unicode-range: U+20080, U+20164, U+20240;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-02.woff2') format('woff2');
+  unicode-range: U+20503, U+20707, U+207B0;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-03.woff2') format('woff2');
+  unicode-range: U+2090E, U+20BB7;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-05.woff2') format('woff2');
+  unicode-range: U+2137C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-06.woff2') format('woff2');
+  unicode-range: U+214DC, U+21681;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-07.woff2') format('woff2');
+  unicode-range: U+219D7, U+219F1, U+21A0B;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-08.woff2') format('woff2');
+  unicode-range: U+21F9F;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-09.woff2') format('woff2');
+  unicode-range: U+2228D, U+2239E;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-10.woff2') format('woff2');
+  unicode-range: U+22474, U+225CA, U+22663, U+2267C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-11.woff2') format('woff2');
+  unicode-range: U+22856, U+2285A;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-12.woff2') format('woff2');
+  unicode-range: U+22C05;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-14.woff2') format('woff2');
+  unicode-range: U+2365C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-15.woff2') format('woff2');
+  unicode-range: U+23BDB;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-16.woff2') format('woff2');
+  unicode-range: U+23C3D, U+23C96, U+23CDA, U+23F43, U+23FC4;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-17.woff2') format('woff2');
+  unicode-range: U+240A2, U+242CE, U+243D6;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-18.woff2') format('woff2');
+  unicode-range: U+244F0;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-19.woff2') format('woff2');
+  unicode-range: U+24849, U+248E5, U+24BDD;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-20.woff2') format('woff2');
+  unicode-range: U+24F81;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-21.woff2') format('woff2');
+  unicode-range: U+25146;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-22.woff2') format('woff2');
+  unicode-range: U+25677, U+256B9;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-23.woff2') format('woff2');
+  unicode-range: U+25AA1, U+25B07, U+25B85;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-24.woff2') format('woff2');
+  unicode-range: U+25CD1, U+25DB7, U+25FC4, U+25FC9;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-25.woff2') format('woff2');
+  unicode-range: U+260B3, U+262A8, U+263D1;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-26.woff2') format('woff2');
+  unicode-range: U+26545, U+26548, U+2664D, U+2665D, U+26762;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-27.woff2') format('woff2');
+  unicode-range: U+26B7C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-28.woff2') format('woff2');
+  unicode-range: U+26D4F, U+26E1C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-29.woff2') format('woff2');
+  unicode-range: U+270F2, U+271CA;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-31.woff2') format('woff2');
+  unicode-range: U+279BD;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-32.woff2') format('woff2');
+  unicode-range: U+27D00;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-33.woff2') format('woff2');
+  unicode-range: U+2810C, U+281AB;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-34.woff2') format('woff2');
+  unicode-range: U+285F3, U+28697;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-36.woff2') format('woff2');
+  unicode-range: U+28CE9, U+28D66, U+28E67, U+28F06, U+28F7B;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-37.woff2') format('woff2');
+  unicode-range: U+29031, U+29178;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-38.woff2') format('woff2');
+  unicode-range: U+29516, U+29530, U+2973E, U+29781;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-39.woff2') format('woff2');
+  unicode-range: U+299B8;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-41.woff2') format('woff2');
+  unicode-range: U+2A14F, U+2A1AA;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-B-42.woff2') format('woff2');
+  unicode-range: U+2A502;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-C-3.woff2') format('woff2');
+  unicode-range: U+2B26C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-C-4.woff2') format('woff2');
+  unicode-range: U+2B387;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-D.woff2') format('woff2');
+  unicode-range: U+2B74A, U+2B7CD;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-E-1.woff2') format('woff2');
+  unicode-range: U+2BA5C;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-E-3.woff2') format('woff2');
+  unicode-range: U+2C2D6;
+}
+
+@font-face {
+  font-family: 'HanaMin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/HanaMinB.CJK-Unified-Ideographs-Extension-E-4.woff2') format('woff2');
+  unicode-range: U+2C4AE, U+2C599;
+}
