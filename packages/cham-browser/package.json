@@ -1,6 +1,6 @@
 {
   "name": "@hanology/cham-browser",
-  "version": "0.4.140",
+  "version": "0.4.141",
   "description": "CHAM — browser-compatible parser, serializer, and site generator for Classical Han Annotated Markdown",
   "type": "module",
   "main": "dist/index.js",
@@ -13,7 +13,8 @@
   },
   "files": [
     "dist",
-    "template"
+    "template",
+    "fonts"
   ],
   "scripts": {
     "build": "tsc"
