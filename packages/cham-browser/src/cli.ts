@@ -449,6 +449,15 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
   symlinkSync(dataDir, templatePublicData)
   console.log(`Data: ${dataDir} → ${templatePublicData}`)
 
+  // Symlink bundled fonts into template's public
+  const bundledFonts = join(templateDir, '..', 'fonts')
+  if (existsSync(bundledFonts)) {
+    const templateFonts = join(templateDir, 'public', 'fonts')
+    rmSync(templateFonts, { recursive: true, force: true })
+    symlinkSync(bundledFonts, templateFonts)
+    console.log(`Fonts: ${bundledFonts} → ${templateFonts}`)
+  }
+
   // Symlink public assets (favicons etc.) into template's public
   const publicDir = config.publicDir
     ? resolve(configDir, config.publicDir)
