@@ -531,8 +531,10 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   // Symlink bundled fonts into template's public
   const bundledFonts = join(templateDir, '..', 'fonts')
   if (existsSync(bundledFonts)) {
-    const templateFonts = join(templateDir, 'public', 'fonts')
+    const templatePublic = join(templateDir, 'public')
+    const templateFonts = join(templatePublic, 'fonts')
     rmSync(templateFonts, { recursive: true, force: true })
+    mkdirSync(templatePublic, { recursive: true })
     symlinkSync(bundledFonts, templateFonts)
     console.log(`Fonts: ${bundledFonts} → ${templateFonts}`)
   }
