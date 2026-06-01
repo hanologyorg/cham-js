@@ -37,6 +37,12 @@ async function fetchBook(bookId: string): Promise<{ meta: BookMeta; pieces: Piec
     data = await res.json()
   }
 
+  if (import.meta.env.SSR && bookId === 'laozi-boshu') {
+    const p81 = data.pieces.find(p => p.num === 81)
+    const hsg9 = p81?.annotationLayers?.find(l => l.id === 'heshanggong')?.annotations[8]
+    if (hsg9) console.log('[DEBUG-FETCH] laozi-boshu p81 hsg9 range FRESH from JSON:', JSON.stringify(hsg9.range))
+  }
+
   data.pieces = data.pieces.map(cleanPiece)
   bookCache.set(bookId, data)
   return data
