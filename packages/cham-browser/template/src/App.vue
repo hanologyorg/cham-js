@@ -11,7 +11,7 @@ import { useAnnounce } from './composables/useAnnounce'
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
 const { logoUrl, aboutHtml } = useSiteConfig()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const isVertical = computed(() => layout.value === 'vertical')
 
 const { message: announceMessage } = useAnnounce()

@@ -35,15 +35,20 @@ const PRON_LANGS = new Set(['yue', 'cmn'])
 const VARIANT_ACTIONS = new Set(['emend', 'note', 'parallel'])
 const TONE_VALUES = new Set(['上聲', '去聲', '平聲', '入聲', '如字'])
 
+const IPA_LATIN_RE = /[ɑɡ]/u
+const BPMF_SYMBOLS = /^[ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩˉˊˇˋ˙ ]+$/u
+
 const KNOWN_KINDS = new Set(Object.keys(KIND_PARAMS))
 
 export class ChamValidator {
   private issues: ValidationIssue[] = []
   private lastParsedDocs: Array<{ filePath: string; doc: ChamDocument }> = []
+  private secondaryMarkerRefs = new Map<string, Set<number>>()
 
   validateBook(bookDir: string): ValidationResult {
     this.issues = []
     this.lastParsedDocs = []
+    this.secondaryMarkerRefs = new Map()
 
     const bookYaml = this.loadBookYaml(bookDir)
     if (!bookYaml) {
@@ -67,13 +72,23 @@ export class ChamValidator {
         allPrimaryDocs.set(dirName, primaryDoc)
         this.validateMarkerIntegrity(primaryDoc, dirName)
         this.validateMarkerUniqueness(primaryDoc, dirName)
-        this.validateAnnotationRefs(primaryDoc, dirName)
         this.validateVerseTargets(primaryDoc, dirName)
         this.validateKindParams(primaryDoc, join(dir, 'text.cham.md'))
         this.validateSequentialMarkers(primaryDoc, dirName)
+        this.validateCompoundAnnotations(primaryDoc, dirName)
       }
 
       this.validateSecondaryFiles(dir, dirName, allPrimaryDocs)
+    }
+
+    // Orphan marker check runs after secondary files so subordinate
+    // annotations are accounted for.
+    for (const dir of pieceDirs) {
+      const dirName = basename(dir)
+      const primaryDoc = allPrimaryDocs.get(dirName)
+      if (primaryDoc) {
+        this.validateAnnotationRefs(primaryDoc, dirName)
+      }
     }
 
     this.validateBookConfig(config, pieceDirs)
@@ -96,6 +111,7 @@ export class ChamValidator {
 
     this.registries = new RegistryLoader().loadAll(dataDir)
     this.validateRegistryRefs(this.lastParsedDocs, this.registries)
+    this.validateDynastyRefs(this.lastParsedDocs, this.registries)
 
     result.valid = !this.issues.some(i => i.severity === 'error')
     result.issues = this.issues
@@ -261,6 +277,7 @@ export class ChamValidator {
 
       try {
         const doc = parse(src)
+        if (doc.meta.type === 'part') continue
         if (doc.meta.type !== 'secondary') {
           this.warning(filePath, undefined, 'Expected secondary frontmatter type')
           continue
@@ -289,6 +306,24 @@ export class ChamValidator {
         if (primaryDoc) {
           this.validateLayerAnnotations(doc, primaryDoc, filePath, f)
         }
+
+        // Collect marker IDs referenced by secondary annotations
+        if (primaryDoc) {
+          let refs = this.secondaryMarkerRefs.get(dirName)
+          if (!refs) {
+            refs = new Set<number>()
+            this.secondaryMarkerRefs.set(dirName, refs)
+          }
+          for (const section of doc.sections) {
+            for (const entry of section.entries) {
+              if (entry.target.type === 'marker') {
+                refs.add(entry.target.markerId)
+              }
+            }
+          }
+        }
+
+        this.validateCompoundAnnotations(doc, filePath)
       } catch (e) {
         this.error(filePath, undefined, `Parse error: ${(e as Error).message}`)
       }
@@ -326,13 +361,19 @@ export class ChamValidator {
       }
     }
 
-    // Check for markers without annotations
+    // Check for markers without annotations (including secondary file refs)
     const annotatedMarkers = new Set<number>()
     for (const section of doc.sections) {
       for (const entry of section.entries) {
         if (entry.target.type === 'marker') {
           annotatedMarkers.add(entry.target.markerId)
         }
+      }
+    }
+    const secRefs = this.secondaryMarkerRefs.get(context)
+    if (secRefs) {
+      for (const id of secRefs) {
+        annotatedMarkers.add(id)
       }
     }
 
@@ -489,6 +530,14 @@ export class ChamValidator {
               this.error(filePath, undefined,
                 `Invalid pron lang: "${entry.params.lang}" — expected one of: ${[...PRON_LANGS].join(', ')}`)
             }
+            if (entry.params.type === 'pinyin' && entry.value && IPA_LATIN_RE.test(entry.value)) {
+              this.error(filePath, undefined,
+                `Pinyin value contains IPA characters (ɑ U+0251 or ɡ U+0261): "${entry.value}" — use standard Latin a/g instead`)
+            }
+            if (entry.params.type === 'bopomofo' && entry.value && !BPMF_SYMBOLS.test(entry.value)) {
+              this.error(filePath, undefined,
+                `Bopomofo value contains non-BPMF characters: "${entry.value}"`)
+            }
             break
           case 'variant':
             if (entry.params.action && !VARIANT_ACTIONS.has(entry.params.action)) {
@@ -519,22 +568,34 @@ export class ChamValidator {
             `Annotation contains ○按 boundary — consider splitting into commentary + kaozheng entries`)
         }
 
-        const zhiyinMatch = v.match(/(?<![音義假借知])音(?!義|假借|訓|韻)/)
-        if (zhiyinMatch) {
-          this.warning(filePath, undefined,
-            `Annotation may contain embedded zhiyin pattern — consider extracting to zhiyin kind`)
+        // Only flag zhiyin in short values (≤20 chars) to avoid false positives
+        // from "音" embedded in long classical text passages
+        if (v.length <= 20) {
+          const zhiyinPatterns = [
+            /^音[\w一-鿿]{1,4}$/,                    // entire value is "音Y" (CJK/alpha only)
+            /^.{1,4}音[\w一-鿿]{1,4}$/,              // entire value is "X音Y" (≤10 chars total)
+            /^[^，。；：\n]{1,6}，音[\w一-鿿]{1,4}$/, // "X，音Y" format
+          ]
+          if (zhiyinPatterns.some(p => p.test(v))) {
+            this.warning(filePath, undefined,
+              `Compound annotation: zhiyin pattern "${v.substring(0, 30)}" — extract as zhiyin entry`)
+          }
         }
 
-        const fanqieMatch = v.match(/\S\s\S\s*[切反]/)
+        const fanqieMatch = v.match(/\S\s\S\s切/)
         if (fanqieMatch) {
           this.warning(filePath, undefined,
-            `Annotation may contain embedded fanqie pattern — consider extracting to fanqie kind`)
+            `Compound annotation: fanqie pattern "${v.substring(0, 30)}" — extract as fanqie entry`)
         }
 
-        const toneMatch = v.match(/[上去平入]聲/)
-        if (toneMatch) {
+        const tonePatterns = [
+          /^[^，。；：\n]{1,8}[上去平入]聲$/,         // short: "X聲" or "讀X聲"
+          /^[^，。；：\n]{1,8}，[上去平入]聲$/,       // "X，Y聲"
+          /^第[一二三四]聲?$/,                          // "第一聲" etc.
+        ]
+        if (tonePatterns.some(p => p.test(v))) {
           this.warning(filePath, undefined,
-            `Annotation may contain embedded tone pattern — consider extracting to tone kind`)
+            `Compound annotation: tone pattern "${v.substring(0, 30)}" — extract as tone entry`)
         }
       }
     }
@@ -571,7 +632,32 @@ export class ChamValidator {
       for (const section of doc.sections) {
         for (const entry of section.entries) {
           const ref = entry.params.ref
-          if (!ref) continue
+          if (!ref) {
+            // Check for allusion source validation
+            const source = entry.params.source
+            if (source && entry.kind === 'allusion' && registries.sources && !(source in registries.sources)) {
+              // Check if source matches an alternate name
+              const match = Object.entries(registries.sources).find(
+                ([, rec]) => rec.names.includes(source)
+              )
+              if (match) {
+                this.warning(filePath, undefined, `Allusion source "${source}" is an alternate name — use registry key "${match[0]}"`)
+              } else {
+                this.warning(filePath, undefined, `Allusion source "${source}" not found in sources registry`)
+              }
+            }
+            // Warn about unlinked person/place/event annotations
+            if (entry.kind === 'person') {
+              this.warning(filePath, undefined, `Person annotation lacks ref: — link to authors registry`)
+            }
+            if (entry.kind === 'place') {
+              this.warning(filePath, undefined, `Place annotation lacks ref: — link to places registry`)
+            }
+            if (entry.kind === 'event') {
+              this.warning(filePath, undefined, `Event annotation lacks ref: — link to events registry`)
+            }
+            continue
+          }
           if (entry.kind === 'person' && registries.authors && !(ref in registries.authors)) {
             this.warning(filePath, undefined, `Author ref "${ref}" not found in authors registry`)
           }
@@ -581,6 +667,47 @@ export class ChamValidator {
           if (entry.kind === 'event' && registries.events && !(ref in registries.events)) {
             this.warning(filePath, undefined, `Event ref "${ref}" not found in events registry`)
           }
+          if (entry.kind === 'see-also') {
+            this.validateSeeAlsoRef(ref, filePath)
+          }
+        }
+      }
+    }
+  }
+
+  private validateSeeAlsoRef(ref: string, filePath: string): void {
+    const parts = ref.split('/')
+    if (parts.length < 2) {
+      this.warning(filePath, undefined, `see-also ref "${ref}" should be in collection/piece format`)
+      return
+    }
+    const [collectionId, pieceId] = parts
+    const contentDir = join(filePath, '..', '..', '..')
+    const collectionDir = join(contentDir, collectionId)
+    if (!existsSync(collectionDir)) {
+      this.warning(filePath, undefined, `see-also ref collection "${collectionId}" not found`)
+      return
+    }
+    const pieceDirs = readdirSync(collectionDir, { withFileTypes: true })
+      .filter(d => d.isDirectory() && d.name.match(/^\d+_/) && d.name.split('_')[0] === pieceId)
+    if (pieceDirs.length === 0) {
+      this.warning(filePath, undefined, `see-also ref piece "${pieceId}" not found in collection "${collectionId}"`)
+    }
+  }
+
+  private validateDynastyRefs(
+    docs: Array<{ filePath: string; doc: ChamDocument }>,
+    registries: ChamRegistries,
+  ): void {
+    if (!registries.dynasties || registries.dynasties.length === 0) return
+    const dynastyKeys = new Set(registries.dynasties.map(d => d.id))
+    for (const { filePath, doc } of docs) {
+      const fm = doc.meta as unknown as Record<string, unknown>
+      const date = fm.date as Record<string, unknown> | undefined
+      if (date && typeof date === 'object' && 'dynasty' in date) {
+        const dyn = date.dynasty as string
+        if (dyn && !dynastyKeys.has(dyn)) {
+          this.warning(filePath, undefined, `Dynasty "${dyn}" not found in dynasties registry`)
         }
       }
     }

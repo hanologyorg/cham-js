@@ -4,6 +4,7 @@ import { loadYaml } from './yaml.js'
 import type {
   ChamRegistries, AuthorRecord, DynastyRecord, EraRecord,
   SexagenaryRecord, PlaceRecord, EventRecord, LexiconEntry, WorkRecord,
+  SourceRecord,
 } from './types.js'
 
 export interface RegistryLoadOptions {
@@ -16,15 +17,30 @@ export interface RegistryLoadOptions {
   events?: boolean
   lexicon?: boolean
   works?: boolean
+  sources?: boolean
 }
 
 function loadAuthors(dataDir: string): Record<string, AuthorRecord> {
   const raw = loadYaml(join(dataDir, 'authors.yaml'))
   const result: Record<string, AuthorRecord> = {}
-  if (!raw.authors || !Array.isArray(raw.authors)) return result
-  for (const item of raw.authors as Array<Record<string, unknown>>) {
-    const id = item.id as string
-    if (!id) continue
+  if (raw.authors && Array.isArray(raw.authors)) {
+    for (const item of raw.authors as Array<Record<string, unknown>>) {
+      const id = item.id as string
+      if (!id) continue
+      result[id] = {
+        name: item.name as string || id,
+        dynasty: item.dynasty as string | undefined,
+        era: item.era as string | undefined,
+        eraCode: item.eraCode as string | undefined,
+        bio: item.bio as string | undefined,
+      }
+    }
+    return result
+  }
+  for (const [id, val] of Object.entries(raw)) {
+    if (typeof val !== 'object' || val === null) continue
+    const item = val as Record<string, unknown>
+    if (!('name' in item)) continue
     result[id] = {
       name: item.name as string || id,
       dynasty: item.dynasty as string | undefined,
@@ -38,14 +54,31 @@ function loadAuthors(dataDir: string): Record<string, AuthorRecord> {
 
 function loadDynasties(dataDir: string): DynastyRecord[] {
   const raw = loadYaml(join(dataDir, 'dynasties.yaml'))
-  if (!raw.dynasties || !Array.isArray(raw.dynasties)) return []
-  return (raw.dynasties as Array<Record<string, unknown>>).map(d => ({
-    id: d.id as string,
-    label: d.label as string,
-    start: d.start as number | undefined,
-    end: d.end as number | undefined,
-    gbCode: d.gb_code as string | undefined,
-  }))
+  if (raw.dynasties && Array.isArray(raw.dynasties)) {
+    return (raw.dynasties as Array<Record<string, unknown>>).map(d => ({
+      id: d.id as string,
+      label: d.label as string,
+      start: d.start as number | undefined,
+      end: d.end as number | undefined,
+      gbCode: d.gb_code as string | undefined,
+    }))
+  }
+  const result: DynastyRecord[] = []
+  for (const [key, val] of Object.entries(raw)) {
+    if (typeof val !== 'object' || val === null) continue
+    const d = val as Record<string, unknown>
+    if (!('code' in d) && !('start' in d)) continue
+    result.push({
+      id: key,
+      label: key,
+      code: d.code as string | undefined,
+      start: d.start as number | null | undefined,
+      end: d.end as number | null | undefined,
+      parent: d.parent as string | undefined,
+      note: d.note as string | undefined,
+    })
+  }
+  return result
 }
 
 function loadEras(dataDir: string): EraRecord[] {
@@ -74,16 +107,31 @@ function loadSexagenary(dataDir: string): SexagenaryRecord[] {
 function loadPlaces(dataDir: string): Record<string, PlaceRecord> {
   const raw = loadYaml(join(dataDir, 'places.yaml'))
   const result: Record<string, PlaceRecord> = {}
-  if (!raw.places || !Array.isArray(raw.places)) return result
-  for (const item of raw.places as Array<Record<string, unknown>>) {
-    const id = item.id as string
-    if (!id) continue
+  if (raw.places && Array.isArray(raw.places)) {
+    for (const item of raw.places as Array<Record<string, unknown>>) {
+      const id = item.id as string
+      if (!id) continue
+      result[id] = {
+        id,
+        label: item.label as string,
+        modern: item.modern as string | undefined,
+        lat: item.lat as number | undefined,
+        lon: item.lon as number | undefined,
+      }
+    }
+    return result
+  }
+  for (const [id, val] of Object.entries(raw)) {
+    if (typeof val !== 'object' || val === null) continue
+    const item = val as Record<string, unknown>
+    if (!('name' in item) && !('label' in item)) continue
+    const geo = Array.isArray(item.geo) ? item.geo as number[] : undefined
     result[id] = {
       id,
-      label: item.label as string,
+      label: (item.name || item.label) as string,
       modern: item.modern as string | undefined,
-      lat: item.lat as number | undefined,
-      lon: item.lon as number | undefined,
+      lat: geo?.[0],
+      lon: geo?.[1],
     }
   }
   return result
@@ -92,13 +140,28 @@ function loadPlaces(dataDir: string): Record<string, PlaceRecord> {
 function loadEvents(dataDir: string): Record<string, EventRecord> {
   const raw = loadYaml(join(dataDir, 'events.yaml'))
   const result: Record<string, EventRecord> = {}
-  if (!raw.events || !Array.isArray(raw.events)) return result
-  for (const item of raw.events as Array<Record<string, unknown>>) {
-    const id = item.id as string
-    if (!id) continue
+  if (raw.events && Array.isArray(raw.events)) {
+    for (const item of raw.events as Array<Record<string, unknown>>) {
+      const id = item.id as string
+      if (!id) continue
+      result[id] = {
+        id,
+        label: item.label as string,
+        dynasty: item.dynasty as string | undefined,
+        era: item.era as string | undefined,
+        eraCode: item.eraCode as string | undefined,
+        year: item.year as number | undefined,
+      }
+    }
+    return result
+  }
+  for (const [id, val] of Object.entries(raw)) {
+    if (typeof val !== 'object' || val === null) continue
+    const item = val as Record<string, unknown>
+    if (!('name' in item) && !('label' in item)) continue
     result[id] = {
       id,
-      label: item.label as string,
+      label: (item.name || item.label) as string,
       dynasty: item.dynasty as string | undefined,
       era: item.era as string | undefined,
       eraCode: item.eraCode as string | undefined,
@@ -170,6 +233,22 @@ function loadWorks(dataDir: string): Record<string, WorkRecord> {
   return result
 }
 
+function loadSources(dataDir: string): Record<string, SourceRecord> {
+  const raw = loadYaml(join(dataDir, 'sources.yaml'))
+  const result: Record<string, SourceRecord> = {}
+  for (const [key, val] of Object.entries(raw)) {
+    if (typeof val !== 'object' || val === null) continue
+    const item = val as Record<string, unknown>
+    if (!('title' in item)) continue
+    result[key] = {
+      names: (item.names as string[]) || [],
+      title: item.title as string,
+      titleEn: item['title-en'] as string | undefined,
+    }
+  }
+  return result
+}
+
 export class RegistryLoader {
   loadAll(dataDir: string): ChamRegistries {
     return {
@@ -181,6 +260,7 @@ export class RegistryLoader {
       events: existsSync(join(dataDir, 'events.yaml')) ? loadEvents(dataDir) : {},
       lexicon: existsSync(join(dataDir, 'lexicon.yaml')) ? loadLexicon(dataDir) : [],
       works: existsSync(join(dataDir, 'works.yaml')) ? loadWorks(dataDir) : {},
+      sources: existsSync(join(dataDir, 'sources.yaml')) ? loadSources(dataDir) : {},
     }
   }
 
@@ -194,6 +274,7 @@ export class RegistryLoader {
     if (opts.events !== false) result.events = loadEvents(dataDir)
     if (opts.lexicon !== false) result.lexicon = loadLexicon(dataDir)
     if (opts.works !== false) result.works = loadWorks(dataDir)
+    if (opts.sources !== false) result.sources = loadSources(dataDir)
     return result
   }
 }

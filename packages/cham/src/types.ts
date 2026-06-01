@@ -428,9 +428,12 @@ export interface AuthorRecord {
 export interface DynastyRecord {
   id: string
   label: string
-  start?: number
-  end?: number
+  start?: number | null
+  end?: number | null
   gbCode?: string
+  code?: string
+  parent?: string
+  note?: string
 }
 
 export interface EraRecord {
@@ -486,6 +489,12 @@ export interface WorkRecord {
   wikipediaZh?: string
 }
 
+export interface SourceRecord {
+  names: string[]
+  title: string
+  titleEn?: string
+}
+
 export interface ChamRegistries {
   authors: Record<string, AuthorRecord>
   dynasties: DynastyRecord[]
@@ -495,6 +504,7 @@ export interface ChamRegistries {
   events: Record<string, EventRecord>
   lexicon: LexiconEntry[]
   works: Record<string, WorkRecord>
+  sources: Record<string, SourceRecord>
 }
 
 // ─── Validator Types ──────────────────────────────────────────
