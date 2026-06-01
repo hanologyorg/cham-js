@@ -189,7 +189,7 @@ function groupBlocksIntoVerses(
     blockTexts.push(textBlocks[i].text)
 
     if (nextBoundary < closeMarkers.length && i === closeMarkers[nextBoundary].blockIndex) {
-      verseTexts.push(blockTexts.join(' '))
+      verseTexts.push(blockTexts.join(''))
       verseCharOffset.push([...blockOffsets])
       blockTexts.length = 0
       blockOffsets.length = 0
@@ -199,7 +199,7 @@ function groupBlocksIntoVerses(
   }
 
   if (blockTexts.length > 0) {
-    verseTexts.push(blockTexts.join(' '))
+    verseTexts.push(blockTexts.join(''))
     verseCharOffset.push([...blockOffsets])
   }
 
