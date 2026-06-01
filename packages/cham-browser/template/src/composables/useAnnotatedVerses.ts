@@ -7,9 +7,16 @@ export function useAnnotatedVerses(
   annotations: Ref<Annotation[]>,
   isVertical: boolean
 ) {
-  const allVerseSpans = computed(() =>
-    verses.value.map((_, i) => buildVerseAnnotations(annotations.value, i))
-  )
+  const allVerseSpans = computed(() => {
+    const result = verses.value.map((v, i) => {
+      const spans = buildVerseAnnotations(annotations.value, i)
+      if (import.meta.env.SSR && annotations.value.length > 10 && i === 2) {
+        console.log('[DEBUG-81-SPANS] verse', i, 'text=', v.text?.slice(0, 20), 'annCount=', annotations.value.length, 'spans=', spans.length, spans.map(s => `[${s.start},${s.end}]`))
+      }
+      return spans
+    })
+    return result
+  })
 
   const verseOffsets = computed(() => {
     const offsets: number[] = []
