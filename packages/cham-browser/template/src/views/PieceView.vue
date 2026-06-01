@@ -247,10 +247,10 @@ const mergedAnnotations = computed<Annotation[]>(() => {
   }
   if (import.meta.env.SSR && piece.value?.num === 81) {
     const hsg9 = result.find(a => a.id === 'heshanggong-9')
-    console.log('[DEBUG-81] mergedAnnotations: bookId=', props.bookId, 'count=', result.length, 'activeLayerIds=', activeLayerIds.value, 'annotationsVisible=', annotationsVisible.value)
+    console.log('[DEBUG-81] mergedAnnotations: bookId=', props.bookId, 'piece.title=', piece.value?.title, 'count=', result.length, 'activeLayerIds=', activeLayerIds.value, 'annotationsVisible=', annotationsVisible.value)
     if (hsg9) console.log('[DEBUG-81] heshanggong-9 range in merged:', JSON.stringify(hsg9.range))
     const rawHsg9 = piece.value?.annotationLayers?.find(l => l.id === 'heshanggong')?.annotations[8]
-    if (rawHsg9) console.log('[DEBUG-81] heshanggong-9 range from piece.value:', JSON.stringify(rawHsg9.range))
+    if (rawHsg9) console.log('[DEBUG-81] heshanggong-9 range from piece.value:', JSON.stringify(rawHsg9.range), 'text snippet:', rawHsg9.text?.slice(0, 30))
   }
   return result
 })
