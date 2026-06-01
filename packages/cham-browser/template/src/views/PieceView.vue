@@ -219,16 +219,10 @@ watch([annotationPane, isVertical], ([pane, vert]) => {
 })
 
 function initLayers() {
-  if (import.meta.env.SSR && piece.value?.num === 81) {
-    console.log('[DEBUG-81] initLayers CALLED: bookId=', props.bookId, 'hasLayers=', hasLayers.value, 'activeLayerIds before=', JSON.stringify(activeLayerIds.value), 'layers=', annotationLayers.value.map(l => l.id), 'piece.annLayers=', piece.value?.annotationLayers?.map(l => l.id))
-  }
   if (hasLayers.value && activeLayerIds.value.length === 0) {
     activeLayerIds.value = annotationLayers.value
       .filter(l => l.enabled)
       .map(l => l.id)
-  }
-  if (import.meta.env.SSR && piece.value?.num === 81) {
-    console.log('[DEBUG-81] initLayers AFTER: bookId=', props.bookId, 'activeLayerIds=', JSON.stringify(activeLayerIds.value))
   }
 }
 
@@ -244,13 +238,6 @@ const mergedAnnotations = computed<Annotation[]>(() => {
   }
   for (const ann of piece.value?.annotations || []) {
     result.push(ann)
-  }
-  if (import.meta.env.SSR && piece.value?.num === 81) {
-    const hsg9 = result.find(a => a.id === 'heshanggong-9')
-    console.log('[DEBUG-81] mergedAnnotations: bookId=', props.bookId, 'piece.title=', piece.value?.title, 'count=', result.length, 'activeLayerIds=', activeLayerIds.value, 'annotationsVisible=', annotationsVisible.value)
-    if (hsg9) console.log('[DEBUG-81] heshanggong-9 range in merged:', JSON.stringify(hsg9.range))
-    const rawHsg9 = piece.value?.annotationLayers?.find(l => l.id === 'heshanggong')?.annotations[8]
-    if (rawHsg9) console.log('[DEBUG-81] heshanggong-9 range from piece.value:', JSON.stringify(rawHsg9.range), 'text snippet:', rawHsg9.text?.slice(0, 30))
   }
   return result
 })

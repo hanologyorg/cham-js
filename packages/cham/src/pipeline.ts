@@ -137,6 +137,114 @@ export function buildAnnotationsText(doc: ChamDocument, annotations: OutputAnnot
   return lines.join('\n')
 }
 
+// ─── Verse Grouping ──────────────────────────────────────────────
+
+interface MarkerInfo { id: number; blockIndex: number; offset: number; length: number }
+
+function groupBlocksIntoVerses(
+  textBlocks: { text: string }[],
+  markers: Map<number, MarkerInfo>,
+): {
+  verses: { text: string }[]
+  blockToVerse: number[]
+  verseCharOffset: number[][]
+} {
+  if (textBlocks.length === 0) {
+    return { verses: [], blockToVerse: [], verseCharOffset: [] }
+  }
+
+  if (markers.size === 0) {
+    return {
+      verses: textBlocks.map(b => ({ text: b.text })),
+      blockToVerse: textBlocks.map((_, i) => i),
+      verseCharOffset: textBlocks.map(() => [0]),
+    }
+  }
+
+  const closeMarkers = [...markers.values()]
+    .filter(m => m.length === 0)
+    .sort((a, b) => a.blockIndex - b.blockIndex)
+
+  if (closeMarkers.length === 0) {
+    return {
+      verses: textBlocks.map(b => ({ text: b.text })),
+      blockToVerse: textBlocks.map((_, i) => i),
+      verseCharOffset: textBlocks.map(() => [0]),
+    }
+  }
+
+  const blockToVerse: number[] = new Array(textBlocks.length)
+  const verseTexts: string[] = []
+  const verseCharOffset: number[][] = []
+  let currentVerse = 0
+  let nextBoundary = 0
+
+  const blockTexts: string[] = []
+  const blockOffsets: number[] = []
+
+  for (let i = 0; i < textBlocks.length; i++) {
+    blockToVerse[i] = currentVerse
+    const offset = blockTexts.reduce((sum, t) => sum + t.length, 0)
+    blockOffsets.push(offset)
+    blockTexts.push(textBlocks[i].text)
+
+    if (nextBoundary < closeMarkers.length && i === closeMarkers[nextBoundary].blockIndex) {
+      verseTexts.push(blockTexts.join(' '))
+      verseCharOffset.push([...blockOffsets])
+      blockTexts.length = 0
+      blockOffsets.length = 0
+      currentVerse++
+      nextBoundary++
+    }
+  }
+
+  if (blockTexts.length > 0) {
+    verseTexts.push(blockTexts.join(' '))
+    verseCharOffset.push([...blockOffsets])
+  }
+
+  return {
+    verses: verseTexts.map(t => ({ text: t })),
+    blockToVerse,
+    verseCharOffset,
+  }
+}
+
+function remapAnnotationVerses(
+  annotations: OutputAnnotation[],
+  blockToVerse: number[],
+  verseCharOffset: number[][],
+): OutputAnnotation[] {
+  return annotations.map(ann => {
+    if (ann.range.scope !== 'verse' || ann.range.verseIndex === undefined) return ann
+    const blockIdx = ann.range.verseIndex
+    if (blockIdx >= blockToVerse.length) return ann
+    const verseIdx = blockToVerse[blockIdx]
+    const offsets = verseCharOffset[verseIdx]
+    if (!offsets) return ann
+
+    // Find this block's position within the merged verse
+    let posInVerse = 0
+    for (let i = 0; i < blockIdx; i++) {
+      if (blockToVerse[i] === verseIdx) posInVerse++
+    }
+
+    const charOffset = offsets[posInVerse] ?? 0
+    const adjustedStart = charOffset + (ann.range.start ?? 0)
+    const adjustedEnd = charOffset + (ann.range.end ?? 0)
+
+    return {
+      ...ann,
+      range: {
+        ...ann.range,
+        verseIndex: verseIdx,
+        start: adjustedStart,
+        end: adjustedEnd,
+      },
+    }
+  })
+}
+
 // ─── Annotation Layers ────────────────────────────────────────
 
 export function buildAnnotationLayers(
@@ -315,10 +423,17 @@ export function buildPieceFromCham(
   if (doc.meta.type !== 'primary') return null
 
   const pmeta = doc.meta as PrimaryMeta
-  const verses = doc.textBlocks.map(b => ({ text: b.text }))
+  const rawVerses = doc.textBlocks.map(b => ({ text: b.text }))
   const annotations = buildAnnotations(doc, pmeta.id as number)
+
+  // Group consecutive textBlocks into verses based on {N}...{/N} markers
+  const { verses, blockToVerse, verseCharOffset } = groupBlocksIntoVerses(doc.textBlocks, doc.markers)
+
+  // Remap annotations from block-level to verse-group-level
+  const remappedAnnotations = remapAnnotationVerses(annotations, blockToVerse, verseCharOffset)
+  const annText = buildAnnotationsText(doc, remappedAnnotations)
+
   const { sections, structuredSections } = parseProseSections(proseFiles)
-  const annText = buildAnnotationsText(doc, annotations)
   if (annText) sections['annotations'] = annText
 
   const partDocs = partFiles
@@ -343,7 +458,11 @@ export function buildPieceFromCham(
     || date?.dynasty
     || ''
 
+  // Build layers with remapped verse indices
   const layers = parseCommentaryLayers(layerFiles, doc)
+  for (const layerId of Object.keys(layers)) {
+    layers[layerId] = remapAnnotationVerses(layers[layerId], blockToVerse, verseCharOffset)
+  }
   const annotationLayers = buildAnnotationLayers(layers, bookConfig)
 
   const parts = partDocs.length > 0
@@ -363,7 +482,7 @@ export function buildPieceFromCham(
     genre: pmeta.genre || bookConfig.genre || 'poetry',
     verses,
     sections,
-    annotations,
+    annotations: remappedAnnotations,
     ...(Object.keys(layers).length > 0 ? { layers } : {}),
     ...(annotationLayers.length > 0 ? { annotationLayers } : {}),
     ...(pmeta.source ? { source: pmeta.source } : {}),
