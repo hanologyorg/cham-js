@@ -224,6 +224,9 @@ function initLayers() {
       .filter(l => l.enabled)
       .map(l => l.id)
   }
+  if (import.meta.env.SSR && piece.value?.num === 81) {
+    console.log('[DEBUG-81] initLayers: hasLayers=', hasLayers.value, 'activeLayerIds=', activeLayerIds.value, 'layers count=', annotationLayers.value.length)
+  }
 }
 
 const mergedAnnotations = computed<Annotation[]>(() => {
@@ -238,6 +241,9 @@ const mergedAnnotations = computed<Annotation[]>(() => {
   }
   for (const ann of piece.value?.annotations || []) {
     result.push(ann)
+  }
+  if (import.meta.env.SSR && piece.value?.num === 81) {
+    console.log('[DEBUG-81] mergedAnnotations: count=', result.length, 'activeLayerIds=', activeLayerIds.value, 'annotationsVisible=', annotationsVisible.value)
   }
   return result
 })
