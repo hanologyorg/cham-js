@@ -219,13 +219,16 @@ watch([annotationPane, isVertical], ([pane, vert]) => {
 })
 
 function initLayers() {
+  if (import.meta.env.SSR && piece.value?.num === 81) {
+    console.log('[DEBUG-81] initLayers CALLED: hasLayers=', hasLayers.value, 'activeLayerIds before=', JSON.stringify(activeLayerIds.value), 'layers=', annotationLayers.value.map(l => l.id), 'piece.annLayers=', piece.value?.annotationLayers?.map(l => l.id))
+  }
   if (hasLayers.value && activeLayerIds.value.length === 0) {
     activeLayerIds.value = annotationLayers.value
       .filter(l => l.enabled)
       .map(l => l.id)
   }
   if (import.meta.env.SSR && piece.value?.num === 81) {
-    console.log('[DEBUG-81] initLayers: hasLayers=', hasLayers.value, 'activeLayerIds=', activeLayerIds.value, 'layers count=', annotationLayers.value.length)
+    console.log('[DEBUG-81] initLayers AFTER: activeLayerIds=', JSON.stringify(activeLayerIds.value))
   }
 }
 
