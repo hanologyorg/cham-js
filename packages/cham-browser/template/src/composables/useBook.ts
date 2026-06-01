@@ -74,6 +74,11 @@ export function useBook(): {
 
     byNum = new Map()
     for (const p of data.pieces) byNum.set(p.num, p)
+    if (import.meta.env.SSR && id === 'laozi-boshu') {
+      const p81 = byNum.get(81)
+      const hsg9 = p81?.annotationLayers?.find(l => l.id === 'heshanggong')?.annotations[8]
+      if (hsg9) console.log('[DEBUG-LOAD] laozi-boshu p81 hsg9 range AFTER load:', JSON.stringify(hsg9.range))
+    }
   }
 
   function getPiece(num: number): Piece | undefined {
