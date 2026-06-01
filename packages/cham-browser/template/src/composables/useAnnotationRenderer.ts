@@ -20,6 +20,10 @@ export function buildVerseAnnotations(annotations: Annotation[], verseIndex: num
   )
   if (!anns.length) return []
 
+  if (import.meta.env.SSR && anns.some(a => a.id === 'heshanggong-9')) {
+    console.log('[DEBUG-BVA] verse', verseIndex, 'anns=', anns.map(a => `${a.id}[${a.range.start},${a.range.end}]`))
+  }
+
   const points = new Set<number>()
   for (const a of anns) {
     points.add(a.range.start ?? 0)
