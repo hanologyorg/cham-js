@@ -63,8 +63,14 @@ function onKey(event: KeyboardEvent) {
         <component :is="Component" :key="route.fullPath" id="main" />
         <template #fallback>
           <div class="route-loading">
-            <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo" />
-            <div v-else class="route-loading-seal">文</div>
+            <div class="route-loading-logo-wrap">
+              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo route-loading-logo--gray" />
+              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo route-loading-logo--fill" />
+              <template v-else>
+                <span class="route-loading-seal route-loading-seal--gray">文</span>
+                <span class="route-loading-seal route-loading-seal--fill">文</span>
+              </template>
+            </div>
           </div>
         </template>
       </Suspense>
@@ -190,22 +196,44 @@ function onKey(event: KeyboardEvent) {
   justify-content: center;
   min-height: 100dvh;
 }
+.route-loading-logo-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+}
 .route-loading-logo {
-  width: 56px; height: auto;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  animation: pulse 1.2s ease-in-out infinite;
+}
+.route-loading-logo--gray {
+  filter: grayscale(1) opacity(0.3);
+}
+.route-loading-logo--fill {
+  clip-path: inset(100% 0 0 0);
+  animation: logoFillUp 1.8s ease-in-out infinite;
 }
 .route-loading-seal {
-  width: 56px; height: 56px;
-  border: 2px solid var(--vermillion);
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; font-weight: 900;
-  color: var(--vermillion);
-  animation: pulse 1.2s ease-in-out infinite;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
 }
-@keyframes pulse {
-  0%, 100% { opacity: 0.6; transform: scale(0.96); }
-  50% { opacity: 1; transform: scale(1); }
+.route-loading-seal--gray {
+  color: var(--ink-faint);
+}
+.route-loading-seal--fill {
+  color: var(--vermillion);
+  clip-path: inset(100% 0 0 0);
+  animation: logoFillUp 1.8s ease-in-out infinite;
+}
+@keyframes logoFillUp {
+  0% { clip-path: inset(100% 0 0 0); }
+  100% { clip-path: inset(0% 0 0 0); }
 }
 </style>

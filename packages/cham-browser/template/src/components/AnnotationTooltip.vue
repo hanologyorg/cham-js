@@ -79,6 +79,17 @@ function getSegment(ann: Annotation) {
   return annotationToPronSegment(ann)
 }
 
+function displayText(ann: Annotation): string {
+  if (!ann.text) return ''
+  if (!props.headword) return ann.text
+  if (ann.text.startsWith(props.headword)) {
+    const rest = ann.text.slice(props.headword.length)
+    const m = rest.match(/^[，。、：；！？\s]+/)
+    return m ? rest.slice(m[0].length) : rest
+  }
+  return ann.text
+}
+
 function layerLabel(ann: Annotation): string {
   if (!props.layerLabels || !ann.id) return ''
   for (const [prefix, label] of Object.entries(props.layerLabels)) {
@@ -157,7 +168,7 @@ onBeforeUnmount(() => {
                 <div class="ann-entry-body">
                   <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
                   <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                  <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
+                  <span v-if="ann.kind !== 'pronunciation' && displayText(ann)" class="ann-text">{{ displayText(ann) }}</span>
                 </div>
               </div>
             </div>
@@ -193,7 +204,7 @@ onBeforeUnmount(() => {
               <div class="ann-entry-body">
                 <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
                 <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                <span v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-text">{{ ann.text }}</span>
+                <span v-if="ann.kind !== 'pronunciation' && displayText(ann)" class="ann-text">{{ displayText(ann) }}</span>
               </div>
             </div>
           </div>
