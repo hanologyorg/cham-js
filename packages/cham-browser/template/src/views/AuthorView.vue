@@ -148,7 +148,10 @@ function goHome() { router.push('/') }
   </div>
 
   <div v-else class="page-loading">
-    <div class="page-loading-seal">文</div>
+    <div class="ld-wrap">
+      <span class="ld-char ld-char--base">文</span>
+      <div class="ld-liquid"><span class="ld-char ld-char--fill">文</span></div>
+    </div>
   </div>
 </template>
 

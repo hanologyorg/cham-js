@@ -828,8 +828,16 @@ const authorDisplay = computed(() => {
   </template>
 
   <div v-else class="page-loading">
-    <img v-if="CHAM_LOGO_URL" :src="CHAM_LOGO_URL" alt="" width="56" height="56" class="page-loading-logo" />
-    <div v-else class="page-loading-seal">文</div>
+    <div class="ld-wrap">
+      <template v-if="CHAM_LOGO_URL">
+        <img :src="CHAM_LOGO_URL" alt="" width="56" height="56" class="ld-base" />
+        <div class="ld-liquid"><img :src="CHAM_LOGO_URL" alt="" width="56" height="56" class="ld-fill" /></div>
+      </template>
+      <template v-else>
+        <span class="ld-char ld-char--base">文</span>
+        <div class="ld-liquid"><span class="ld-char ld-char--fill">文</span></div>
+      </template>
+    </div>
   </div>
 </template>
 

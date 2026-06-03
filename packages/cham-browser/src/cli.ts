@@ -421,7 +421,7 @@ function chamHtmlPlugin(siteTitle: string, logoUrl?: string) {
       if (logoUrl) {
         result = result.replace(
           'id="loading-logo"></div>',
-          `id="loading-logo"><img src="${logoUrl}" alt="" /></div>`
+          `id="loading-logo"><img src="${logoUrl}" alt="" class="ld-base" /><div class="ld-liquid"><img src="${logoUrl}" alt="" class="ld-fill" /></div></div>`
         )
       }
       return result
