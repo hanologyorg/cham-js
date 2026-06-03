@@ -77,8 +77,16 @@ const totalPieces = computed(() => books.value.reduce((sum, b) => sum + b.count,
 
 <template>
   <div v-if="scale !== 'library'" class="page-loading">
-    <img v-if="logoUrl" :src="logoUrl" alt="" class="page-loading-logo" />
-    <div v-else class="page-loading-seal">文</div>
+    <div class="ld-wrap">
+      <template v-if="logoUrl">
+        <img :src="logoUrl" alt="" class="ld-base" />
+        <div class="ld-liquid"><img :src="logoUrl" alt="" class="ld-fill" /></div>
+      </template>
+      <template v-else>
+        <span class="ld-char ld-char--base">文</span>
+        <div class="ld-liquid"><span class="ld-char ld-char--fill">文</span></div>
+      </template>
+    </div>
   </div>
   <div v-else>
     <!-- ═══════ 直排模式 ═══════ -->

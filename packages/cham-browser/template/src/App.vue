@@ -63,12 +63,14 @@ function onKey(event: KeyboardEvent) {
         <component :is="Component" :key="route.fullPath" id="main" />
         <template #fallback>
           <div class="route-loading">
-            <div class="route-loading-logo-wrap">
-              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo route-loading-logo--gray" />
-              <img v-if="logoUrl" :src="logoUrl" alt="" class="route-loading-logo route-loading-logo--fill" />
+            <div class="ld-wrap">
+              <template v-if="logoUrl">
+                <img :src="logoUrl" alt="" class="ld-base" />
+                <div class="ld-liquid"><img :src="logoUrl" alt="" class="ld-fill" /></div>
+              </template>
               <template v-else>
-                <span class="route-loading-seal route-loading-seal--gray">文</span>
-                <span class="route-loading-seal route-loading-seal--fill">文</span>
+                <span class="ld-char ld-char--base">文</span>
+                <div class="ld-liquid"><span class="ld-char ld-char--fill">文</span></div>
               </template>
             </div>
           </div>
@@ -195,45 +197,5 @@ function onKey(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   min-height: 100dvh;
-}
-.route-loading-logo-wrap {
-  position: relative;
-  width: 56px;
-  height: 56px;
-}
-.route-loading-logo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.route-loading-logo--gray {
-  filter: grayscale(1) opacity(0.3);
-}
-.route-loading-logo--fill {
-  clip-path: inset(100% 0 0 0);
-  animation: logoFillUp 1.8s ease-in-out infinite;
-}
-.route-loading-seal {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 900;
-}
-.route-loading-seal--gray {
-  color: var(--ink-faint);
-}
-.route-loading-seal--fill {
-  color: var(--vermillion);
-  clip-path: inset(100% 0 0 0);
-  animation: logoFillUp 1.8s ease-in-out infinite;
-}
-@keyframes logoFillUp {
-  0% { clip-path: inset(100% 0 0 0); }
-  100% { clip-path: inset(0% 0 0 0); }
 }
 </style>
