@@ -313,27 +313,45 @@ button:focus-visible {
 .ld-liquid {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  animation: liquidRise 2.4s ease-in-out infinite;
+  animation: liquidRise 3s ease-in-out infinite;
 }
-.ld-liquid::before {
+.ld-liquid::before,
+.ld-liquid::after {
   content: '';
   position: absolute;
   left: -50%;
   width: 200%;
-  height: 10px;
-  bottom: calc(100% - 1px);
   background: var(--paper);
-  border-radius: 43%;
-  animation: waveSway 1s ease-in-out infinite alternate;
+}
+.ld-liquid::before {
+  height: 18px;
+  bottom: calc(100% - 2px);
+  border-radius: 38%;
+  animation: waveA 1.4s ease-in-out infinite alternate;
+}
+.ld-liquid::after {
+  height: 12px;
+  bottom: calc(100% - 5px);
+  border-radius: 44%;
+  opacity: 0.7;
+  animation: waveB 0.9s ease-in-out infinite alternate;
 }
 @keyframes liquidRise {
   0% { transform: translateY(100%); }
-  100% { transform: translateY(0); }
+  18% { transform: translateY(70%); }
+  40% { transform: translateY(45%); }
+  60% { transform: translateY(25%); }
+  78% { transform: translateY(10%); }
+  92% { transform: translateY(2%); }
+  100% { transform: translateY(0%); }
 }
-@keyframes waveSway {
-  0% { transform: translateX(-5%) rotate(-1deg); }
-  100% { transform: translateX(5%) rotate(1deg); }
+@keyframes waveA {
+  0% { transform: translateX(-10%) rotate(-2deg); }
+  100% { transform: translateX(10%) rotate(2deg); }
+}
+@keyframes waveB {
+  0% { transform: translateX(7%) rotate(1.5deg); }
+  100% { transform: translateX(-7%) rotate(-1.5deg); }
 }
 
 /* ===== LAYOUT TRANSITION ===== */

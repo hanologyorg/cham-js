@@ -19,15 +19,18 @@
     #app-loading.fade-out{opacity:0;pointer-events:none}
     #app-loading .ld-wrap{position:relative;width:72px;height:72px;overflow:hidden}
     #app-loading .ld-base{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:grayscale(1) opacity(.25)}
-    #app-loading .ld-liquid{position:absolute;inset:0;overflow:hidden;animation:liquidRise 2.4s ease-in-out infinite}
-    #app-loading .ld-liquid::before{content:'';position:absolute;left:-50%;width:200%;height:10px;bottom:calc(100% - 1px);background:var(--paper,#faf6ee);border-radius:43%;animation:waveSway 1s ease-in-out infinite alternate}
+    #app-loading .ld-liquid{position:absolute;inset:0;animation:liquidRise 3s ease-in-out infinite}
+    #app-loading .ld-liquid::before,#app-loading .ld-liquid::after{content:'';position:absolute;left:-50%;width:200%;background:var(--paper,#faf6ee)}
+    #app-loading .ld-liquid::before{height:18px;bottom:calc(100% - 2px);border-radius:38%;animation:waveA 1.4s ease-in-out infinite alternate}
+    #app-loading .ld-liquid::after{height:12px;bottom:calc(100% - 5px);border-radius:44%;opacity:.7;animation:waveB .9s ease-in-out infinite alternate}
     #app-loading .ld-fill{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
     #app-loading .ld-char{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:900;line-height:1}
     #app-loading .ld-char--base{color:#a89b8a;font-family:'Noto Serif TC',serif}
     #app-loading .ld-char--fill{color:var(--vermillion,#c23a2b);font-family:'Noto Serif TC',serif}
     #app-loading .line{width:1px;height:40px;background:linear-gradient(180deg,var(--vermillion,#c23a2b),transparent);margin-top:24px;animation:lineGrow .6s .3s cubic-bezier(.16,1,.3,1) forwards;transform:scaleY(0);transform-origin:top}
-    @keyframes liquidRise{0%{transform:translateY(100%)}to{transform:translateY(0)}}
-    @keyframes waveSway{0%{transform:translateX(-5%) rotate(-1deg)}to{transform:translateX(5%) rotate(1deg)}}
+    @keyframes liquidRise{0%{transform:translateY(100%)}18%{transform:translateY(70%)}40%{transform:translateY(45%)}60%{transform:translateY(25%)}78%{transform:translateY(10%)}92%{transform:translateY(2%)}100%{transform:translateY(0%)}}
+    @keyframes waveA{0%{transform:translateX(-10%) rotate(-2deg)}to{transform:translateX(10%) rotate(2deg)}}
+    @keyframes waveB{0%{transform:translateX(7%) rotate(1.5deg)}to{transform:translateX(-7%) rotate(-1.5deg)}}
     @keyframes lineGrow{to{transform:scaleY(1)}}
   </style>
 </head>
