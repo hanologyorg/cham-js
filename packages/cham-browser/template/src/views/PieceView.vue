@@ -876,6 +876,7 @@ const authorDisplay = computed(() => {
   line-height: 1.6;
 }
 .v-poem-author {
+  writing-mode: vertical-rl;
   font-size: 24px; font-weight: 400;
   color: var(--ink-light); letter-spacing: 6px;
   cursor: pointer;
