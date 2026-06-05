@@ -481,10 +481,10 @@ const authorDisplay = computed(() => {
           <template v-if="piece.contributors && piece.contributors.length > 1">
             <div v-for="group in contributorGroups" :key="group.title" class="v-author-group">
               <span class="v-author-role">{{ group.title }}</span>
-              <button v-for="name in group.names" :key="name" class="v-poem-author unstyled" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</button>
+              <div v-for="name in group.names" :key="name" class="v-poem-author" tabindex="0" role="button" @click="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)" @keydown.enter="openAuthorPane(piece.contributors!.find(c => c.name === name)?.id)">{{ name }}</div>
             </div>
           </template>
-          <button class="v-poem-author unstyled" tabindex="0" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</button>
+          <div class="v-poem-author" tabindex="0" role="button" @click="openAuthorPane" @keydown.enter="openAuthorPane">{{ piece.author }}</div>
           <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="v-source-link">
             ← {{ meta?.title }}
           </router-link>
@@ -876,8 +876,6 @@ const authorDisplay = computed(() => {
   line-height: 1.6;
 }
 .v-poem-author {
-  writing-mode: vertical-rl !important;
-  text-orientation: mixed !important;
   font-size: 24px; font-weight: 400;
   color: var(--ink-light); letter-spacing: 6px;
   cursor: pointer;
