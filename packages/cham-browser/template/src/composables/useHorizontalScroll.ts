@@ -8,14 +8,11 @@ export function useHorizontalScroll(container: Ref<HTMLElement | null>) {
     const el = container.value
     if (!el) return
 
-    if (e.deltaY === 0 && e.deltaX === 0) return
+    // Pure vertical wheel only; leave trackpad (deltaX) and Shift+wheel to native scrolling so OS momentum/inertia is preserved.
+    if (e.deltaY === 0 || e.deltaX !== 0 || e.shiftKey) return
 
     e.preventDefault()
-
-    // Use deltaY as primary input; only use deltaX when deltaY is exactly 0
-    // This avoids direction flips from trackpad deltaX noise during momentum scrolling
-    const left = e.deltaY !== 0 ? -e.deltaY : e.deltaX
-    el.scrollBy({ left, behavior: 'instant' as ScrollBehavior })
+    el.scrollBy({ left: -e.deltaY })
   }
 
   function scrollToStart() {
