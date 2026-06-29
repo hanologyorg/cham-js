@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBook } from '../composables/useBook'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode, FONT_SIZES } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
+import { useAnnotationLayers } from '../composables/useAnnotationLayers'
 import { useAuthorPane } from '../composables/useAuthorPane'
 import { useI18n } from '../composables/useI18n'
 import VerticalScroll from '../components/VerticalScroll.vue'
@@ -21,7 +22,7 @@ import BackToTop from '../components/BackToTop.vue'
 import AuthorPane from '../components/AuthorPane.vue'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { tcy } from '../utils/tcy'
-import type { Piece, Annotation, AnnotationLayer, Part } from '../types'
+import type { Piece, Annotation, Part } from '../types'
 
 const props = defineProps<{ bookId: string; num: string | number }>()
 const router = useRouter()
@@ -108,6 +109,18 @@ const piece = computed<Piece | undefined>(() => {
   return getPiece(n)
 })
 
+// Layer management + pane + headwords — extracted to useAnnotationLayers.
+const layers = useAnnotationLayers(piece, prefAnnotationsVisible)
+const {
+  annotationLayers, hasLayers, toggleableLayers,
+  activeLayerIds, toggleLayer,
+  mergedAnnotations, annotationHeadwords: headwords,
+  paneVisible, paneActiveId,
+  showPaneFor, hidePane, scrollToAnnotation: scrollToPaneAnnotation,
+} = layers
+// Unused return fields kept to satisfy the type's contract.
+void layers
+
 watch(() => piece.value?.id, () => {
   sectionCache = []
   nextTick(rebuildSectionCache)
@@ -152,23 +165,10 @@ const totalAnnotationCount = computed(() => {
 const annotationLayers = computed<AnnotationLayer[]>(() => piece.value?.annotationLayers || [])
 const hasLayers = computed(() => annotationLayers.value.length > 1)
 const toggleableLayers = computed(() => annotationLayers.value.filter(l => l.id !== 'default'))
-const activeLayerIds = ref<string[]>([])
-const annotationsVisible = prefAnnotationsVisible
 
-function toggleLayer(id: string) {
-  const current = activeLayerIds.value
-  if (current.includes(id)) {
-    const next = current.filter(x => x !== id)
-    activeLayerIds.value = next
-    if (next.length === 0) annotationsVisible.value = false
-  } else {
-    activeLayerIds.value = [...current, id]
-    annotationsVisible.value = true
-  }
-}
-const paneVisible = ref(false)
-const paneActiveId = ref('')
-
+// Pane + interaction routing: when vertical pane is enabled, layer
+// hover/tap flips to pane mode; otherwise it goes to the standard
+// hover/tap interaction.
 function onAnnotationHover(event: MouseEvent, annotations: Annotation[]) {
   if (annotationPane.value && isVertical.value) {
     paneActiveId.value = annotations[0]?.id || ''
@@ -182,24 +182,33 @@ function onAnnotationLeave() {
 }
 function onAnnotationTap(event: MouseEvent, annotations: Annotation[]) {
   if (annotationPane.value && isVertical.value) {
-    if (!paneVisible.value) paneVisible.value = true
-    paneActiveId.value = annotations[0]?.id || ''
+    showPaneFor(annotations[0] as Annotation)
   } else {
     interaction.onTap(event, annotations)
   }
 }
 function onPaneSelect(ann: Annotation) {
-  const el = document.querySelector(`[data-ann-ids*="${ann.id}"]`) as HTMLElement | null
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
-    el.classList.add('ann-flash')
-    setTimeout(() => el.classList.remove('ann-flash'), 1500)
-  }
+  scrollToPaneAnnotation(ann)
 }
-const annotationHeadwords = computed(() => {
+
+const annotationHeadwords = computed<Record<string, string>>(() => {
   const result: Record<string, string> = {}
+  const p = piece.value
   for (const ann of mergedAnnotations.value) {
-    result[ann.id] = getHeadword(ann)
+    let hw = ''
+    if (p) {
+      if (ann.range.scope === 'title') {
+        hw = p.title.slice(ann.range.start ?? 0, ann.range.end)
+      } else if (ann.range.scope === 'verse' && ann.range.verseIndex !== undefined) {
+        const verse = p.verses[ann.range.verseIndex]
+        if (verse) hw = verse.text.slice(ann.range.start ?? 0, ann.range.end)
+      }
+    }
+    if (!hw) {
+      const m = ann.text.match(/^([一-鿿]{1,2})/)
+      hw = m ? m[1] : ''
+    }
+    result[ann.id] = hw
   }
   return result
 })
@@ -208,32 +217,8 @@ watch([annotationPane, isVertical], ([pane, vert]) => {
   if (pane && vert) {
     interaction.dismiss()
   } else {
-    paneVisible.value = false
+    hidePane()
   }
-})
-
-function initLayers() {
-  if (hasLayers.value && activeLayerIds.value.length === 0) {
-    activeLayerIds.value = annotationLayers.value
-      .filter(l => l.enabled)
-      .map(l => l.id)
-  }
-}
-
-const mergedAnnotations = computed<Annotation[]>(() => {
-  if (!annotationsVisible.value) return []
-  if (!hasLayers.value) return piece.value?.annotations || []
-  const result: Annotation[] = []
-  for (const layer of annotationLayers.value) {
-    if (!activeLayerIds.value.includes(layer.id)) continue
-    for (const ann of layer.annotations) {
-      result.push(ann)
-    }
-  }
-  for (const ann of piece.value?.annotations || []) {
-    result.push(ann)
-  }
-  return result
 })
 
 const layerLabels = computed(() => {
@@ -245,7 +230,7 @@ const layerLabels = computed(() => {
 })
 
 const layerAnnotationBlocks = computed(() => {
-  if (!hasLayers.value || !annotationsVisible.value) return []
+  if (!hasLayers.value || !prefAnnotationsVisible.value) return []
   const result: { label: string; text: string }[] = []
   const activeLayers = annotationLayers.value.filter(l => activeLayerIds.value.includes(l.id) && l.id !== 'default')
   for (const layer of activeLayers) {
@@ -253,30 +238,14 @@ const layerAnnotationBlocks = computed(() => {
     const lines: string[] = []
     let n = 1
     for (const ann of layer.annotations) {
-      const headword = getHeadword(ann)
-      lines.push(`${n}.${headword}：${ann.text}`)
+      const hw = annotationHeadwords.value[ann.id] || ''
+      lines.push(`${n}.${hw}：${ann.text}`)
       n++
     }
     result.push({ label: layer.label, text: lines.join('\n') })
   }
   return result
 })
-
-function getHeadword(ann: Annotation): string {
-  const p = piece.value
-  if (!p) return ''
-  if (ann.range.scope === 'title') {
-    return p.title.slice(ann.range.start ?? 0, ann.range.end)
-  }
-  if (ann.range.scope === 'verse' && ann.range.verseIndex !== undefined) {
-    const verse = p.verses[ann.range.verseIndex]
-    if (verse) return verse.text.slice(ann.range.start ?? 0, ann.range.end)
-  }
-  return ''
-}
-
-// Initialize layers when piece loads
-watch(() => piece.value, () => initLayers(), { immediate: true })
 
 // ─── Multi-part ───────────────────────────────────────────────
 const isMultiPart = computed(() => (piece.value?.parts?.length ?? 0) > 0)

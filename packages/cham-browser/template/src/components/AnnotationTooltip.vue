@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
 import { useWindowSize } from '../composables/useWindowSize'
-import PronunciationGroup from './PronunciationGroup.vue'
+import AnnotationBody from './AnnotationBody.vue'
 import type { Annotation } from '../types'
 
 const { t } = useI18n()
@@ -75,22 +74,7 @@ function onSheetTouchEnd() {
   dragDeltaX.value = 0
 }
 
-function getSegment(ann: Annotation) {
-  return annotationToPronSegment(ann)
-}
-
-function displayText(ann: Annotation): string {
-  if (!ann.text) return ''
-  if (!props.headword) return ann.text
-  if (ann.text.startsWith(props.headword)) {
-    const rest = ann.text.slice(props.headword.length)
-    const m = rest.match(/^[，。、：；！？\s]+/)
-    return m ? rest.slice(m[0].length) : rest
-  }
-  return ann.text
-}
-
-function layerLabel(ann: Annotation): string {
+function layerLabelFor(ann: Annotation): string {
   if (!props.layerLabels || !ann.id) return ''
   for (const [prefix, label] of Object.entries(props.layerLabels)) {
     if (ann.id.startsWith(prefix)) return label
@@ -166,9 +150,11 @@ onBeforeUnmount(() => {
                   <span class="ann-kind ann-kind-badge" :class="ann.kind">{{ kindLabel(ann) }}</span>
                 </div>
                 <div class="ann-entry-body">
-                  <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
-                  <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                  <span v-if="ann.kind !== 'pronunciation' && displayText(ann)" class="ann-text">{{ displayText(ann) }}</span>
+                  <AnnotationBody
+                    :annotation="ann"
+                    :headword="headword"
+                    :layer-label="layerLabelFor(ann)"
+                  />
                 </div>
               </div>
             </div>
@@ -202,9 +188,11 @@ onBeforeUnmount(() => {
                 <span class="ann-kind ann-kind-badge" :class="ann.kind">{{ kindLabel(ann) }}</span>
               </div>
               <div class="ann-entry-body">
-                <span v-if="layerLabel(ann)" class="ann-layer">{{ layerLabel(ann) }}</span>
-                <div v-if="getSegment(ann)" class="ann-pron-h"><PronunciationGroup :segment="getSegment(ann)!" /></div>
-                <span v-if="ann.kind !== 'pronunciation' && displayText(ann)" class="ann-text">{{ displayText(ann) }}</span>
+                <AnnotationBody
+                  :annotation="ann"
+                  :headword="headword"
+                  :layer-label="layerLabelFor(ann)"
+                />
               </div>
             </div>
           </div>

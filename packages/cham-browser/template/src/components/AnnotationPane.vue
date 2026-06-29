@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { annotationToPronSegment } from '../utils/annotationParser'
 import { kindLabel } from '../utils/annotationLabels'
 import { toChineseNumber } from '../utils/chineseNumber'
 import { useI18n } from '../composables/useI18n'
 import { useWindowSize } from '../composables/useWindowSize'
 import PronunciationGroup from './PronunciationGroup.vue'
+import AnnotationBody from './AnnotationBody.vue'
 import type { Annotation } from '../types'
 
 const props = defineProps<{
@@ -90,10 +90,6 @@ function onHandleStart(e: MouseEvent | TouchEvent) {
   document.addEventListener('touchmove', moveFn, { passive: false })
   document.addEventListener('touchend', endFn)
   e.preventDefault()
-}
-
-function getSegment(ann: Annotation) {
-  return annotationToPronSegment(ann)
 }
 
 function headword(ann: Annotation): string {
@@ -186,8 +182,11 @@ onBeforeUnmount(() => {
                 <span v-if="layerLabel(ann)" class="ann-pane-layer">{{ layerLabel(ann) }}</span>
               </div>
               <div class="ann-pane-entry-body">
-                <PronunciationGroup v-if="getSegment(ann)" :segment="getSegment(ann)!" />
-                <div v-if="ann.text && ann.kind !== 'pronunciation'" class="ann-pane-text">{{ ann.text }}</div>
+                <AnnotationBody
+                  :annotation="ann"
+                  :headword="headword(ann)"
+                  :layer-label="layerLabel(ann)"
+                />
               </div>
             </div>
           </button>
