@@ -1,6 +1,6 @@
 {
   "name": "@hanology/cham",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Classical Han Annotated Markdown — parser, serializer, ePub converter, and validator",
   "type": "module",
   "main": "dist/index.js",
@@ -40,7 +40,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hanology/era": "file:../../../era-js",
+    "@hanology/era": "^0.1.0",
     "fflate": "^0.8.0"
   },
   "devDependencies": {
