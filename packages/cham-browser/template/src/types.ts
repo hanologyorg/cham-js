@@ -140,6 +140,13 @@ export interface Part {
   annotationText?: string
 }
 
+export interface HierarchyLevel {
+  level: string
+  index: number
+  label?: string
+  parent?: number | string
+}
+
 export interface Piece {
   bookId: string
   num: number
@@ -149,6 +156,7 @@ export interface Piece {
   era: string
   dynasty?: string
   genre: BookGenre
+  hierarchy?: HierarchyLevel[]
   verses: VerseLine[]
   sections: Record<string, string>
   structuredSections?: ProseSection[]
@@ -171,6 +179,7 @@ export interface Author {
   name: string
   era: string
   workCount: number
+  works?: string[]
   bio?: string
   born?: string
   died?: string

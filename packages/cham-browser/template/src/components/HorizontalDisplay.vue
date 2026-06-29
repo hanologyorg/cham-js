@@ -37,13 +37,17 @@ function onTap(event: MouseEvent) {
   <div class="h-display" @mouseover="onHover" @mouseleave="onLeave" @click="onTap">
     <div class="h-display-title">{{ title }}</div>
     <div class="h-display-author">{{ author }}</div>
-    <div
-      v-for="(_, i) in verses"
-      :key="i"
-      class="h-display-line h-verse-anim"
-      :style="{ animationDelay: Math.min(0.15 + i * 0.08, 1.2) + 's' }"
-      v-html="verseHtml(i)"
-    />
+    <div class="h-display-verses">
+      <div
+        v-for="(_, i) in verses"
+        :key="i"
+        :id="`verse-${i + 1}`"
+        :data-section-key="`verse-${i + 1}`"
+        class="h-display-line h-verse-anim"
+        :style="{ animationDelay: Math.min(0.15 + i * 0.08, 1.2) + 's' }"
+        v-html="verseHtml(i)"
+      />
+    </div>
   </div>
 </template>
 
@@ -67,9 +71,18 @@ function onTap(event: MouseEvent) {
   font-size: 16px; color: var(--ink-light);
   margin-bottom: 24px; letter-spacing: 3px;
 }
+.h-display-verses { counter-reset: verse; }
 .h-display-line {
   font-size: var(--main-font-size, 24px); line-height: 2.6;
   letter-spacing: 4px; color: var(--ink); white-space: pre-wrap;
+  counter-increment: verse;
+}
+.h-display-line::before {
+  content: counter(verse, cjk-ideographic) "、";
+  color: var(--ink-light);
+  font-size: 0.6em;
+  letter-spacing: 1px;
+  margin-right: 4px;
 }
 .h-verse-anim {
   animation: verseFade 0.45s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;

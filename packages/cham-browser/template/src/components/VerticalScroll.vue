@@ -39,10 +39,12 @@ function onTap(event: MouseEvent) {
   <div class="v-scroll" @mouseover="onHover" @mouseleave="onLeave" @click="onTap">
     <span class="v-scroll-title">{{ title }}</span>
     <span class="v-scroll-author v-scroll-clickable" @click="emit('openAuthor', author)">{{ author }}</span>
-    <div class="v-scroll-body">
+    <div class="v-scroll-body v-scroll-verses">
       <span
         v-for="(_, i) in verses"
         :key="i"
+        :id="`verse-${i + 1}`"
+        :data-section-key="`verse-${i + 1}`"
         class="v-scroll-line v-verse-anim"
         :style="{ animationDelay: Math.min(0.2 + i * 0.06, 1.0) + 's' }"
         v-html="verseHtml(i)"
@@ -79,9 +81,17 @@ function onTap(event: MouseEvent) {
 .v-scroll-clickable { cursor: pointer; transition: color 0.15s; }
 .v-scroll-clickable:hover { color: var(--vermillion); }
 .v-scroll-body { margin-left: 24px; }
+.v-scroll-verses { counter-reset: verse; }
 .v-scroll-line {
   font-size: var(--main-font-size, 24px); line-height: 2.4; letter-spacing: 6px;
   color: var(--ink); display: block; white-space: pre-wrap;
+  counter-increment: verse;
+}
+.v-scroll-line::before {
+  content: counter(verse, cjk-ideographic) "、";
+  color: var(--ink-light);
+  font-size: 0.7em;
+  letter-spacing: 2px;
 }
 .v-verse-anim {
   animation: verseFadeV 0.4s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;

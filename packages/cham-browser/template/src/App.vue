@@ -7,12 +7,15 @@ import ReadingToolbar from './components/ReadingToolbar.vue'
 import { computed, ref, watch, provide } from 'vue'
 import { useFocusTrap } from './composables/useFocusTrap'
 import { useAnnounce } from './composables/useAnnounce'
+import { useHead } from '@unhead/vue'
 
 const router = useRouter()
 const { toggleLayout, cycleTheme, layout } = useReadingMode()
 const { logoUrl, aboutHtml } = useSiteConfig()
 const { locale, t } = useI18n()
 const isVertical = computed(() => layout.value === 'vertical')
+
+useHead({ htmlAttrs: { lang: computed(() => locale.value === 'en' ? 'en' : locale.value === 'zh-Hans' ? 'zh-Hans' : 'zh-Hant') } })
 
 const { message: announceMessage } = useAnnounce()
 

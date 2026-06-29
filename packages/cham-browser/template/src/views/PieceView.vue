@@ -103,37 +103,31 @@ onMounted(() => {
   })
 })
 
-watch(() => piece.value?.id, () => {
-  sectionCache = []
-  nextTick(rebuildSectionCache)
-})
-
-// Keyboard navigation
-onMounted(() => {
-  function onKey(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
-    const adj = adjacent.value
-    if (isVertical.value) {
-      if (e.key === 'ArrowLeft' && adj.next !== null) { e.preventDefault(); navigate(1) }
-      if (e.key === 'ArrowRight' && adj.prev !== null) { e.preventDefault(); navigate(-1) }
-    } else {
-      if (e.key === 'ArrowRight' && adj.next !== null) { e.preventDefault(); navigate(1) }
-      if (e.key === 'ArrowLeft' && adj.prev !== null) { e.preventDefault(); navigate(-1) }
-    }
-    if (e.key === 'Escape') { e.preventDefault(); goBack() }
-  }
-  window.addEventListener('keydown', onKey)
-  onUnmounted(() => window.removeEventListener('keydown', onKey))
-})
-
 const piece = computed<Piece | undefined>(() => {
   const n = typeof props.num === 'string' ? parseInt(props.num, 10) : props.num
   return getPiece(n)
 })
 
+watch(() => piece.value?.id, () => {
+  sectionCache = []
+  nextTick(rebuildSectionCache)
+})
+
 const adjacent = computed(() => {
   const n = typeof props.num === 'string' ? parseInt(props.num, 10) : props.num
   return getAdjacentNums(n)
+})
+
+// j/k navigate between pieces (vim-style), Escape goes back. Avoid arrow keys — they conflict with browser back/forward and horizontal scrolling.
+onMounted(() => {
+  function onKey(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+    if (e.key === 'j') { e.preventDefault(); navigate(1) }
+    else if (e.key === 'k') { e.preventDefault(); navigate(-1) }
+    else if (e.key === 'Escape') { e.preventDefault(); goBack() }
+  }
+  window.addEventListener('keydown', onKey)
+  onUnmounted(() => window.removeEventListener('keydown', onKey))
 })
 
 const pageTitle = computed(() => piece.value
@@ -362,10 +356,16 @@ function fontSizeDown() {
 const currentSection = ref('')
 const tocOpen = ref(false)
 
+const hierarchyLabel = computed(() => {
+  const h = piece.value?.hierarchy
+  if (!h || h.length === 0) return ''
+  return h.map(lv => lv.label || `${lv.level}${toChineseNumber(lv.index)}`).join(' ')
+})
+
 const tocItems = computed(() => {
   const p = piece.value
   const items: { key: string; label: string; context?: string; level: number }[] = [
-    { key: 'title', label: p?.title || '', context: `${p?.num}. `, level: 0 },
+    { key: 'title', label: p?.title || '', context: hierarchyLabel.value || `${p?.num}. `, level: 0 },
   ]
   if (isMultiPart.value && p?.parts) {
     for (const part of p.parts) {
@@ -373,6 +373,11 @@ const tocItems = computed(() => {
       if (chapter) {
         items.push({ key: `part-${part.num}`, label: chapter, context: `（${toChineseNumber(part.num)}）`, level: 1 })
       }
+    }
+  } else if (p && p.verses.length > 0) {
+    items.push({ key: 'verse', label: t('section.verse'), level: 1 })
+    for (let i = 0; i < p.verses.length; i++) {
+      items.push({ key: `verse-${i + 1}`, label: toChineseNumber(i + 1), context: '', level: 2 })
     }
   } else {
     items.push({ key: 'verse', label: t('section.verse'), level: 1 })
@@ -468,6 +473,7 @@ const authorDisplay = computed(() => {
         :poem-title="piece.title"
         :poem-author="piece.author"
         :title-collapsed="titleCollapsed"
+        has-back
         :has-prev="adjacent.prev !== null"
         :has-next="adjacent.next !== null"
         @back="goBack"
@@ -477,7 +483,9 @@ const authorDisplay = computed(() => {
       <ReadingProgress vertical :scroll-container="vPageRef" />
       <div ref="vPageRef" class="v-page">
         <section ref="vTitleRef" class="v-title-col">
-          <h1 class="v-poem-title">{{ piece.title }}</h1>
+          <h1 class="v-poem-title">
+            <span v-if="hierarchyLabel" class="v-poem-hierarchy">{{ hierarchyLabel }} </span>{{ piece.title }}
+          </h1>
           <template v-if="piece.contributors && piece.contributors.length > 1">
             <div v-for="group in contributorGroups" :key="group.title" class="v-author-group">
               <span class="v-author-role">{{ group.title }}</span>
@@ -674,7 +682,7 @@ const authorDisplay = computed(() => {
                 <router-link v-if="piece.source?.textRef" :to="`/${piece.source.textRef}`" class="h-source-link">
                   {{ meta?.title }} →
                 </router-link>
-                <span class="h-sep">{{ piece.num }}.</span>
+                <span class="h-sep">{{ hierarchyLabel || `${piece.num}.` }}</span>
                 {{ piece.title }}
               </span>
               <template v-if="piece.contributors && piece.contributors.length > 1">

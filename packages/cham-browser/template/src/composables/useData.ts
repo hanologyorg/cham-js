@@ -9,9 +9,23 @@ interface AuthorIndexEntry {
   workCount: number
 }
 
+interface PieceIndexEntry {
+  id: string
+  t: string
+  a: string
+  ar: string
+  e: string
+  ec: string
+  b: string
+  g: string
+  n: number
+  v1: string
+}
+
 const authorIndex = shallowRef<AuthorIndexEntry[]>([])
 const authorCache = new Map<string, Author>()
 const dynasties = ref<Record<string, Dynasty>>({})
+const pieceIndex = shallowRef<PieceIndexEntry[]>([])
 const sharedLoaded = ref(false)
 let sharedPromise: Promise<void> | null = null
 
@@ -22,25 +36,26 @@ async function loadShared(): Promise<void> {
     try {
       if (import.meta.env.SSR) {
         const { readFileSync } = await import('fs')
-        const { resolve } = await import('path')
+        const { resolve, join } = await import('path')
         const base = process.env.CHAM_DATA_DIR || resolve('public/data')
-        authorIndex.value = JSON.parse(readFileSync(`${base}/authors/index.json`, 'utf-8'))
-        const { readdirSync } = await import('fs')
-        const { join } = await import('path')
+        authorIndex.value = JSON.parse(readFileSync(join(base, 'authors', 'index.json'), 'utf-8'))
         for (const entry of authorIndex.value) {
           const f = join(base, 'authors', `${entry.id}.json`)
           try {
             authorCache.set(entry.id, JSON.parse(readFileSync(f, 'utf-8')))
           } catch { /* skip missing */ }
         }
-        dynasties.value = JSON.parse(readFileSync(`${base}/dynasties.json`, 'utf-8'))
+        dynasties.value = JSON.parse(readFileSync(join(base, 'dynasties.json'), 'utf-8'))
+        pieceIndex.value = JSON.parse(readFileSync(join(base, 'index.json'), 'utf-8'))
       } else {
-        const [aRes, dRes] = await Promise.all([
+        const [aRes, dRes, pRes] = await Promise.all([
           fetch('/data/authors/index.json'),
           fetch('/data/dynasties.json'),
+          fetch('/data/index.json'),
         ])
         authorIndex.value = await aRes.json()
         dynasties.value = await dRes.json()
+        pieceIndex.value = await pRes.json()
       }
       sharedLoaded.value = true
     } finally {
@@ -74,6 +89,14 @@ const authorByName = computed(() => {
   return map
 })
 
+const pieceIndexById = computed(() => {
+  const map = new Map<string, PieceIndexEntry>()
+  for (const p of pieceIndex.value) {
+    if (!map.has(p.id)) map.set(p.id, p)
+  }
+  return map
+})
+
 export function useData() {
   function getAuthorIndex(name: string): AuthorIndexEntry | undefined {
     return authorByName.value.get(name)
@@ -85,6 +108,18 @@ export function useData() {
     return authorCache.get(entry.id)
   }
 
+  function getPieceIndex(id: string): PieceIndexEntry | undefined {
+    return pieceIndexById.value.get(id)
+  }
+
+  function getAuthorWorks(authorId: string): PieceIndexEntry[] {
+    const author = authorCache.get(authorId)
+    if (!author?.works?.length) return []
+    return author.works
+      .map(id => pieceIndexById.value.get(id))
+      .filter((p): p is PieceIndexEntry => p != null)
+  }
+
   return {
     authors: authorIndex,
     dynasties,
@@ -93,5 +128,7 @@ export function useData() {
     getAuthor,
     getAuthorIndex,
     loadAuthorDetail,
+    getPieceIndex,
+    getAuthorWorks,
   }
 }
