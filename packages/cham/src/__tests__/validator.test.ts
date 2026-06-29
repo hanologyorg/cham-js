@@ -496,6 +496,114 @@ describe('ChamValidator', () => {
       expect(result.issues.some(i => i.message.includes('○按'))).toBe(true)
       cleanup()
     })
+
+    it('accepts standalone pinyin kind', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} pinyin [zhuī]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const kindError = result.issues.find(i => i.message.includes('Unknown annotation kind'))
+      expect(kindError).toBeUndefined()
+      cleanup()
+    })
+
+    it('accepts standalone bpmf kind', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} bpmf [ㄓㄨㄟ]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const kindError = result.issues.find(i => i.message.includes('Unknown annotation kind'))
+      expect(kindError).toBeUndefined()
+      cleanup()
+    })
+
+    it('accepts standalone jyutping kind', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} jyutping [zeoi1]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      const kindError = result.issues.find(i => i.message.includes('Unknown annotation kind'))
+      expect(kindError).toBeUndefined()
+      cleanup()
+    })
+
+    it('rejects IPA in standalone pinyin value', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} pinyin [ɑ]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('IPA characters'))).toBe(true)
+      cleanup()
+    })
+
+    it('rejects non-BPMF in standalone bpmf value', () => {
+      setupDir({
+        'test.cham.md': [
+          '---',
+          'type: primary',
+          'id: 1',
+          'title: Test',
+          '---',
+          '',
+          'A{1}B{/1}',
+          '',
+          '## Notes',
+          '',
+          '{1} bpmf [abc]',
+        ].join('\n'),
+      })
+      const result = validator.validateFile(join(TMP, 'test.cham.md'))
+      expect(result.issues.some(i => i.message.includes('non-BPMF'))).toBe(true)
+      cleanup()
+    })
   })
 
   describe('validateBook', () => {

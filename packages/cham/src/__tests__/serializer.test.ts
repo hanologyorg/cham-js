@@ -262,13 +262,155 @@ describe('round-trip: all target types', () => {
     const doc2 = parse(serialized)
 
     expect(doc2.sections[0].entries.length).toBe(4)
+    // Canonical order: @title, @verse:0:3, {1}, @full
     expect(doc2.sections[0].entries[0].target.type).toBe('title')
-    expect(doc2.sections[0].entries[1].target.type).toBe('full')
+    expect(doc2.sections[0].entries[1].target.type).toBe('verse')
     expect(doc2.sections[0].entries[2].target.type).toBe('marker')
-    if (doc2.sections[0].entries[3].target.type === 'verse') {
-      expect(doc2.sections[0].entries[3].target.line).toBe(0)
-      expect(doc2.sections[0].entries[3].target.char).toBe(3)
+    expect(doc2.sections[0].entries[3].target.type).toBe('full')
+    if (doc2.sections[0].entries[1].target.type === 'verse') {
+      expect(doc2.sections[0].entries[1].target.line).toBe(0)
+      expect(doc2.sections[0].entries[1].target.char).toBe(3)
     }
+  })
+})
+
+// ─── Canonical Ordering Tests ──────────────────────────────────
+
+const CANONICAL_ORDER_SRC = `---
+id: 7
+title: Canonical Order Test
+---
+{1}道{/1}可道
+
+## 注釋
+
+{1} meaning [釋義]
+
+{1} fanqie upper:徒 lower:耗 [道][徒耗切]
+
+{1} tone [道][上聲]
+
+{1} commentary [古注]
+
+{1} person ref:A001 [老子]
+
+{1} zhiyin [道][導]`
+
+describe('serializer canonical ordering', () => {
+  it('orders entries by kind priority within same marker', () => {
+    const doc = parse(CANONICAL_ORDER_SRC)
+    const serialized = serialize(doc)
+    const doc2 = parse(serialized)
+
+    const kinds = doc2.sections[0].entries.map(e => e.kind)
+    // Canonical: fanqie(2), zhiyin(3), tone(4), meaning(5), person(6), commentary(8)
+    expect(kinds).toEqual(['fanqie', 'zhiyin', 'tone', 'meaning', 'person', 'commentary'])
+  })
+
+  it('groups entries by marker id', () => {
+    const multiMarker = `---
+id: 8
+title: Multi-Marker Order
+---
+{2}B{/2}{1}A{/1}
+
+## 注釋
+
+{2} meaning [B的釋義]
+
+{1} commentary [A的古注]
+
+{1} meaning [A的釋義]
+
+{2} fanqie upper:彼 lower:萌 [B][彼萌切]`
+
+    const doc = parse(multiMarker)
+    const serialized = serialize(doc)
+    const doc2 = parse(serialized)
+
+    const entries = doc2.sections[0].entries
+    // {1} entries first (marker 1), then {2} entries (marker 2)
+    const markerOrder = entries.map(e => e.target.type === 'marker' ? e.target.markerId : -1)
+    expect(markerOrder).toEqual([1, 1, 2, 2])
+    // Within {1}: commentary after meaning; within {2}: fanqie before meaning
+    expect(entries[0].kind).toBe('meaning')
+    expect(entries[1].kind).toBe('commentary')
+    expect(entries[2].kind).toBe('fanqie')
+    expect(entries[3].kind).toBe('meaning')
+  })
+
+  // Locks in the canonical kind ordering for ALL built-in kinds, so any
+  // future divergence between serializer and AnnotationKindRegistry's
+  // displayOrder is caught. The expected order mirrors the registry's
+  // BUILTIN_SPECS displayOrder values (stable sort within same order).
+  it('orders all built-in kinds by registry displayOrder', () => {
+    // Source order is intentionally scrambled; after sort, kinds must
+    // appear in displayOrder groups (1, 2, 3, ..., 12), preserving source
+    // order within each group.
+    const allKindsSrc = `---
+id: 9
+title: All Kinds Order
+---
+{1}道{/1}
+
+## 注釋
+
+{1} speaker ref:A001 role:emperor [s]
+{1} variant action:emend [v]
+{1} zhiyin [道][導]
+{1} see-also ref:x/1 [s]
+{1} skqs-variant unicode:𫝆 [s]
+{1} date dynasty:Han [c]
+{1} collation [c]
+{1} commentary [c]
+{1} bpmf [ㄉㄠ]
+{1} allusion source:Classic [a]
+{1} tone [上聲]
+{1} translation [t]
+{1} place ref:P001 [p]
+{1} pinyin [dao]
+{1} meaning [m]
+{1} jyutping [zeoi1]
+{1} fanqie upper:徒 lower:耗 [道][徒耗切]
+{1} event ref:E1 [c]
+{1} person ref:A001 [p]
+{1} pron type:pinyin lang:cmn [dao]`
+
+    const doc = parse(allKindsSrc)
+    const doc2 = parse(serialize(doc))
+    const kinds = doc2.sections[0].entries.map(e => e.kind)
+
+    // Source-order-within-group:
+    //   order 1: pron(20), pinyin(16), bpmf(9), jyutping(17)
+    //   order 2: fanqie(18)
+    //   order 3: zhiyin(3)
+    //   order 4: tone(12)
+    //   order 5: meaning(15)
+    //   order 6: date(8), place(14), event(19), person(20)
+    //     Source positions: date=8, event=19, person=20, place=14
+    //     → date, place, event, person
+    //   order 7: allusion(10)
+    //   order 8: commentary(7)
+    //   order 9: translation(13)
+    //   order 10: variant(2), skqs-variant(5), collation(6)
+    //     Source positions: collation=6, skqs-variant=5, variant=2
+    //     → variant, skqs-variant, collation
+    //   order 11: see-also(4)
+    //   order 12: speaker(1)
+    expect(kinds).toEqual([
+      'bpmf', 'pinyin', 'jyutping', 'pron',  // 1 (pronunciation family; stable by source order)
+      'fanqie',                                // 2
+      'zhiyin',                                // 3
+      'tone',                                  // 4
+      'meaning',                               // 5
+      'date', 'place', 'event', 'person',      // 6 (named-entity family)
+      'allusion',                              // 7
+      'commentary',                            // 8
+      'translation',                           // 9
+      'variant', 'skqs-variant', 'collation',  // 10 (textual criticism)
+      'see-also',                              // 11
+      'speaker',                               // 12
+    ])
   })
 })
 

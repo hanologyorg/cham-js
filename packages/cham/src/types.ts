@@ -199,10 +199,26 @@ export type AnnotationKind =
   | (string & {})
 
 export type AnnotationTarget =
+  // --- Inline marker reference ---
+  // {N} in annotation; resolved via the primary document's marker table.
   | { type: 'marker'; markerId: number }
+
+  // --- Direct position reference ---
+  // @verse:N:C-E — explicit verse index and character range.
+  | { type: 'verse'; line: number; char: number; end?: number }
+
+  // --- Entire-verse reference ---
+  // @v:N — the whole Nth text block.
+  | { type: 'verse-all'; line: number }
+
+  // --- External text-quote reference ---
+  // @[quote] — search all verses for an exact match of `quote`.
+  // @N[quote] — search only within verse N (disambiguation for repeated phrases).
+  | { type: 'text'; quote: string; verseHint?: number }
+
+  // --- Special targets ---
   | { type: 'title' }
   | { type: 'full' }
-  | { type: 'verse'; line: number; char: number; end?: number }
 
 export interface AnnotationEntry {
   target: AnnotationTarget
@@ -308,6 +324,7 @@ export interface BookMeta {
   layers?: BookLayer[]
   annotation?: BookAnnotationDefaults
   volumes?: VolumeConfig[]
+  hierarchy?: HierarchyLevelName[]
   groups?: BookGroup[]
 }
 
@@ -352,6 +369,12 @@ export interface OutputAnnotation {
   lang?: string
   text: string
   source: string
+  /**
+   * Author/contributor registry ID for this specific annotation.
+   * Propagated from the annotation section's `@contributor` metadata.
+   * Falls back to the layer-level contributor when the section has none.
+   */
+  contributor?: string
 }
 
 export interface OutputAnnotationLayer {
@@ -384,6 +407,7 @@ export interface OutputPiece {
   era: string
   eraCode?: string
   genre: BookGenre
+  hierarchy?: HierarchyLevel[]
   verses: { text: string }[]
   sections: Record<string, string>
   structuredSections?: OutputProseSection[]
@@ -405,6 +429,18 @@ export interface PieceContributor {
 export interface BookData {
   meta: BookMeta
   pieces: OutputPiece[]
+}
+
+/**
+ * Pre-loaded CHAM sources for a single piece, ready to be fed to a
+ * builder. ChamJsonConverter produces these from disk; BookBuilder
+ * consumes them. Tests can construct them in-memory without fs.
+ */
+export interface PieceSources {
+  readonly chamSource: string
+  readonly proseFiles?: ReadonlyMap<string, string>
+  readonly layerFiles?: ReadonlyMap<string, string>
+  readonly partFiles?: ReadonlyMap<string, string>
 }
 
 // ─── Registry Types ────────────────────────────────────────────

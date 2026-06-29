@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs'
-import { join, basename } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { walkFiles, bookYamlAndCham } from './_walk.js'
 
 /**
  * Mechanical frontmatter normalization for CHAM files.
@@ -14,25 +14,21 @@ function fixFile(filePath: string): boolean {
   let content = readFileSync(filePath, 'utf-8')
   let changed = false
 
-  // Fix type: secondary (remove the line)
   if (content.includes('type: secondary\n')) {
     content = content.replace('type: secondary\n', '')
     changed = true
   }
 
-  // Fix role: commentator → role: annotator
   if (content.includes('role: commentator')) {
     content = content.replaceAll('role: commentator', 'role: annotator')
     changed = true
   }
 
-  // Fix contributor: 四庫全書館臣 → contributor: C010
   if (content.includes('contributor: 四庫全書館臣')) {
     content = content.replaceAll('contributor: 四庫全書館臣', 'contributor: C010')
     changed = true
   }
 
-  // Fix titleEn → title-en
   if (content.includes('titleEn:')) {
     content = content.replaceAll('titleEn:', 'title-en:')
     changed = true
@@ -44,21 +40,8 @@ function fixFile(filePath: string): boolean {
   return changed
 }
 
-function walkDir(dir: string): string[] {
-  const results: string[] = []
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      results.push(...walkDir(fullPath))
-    } else if (entry.name.endsWith('.cham.md') || entry.name === 'book.yaml') {
-      results.push(fullPath)
-    }
-  }
-  return results
-}
-
 export function normalizeFrontmatter(contentDir: string): void {
-  const files = walkDir(contentDir)
+  const files = walkFiles(contentDir, bookYamlAndCham)
   let fixed = 0
   for (const f of files) {
     if (fixFile(f)) {
@@ -69,7 +52,6 @@ export function normalizeFrontmatter(contentDir: string): void {
   console.log(`\nNormalized ${fixed} of ${files.length} files.`)
 }
 
-// CLI
 const contentDir = process.argv[2]
 if (!contentDir || !existsSync(contentDir)) {
   console.error('Usage: npx tsx src/normalize-frontmatter.ts <content-dir>')
