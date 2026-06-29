@@ -63,8 +63,7 @@ export function serializePrimaryMeta(meta: PrimaryMeta): string[] {
     if (meta.source.relation) lines.push(`  relation: ${serializeValue(meta.source.relation)}`)
     if (meta.source.range) {
       lines.push('  range:')
-      const r = meta.source.range as Record<string, unknown>
-      for (const [k, v] of Object.entries(r)) {
+      for (const [k, v] of Object.entries(meta.source.range)) {
         if (v !== undefined) lines.push(`    ${k}: ${serializeValue(v)}`)
       }
     }
@@ -103,8 +102,7 @@ export function serializePartMeta(meta: PartMeta): string[] {
     if (meta.source.relation) lines.push(`  relation: ${serializeValue(meta.source.relation)}`)
     if (meta.source.range) {
       lines.push('  range:')
-      const r = meta.source.range as Record<string, unknown>
-      for (const [k, v] of Object.entries(r)) {
+      for (const [k, v] of Object.entries(meta.source.range)) {
         lines.push(`    ${k}: ${serializeValue(v)}`)
       }
     }

@@ -275,6 +275,31 @@ export function normalizeDynasty(dynasty: string): string {
     .replace('南朝 宋', '南朝宋').replace('南朝宋', '南朝宋')
 }
 
+/**
+ * Resolve a raw dynasty label to its canonical Trad Chinese form using
+ * the GB/T registry via `@hanology/era`.
+ *
+ * Handles:
+ * - Simplified → Traditional character normalization (汉 → 漢)
+ * - Registry verification (confirms the dynasty exists in GB/T)
+ *
+ * Does NOT apply alias resolution (魏 → 曹魏, 宋 → 北宋) — those are
+ * opinionated mappings that may not match the project's intent.
+ * Aliases should be applied explicitly by callers that want them.
+ *
+ * If the label isn't in the registry, returns the normalized form as-is
+ * (preserves custom dynasty names not yet in GB/T).
+ */
+export function resolveDynastyLabel(rawDynasty: string): string {
+  if (!rawDynasty) return ''
+  const r = resolver()
+  // Verify against registry — but preserve the original label
+  const direct = r.getDynastyByLabel(rawDynasty)
+  if (direct) return direct.label
+  // Not in registry — return normalized form
+  return normalizeDynasty(rawDynasty)
+}
+
 // Re-export `@hanology/era` for cham-js consumers that want strict GB/T
 // code handling. Same API as the underlying package.
 export {

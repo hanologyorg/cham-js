@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync } from 'fs'
 import { join, basename, resolve } from 'path'
-import { parse } from '../src/parser.js'
+import { parse } from '../src/index.js'
 
 /**
  * Renumber markers in a CHAM collection to be sequential.

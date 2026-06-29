@@ -143,21 +143,41 @@ export function parseAnnotationSections(body: string): AnnotationSection[] {
 
 /**
  * Parses consecutive `@key: value` meta lines following a section header.
+ *
+ * Each known SectionMeta field is parsed with its correct type:
+ * `era_year` and `iso` are numbers; everything else is a string.
+ * Unknown keys are dropped (no silent propagation).
  */
 function parseSectionMeta(
   lines: string[],
   startIdx: number,
 ): { meta: SectionMeta; consumed: number } {
-  const meta: Record<string, string> = {}
+  const raw: Record<string, string> = {}
   let i = startIdx
   while (i < lines.length && lines[i].startsWith('@')) {
     const ci = lines[i].indexOf(':')
     if (ci !== -1) {
-      meta[lines[i].slice(1, ci).trim()] = lines[i].slice(ci + 1).trim()
+      raw[lines[i].slice(1, ci).trim()] = lines[i].slice(ci + 1).trim()
     }
     i++
   }
-  return { meta: meta as unknown as SectionMeta, consumed: i }
+  return { meta: buildSectionMeta(raw), consumed: i }
+}
+
+/** Coerces a raw key-value map to a typed SectionMeta. */
+function buildSectionMeta(raw: Record<string, string>): SectionMeta {
+  const meta: SectionMeta = {}
+  if (raw.contributor) meta.contributor = raw.contributor
+  if (raw.role) meta.role = raw.role
+  if (raw.dynasty) meta.dynasty = raw.dynasty
+  if (raw.era) meta.era = raw.era
+  if (raw.eraCode) meta.eraCode = raw.eraCode
+  if (raw.nature) meta.nature = raw.nature
+  const eraYear = parseInt(raw.era_year ?? '', 10)
+  if (Number.isFinite(eraYear)) meta.era_year = eraYear
+  const iso = parseInt(raw.iso ?? '', 10)
+  if (Number.isFinite(iso)) meta.iso = iso
+  return meta
 }
 
 /**
