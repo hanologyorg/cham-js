@@ -1,16 +1,15 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'fs'
-import { join, basename, dirname } from 'path'
-import { loadYaml } from './yaml.js'
-import {
-  buildPieceFromCham, buildBookMeta, buildLibraryIndex,
-  buildCrossRefs, detectScale,
-} from './pipeline.js'
+import { join } from 'path'
+import { buildCrossRefs, BookBuilder } from './pipeline.js'
+import { loadBookConfig } from './book-config-loader.js'
 import type {
   BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale,
-  OutputPiece, AuthorRecord,
+  OutputPiece, AuthorRecord, PieceSources,
 } from './types.js'
 
 // ─── ChamJsonConverter ────────────────────────────────────────
+// I/O adapter around BookBuilder. Reads directories → builds pure
+// PieceSources → delegates to BookBuilder → writes JSON.
 
 export interface BookConvertOptions {
   bookDir: string
@@ -32,26 +31,9 @@ export interface LibraryConvertResult {
 
 export class ChamJsonConverter {
   convertBook(opts: BookConvertOptions): BookData {
-    const config = this.loadBookConfig(opts.bookDir)
-    const authors = opts.authors || {}
-    const pieces: OutputPiece[] = []
-
-    for (const entry of readdirSync(opts.bookDir).sort()) {
-      const pieceDir = join(opts.bookDir, entry)
-      const chamPath = join(pieceDir, 'text.cham.md')
-      if (!existsSync(chamPath)) continue
-
-      const chamSource = readFileSync(chamPath, 'utf-8')
-      const proseFiles = this.readProseFiles(pieceDir)
-      const layerFiles = this.readLayerFiles(pieceDir)
-      const partFiles = this.readPartFiles(pieceDir)
-
-      const piece = buildPieceFromCham(chamSource, config, authors, config.id, proseFiles, layerFiles, partFiles)
-      if (piece) pieces.push(piece)
-    }
-
-    const meta: BookMeta = buildBookMeta(config, pieces.length)
-    const bookData: BookData = { meta, pieces }
+    const config = loadBookConfig(opts.bookDir)
+    const pieceSources = this.readPieceSources(opts.bookDir)
+    const bookData = new BookBuilder(config, opts.authors || {}).buildFromSources(pieceSources)
 
     if (opts.outputDir) {
       mkdirSync(opts.outputDir, { recursive: true })
@@ -61,7 +43,6 @@ export class ChamJsonConverter {
         'utf-8',
       )
     }
-
     return bookData
   }
 
@@ -69,7 +50,6 @@ export class ChamJsonConverter {
     mkdirSync(opts.outputDir, { recursive: true })
     mkdirSync(join(opts.outputDir, 'books'), { recursive: true })
 
-    const authors = opts.authors || {}
     const books = this.scanBooks(opts.libraryDir)
     const scale = this.detectScale(books)
 
@@ -78,13 +58,11 @@ export class ChamJsonConverter {
     const bookDataList: BookData[] = []
 
     for (const { config, dir } of books) {
-      const bookOutputDir = join(opts.outputDir, 'books')
       const bookData = this.convertBook({
         bookDir: dir,
-        outputDir: bookOutputDir,
-        authors,
+        outputDir: join(opts.outputDir, 'books'),
+        authors: opts.authors,
       })
-
       bookMetas.push(bookData.meta)
       bookDataList.push(bookData)
       allPieces.push(...bookData.pieces)
@@ -105,10 +83,26 @@ export class ChamJsonConverter {
 
   // ─── File I/O Helpers ─────────────────────────────────────
 
+  /** Reads every piece directory under `bookDir` into PieceSources. */
+  private readPieceSources(bookDir: string): PieceSources[] {
+    const sources: PieceSources[] = []
+    for (const entry of readdirSync(bookDir).sort()) {
+      const pieceDir = join(bookDir, entry)
+      const chamPath = join(pieceDir, 'text.cham.md')
+      if (!existsSync(chamPath)) continue
+      sources.push({
+        chamSource: readFileSync(chamPath, 'utf-8'),
+        proseFiles: this.readProseFiles(pieceDir),
+        layerFiles: this.readLayerFiles(pieceDir),
+        partFiles: this.readPartFiles(pieceDir),
+      })
+    }
+    return sources
+  }
+
   private readProseFiles(pieceDir: string): Map<string, string> {
     const files = new Map<string, string>()
     if (!existsSync(pieceDir)) return files
-
     for (const f of readdirSync(pieceDir)) {
       if (!f.endsWith('.md') || f.endsWith('.cham.md') || f.startsWith('_')) continue
       files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
@@ -119,7 +113,6 @@ export class ChamJsonConverter {
   private readLayerFiles(pieceDir: string): Map<string, string> {
     const files = new Map<string, string>()
     if (!existsSync(pieceDir)) return files
-
     for (const f of readdirSync(pieceDir)) {
       if (!f.endsWith('.cham.md') || f === 'text.cham.md' || f.startsWith('part-')) continue
       files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
@@ -130,7 +123,6 @@ export class ChamJsonConverter {
   private readPartFiles(pieceDir: string): Map<string, string> {
     const files = new Map<string, string>()
     if (!existsSync(pieceDir)) return files
-
     for (const f of readdirSync(pieceDir).sort()) {
       if (!f.startsWith('part-') || !f.endsWith('.cham.md')) continue
       files.set(f, readFileSync(join(pieceDir, f), 'utf-8'))
@@ -138,55 +130,14 @@ export class ChamJsonConverter {
     return files
   }
 
-  // ─── Book Config ──────────────────────────────────────────
-
-  private loadBookConfig(bookDir: string): BookConfig {
-    const raw = this.loadMergedBookYaml(bookDir)
-    return {
-      id: raw.id as string || basename(bookDir),
-      title: raw.title as string || '',
-      subtitle: raw.subtitle as string | undefined,
-      'title-en': raw['title-en'] as string | undefined,
-      publisher: raw.publisher as string | undefined,
-      genre: raw.genre as BookConfig['genre'],
-      contributors: raw.contributors as BookConfig['contributors'],
-      date: raw.date as BookConfig['date'],
-      hero: raw.hero as string[] | undefined,
-      layers: raw.layers as BookConfig['layers'],
-      annotation: raw.annotation as BookConfig['annotation'],
-    }
-  }
-
-  private loadMergedBookYaml(bookDir: string): Record<string, unknown> {
-    const configs: Record<string, unknown>[] = []
-    let dir = bookDir
-
-    while (dir && dir !== '/' && existsSync(dir)) {
-      const yamlPath = join(dir, 'book.yaml')
-      if (existsSync(yamlPath)) {
-        const raw = loadYaml(yamlPath)
-        configs.unshift(raw)
-      }
-      const parent = dirname(dir)
-      if (parent === dir) break
-      dir = parent
-    }
-
-    return configs.reduce<Record<string, unknown>>((merged, cfg) => ({
-      ...merged,
-      ...cfg,
-      ...(cfg.contributors ? { contributors: cfg.contributors } : {}),
-      ...(cfg.date ? { date: { ...(merged.date as Record<string, unknown> || {}), ...cfg.date } } : {}),
-      ...(cfg.layers ? { layers: cfg.layers } : {}),
-    }), {})
-  }
+  // ─── Library scan ─────────────────────────────────────────
 
   private scanBooks(libraryDir: string): { config: BookConfig; dir: string }[] {
     const books: { config: BookConfig; dir: string }[] = []
     for (const entry of readdirSync(libraryDir).sort()) {
       const dir = join(libraryDir, entry)
       if (!existsSync(join(dir, 'book.yaml'))) continue
-      books.push({ config: this.loadBookConfig(dir), dir })
+      books.push({ config: loadBookConfig(dir), dir })
     }
     return books
   }

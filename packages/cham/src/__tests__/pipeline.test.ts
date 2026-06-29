@@ -109,7 +109,7 @@ describe('entryToRange', () => {
     expect(range).toEqual({ type: 'range', scope: 'verse', verseIndex: 0, start: 2, end: 5 })
   })
 
-  it('returns fallback for missing marker', () => {
+  it('returns null for missing marker', () => {
     const doc = parse(CHAM_SOURCE)
     const entry = {
       target: { type: 'marker' as const, markerId: 999 },
@@ -118,7 +118,29 @@ describe('entryToRange', () => {
       value: 'test',
     }
     const range = entryToRange(entry, doc)
-    expect(range).toEqual({ type: 'range', scope: 'title', start: 0, end: 1 })
+    expect(range).toBeNull()
+  })
+
+  it('returns null for invalid verse-all line', () => {
+    const doc = parse(CHAM_SOURCE)
+    const entry = {
+      target: { type: 'verse-all' as const, line: 999 },
+      kind: 'meaning' as const,
+      params: {},
+      value: 'test',
+    }
+    expect(entryToRange(entry, doc)).toBeNull()
+  })
+
+  it('returns null for unresolvable text quote', () => {
+    const doc = parse(CHAM_SOURCE)
+    const entry = {
+      target: { type: 'text' as const, quote: '不存在' },
+      kind: 'meaning' as const,
+      params: {},
+      value: 'test',
+    }
+    expect(entryToRange(entry, doc)).toBeNull()
   })
 })
 
@@ -145,7 +167,7 @@ describe('buildAnnotations', () => {
 id: 1
 title: T
 ---
-Text
+{1}Text{/1}
 
 ## Notes
 {1} meaning [  padded  ]`

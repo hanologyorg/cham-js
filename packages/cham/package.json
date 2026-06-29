@@ -1,6 +1,6 @@
 {
   "name": "@hanology/cham",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Classical Han Annotated Markdown — parser, serializer, ePub converter, and validator",
   "type": "module",
   "main": "dist/index.js",
@@ -32,7 +32,8 @@
     }
   },
   "bin": {
-    "cham-epub": "dist/cli.js"
+    "cham-epub": "dist/cli.js",
+    "cham-validate": "dist/cli-validate.js"
   },
   "scripts": {
     "build": "tsc",

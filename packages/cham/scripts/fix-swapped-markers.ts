@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs'
-import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { walkFiles, allChamFiles } from './_walk.js'
 
 /**
  * Fixes the broken marker pattern `{M}{/N}` where M = N+1.
@@ -31,21 +31,8 @@ function fixFile(filePath: string): number {
   return fixed
 }
 
-function walkDir(dir: string): string[] {
-  const results: string[] = []
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      results.push(...walkDir(fullPath))
-    } else if (entry.name.endsWith('.cham.md')) {
-      results.push(fullPath)
-    }
-  }
-  return results
-}
-
 export function fixSwappedMarkers(contentDir: string): void {
-  const files = walkDir(contentDir)
+  const files = walkFiles(contentDir, allChamFiles)
   let totalFixed = 0
   let filesFixed = 0
   for (const f of files) {

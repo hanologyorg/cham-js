@@ -1,6 +1,10 @@
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { loadYaml } from './yaml.js'
+import {
+  asRecord, asArrayOfRecords,
+  pickString, pickNumber, pickStringArray,
+} from './yaml-typer.js'
 import type {
   ChamRegistries, AuthorRecord, DynastyRecord, EraRecord,
   SexagenaryRecord, PlaceRecord, EventRecord, LexiconEntry, WorkRecord,
@@ -20,230 +24,283 @@ export interface RegistryLoadOptions {
   sources?: boolean
 }
 
+/**
+ * Picks known optional string fields from a record, omitting
+ * undefined/null values. Coerces non-strings to strings (rare in
+ * practice; defensive against malformed YAML).
+ */
+function pickOptionalStrings(
+  raw: Record<string, unknown>,
+  ...fields: readonly string[]
+): Partial<Record<string, string>> {
+  const out: Partial<Record<string, string>> = {}
+  for (const f of fields) {
+    const v = raw[f]
+    if (v === undefined || v === null) continue
+    out[f] = typeof v === 'string' ? v : String(v)
+  }
+  return out
+}
+
 function loadAuthors(dataDir: string): Record<string, AuthorRecord> {
-  const raw = loadYaml(join(dataDir, 'authors.yaml'))
+  const top = asRecord(loadYaml(join(dataDir, 'authors.yaml')))
+  if (!top) return {}
   const result: Record<string, AuthorRecord> = {}
-  if (raw.authors && Array.isArray(raw.authors)) {
-    for (const item of raw.authors as Array<Record<string, unknown>>) {
-      const id = item.id as string
+
+  // Format (a): `authors:` array with explicit `id` fields.
+  const arrayForm = asArrayOfRecords(top.authors)
+  if (arrayForm) {
+    for (const item of arrayForm) {
+      const id = pickString(item, 'id')
       if (!id) continue
       result[id] = {
-        name: item.name as string || id,
-        dynasty: item.dynasty as string | undefined,
-        era: item.era as string | undefined,
-        eraCode: item.eraCode as string | undefined,
-        bio: item.bio as string | undefined,
+        name: pickString(item, 'name') ?? id,
+        ...pickOptionalStrings(item,
+          'dynasty', 'era', 'eraCode', 'bio',
+          'born', 'died', 'courtesyName', 'artName',
+          'wikidata', 'ctextId', 'wikipediaZh', 'wikipediaEn',
+        ),
       }
     }
     return result
   }
-  for (const [id, val] of Object.entries(raw)) {
-    if (typeof val !== 'object' || val === null) continue
-    const item = val as Record<string, unknown>
-    if (!('name' in item)) continue
+
+  // Format (b): top-level mapping of id → record.
+  for (const [id, val] of Object.entries(top)) {
+    const item = asRecord(val)
+    if (!item || !('name' in item)) continue
     result[id] = {
-      name: item.name as string || id,
-      dynasty: item.dynasty as string | undefined,
-      era: item.era as string | undefined,
-      eraCode: item.eraCode as string | undefined,
-      bio: item.bio as string | undefined,
+      name: pickString(item, 'name') ?? id,
+      ...pickOptionalStrings(item,
+        'dynasty', 'era', 'eraCode', 'bio',
+        'born', 'died', 'courtesyName', 'artName',
+        'wikidata', 'ctextId', 'wikipediaZh', 'wikipediaEn',
+      ),
     }
   }
   return result
 }
 
 function loadDynasties(dataDir: string): DynastyRecord[] {
-  const raw = loadYaml(join(dataDir, 'dynasties.yaml'))
-  if (raw.dynasties && Array.isArray(raw.dynasties)) {
-    return (raw.dynasties as Array<Record<string, unknown>>).map(d => ({
-      id: d.id as string,
-      label: d.label as string,
-      start: d.start as number | undefined,
-      end: d.end as number | undefined,
-      gbCode: d.gb_code as string | undefined,
+  const top = asRecord(loadYaml(join(dataDir, 'dynasties.yaml')))
+  if (!top) return []
+
+  const arrayForm = asArrayOfRecords(top.dynasties)
+  if (arrayForm) {
+    return arrayForm.map(d => ({
+      id: pickString(d, 'id') ?? '',
+      label: pickString(d, 'label') ?? '',
+      start: pickNumber(d, 'start'),
+      end: pickNumber(d, 'end'),
+      gbCode: pickString(d, 'gb_code'),
     }))
   }
+
   const result: DynastyRecord[] = []
-  for (const [key, val] of Object.entries(raw)) {
-    if (typeof val !== 'object' || val === null) continue
-    const d = val as Record<string, unknown>
+  for (const [key, val] of Object.entries(top)) {
+    const d = asRecord(val)
+    if (!d) continue
     if (!('code' in d) && !('start' in d)) continue
     result.push({
       id: key,
       label: key,
-      code: d.code as string | undefined,
-      start: d.start as number | null | undefined,
-      end: d.end as number | null | undefined,
-      parent: d.parent as string | undefined,
-      note: d.note as string | undefined,
+      code: pickString(d, 'code'),
+      start: pickNumber(d, 'start'),
+      end: pickNumber(d, 'end'),
+      parent: pickString(d, 'parent'),
+      note: pickString(d, 'note'),
     })
   }
   return result
 }
 
 function loadEras(dataDir: string): EraRecord[] {
-  const raw = loadYaml(join(dataDir, 'eras.yaml'))
-  if (!raw.eras || !Array.isArray(raw.eras)) return []
-  return (raw.eras as Array<Record<string, unknown>>).map(e => ({
-    dynasty: e.dynasty as string,
-    era: (e.era as string) || '',
-    eraCode: e.eraCode as string | undefined,
-    label: e.label as string,
-    start: e.start as number | undefined,
-    end: e.end as number | undefined,
+  const top = asRecord(loadYaml(join(dataDir, 'eras.yaml')))
+  if (!top) return []
+  const arrayForm = asArrayOfRecords(top.eras)
+  if (!arrayForm) return []
+  return arrayForm.map(e => ({
+    dynasty: pickString(e, 'dynasty') ?? '',
+    era: pickString(e, 'era') ?? '',
+    eraCode: pickString(e, 'eraCode'),
+    label: pickString(e, 'label') ?? '',
+    start: pickNumber(e, 'start'),
+    end: pickNumber(e, 'end'),
   }))
 }
 
 function loadSexagenary(dataDir: string): SexagenaryRecord[] {
-  const raw = loadYaml(join(dataDir, 'sexagenary.yaml'))
-  if (!raw.entries || !Array.isArray(raw.entries)) return []
-  return (raw.entries as Array<Record<string, unknown>>).map(e => ({
-    stem: e.stem as string,
-    branch: e.branch as string,
-    label: e.label as string,
+  const top = asRecord(loadYaml(join(dataDir, 'sexagenary.yaml')))
+  if (!top) return []
+  const arrayForm = asArrayOfRecords(top.entries)
+  if (!arrayForm) return []
+  return arrayForm.map(e => ({
+    stem: pickString(e, 'stem') ?? '',
+    branch: pickString(e, 'branch') ?? '',
+    label: pickString(e, 'label') ?? '',
   }))
 }
 
 function loadPlaces(dataDir: string): Record<string, PlaceRecord> {
-  const raw = loadYaml(join(dataDir, 'places.yaml'))
+  const top = asRecord(loadYaml(join(dataDir, 'places.yaml')))
+  if (!top) return {}
   const result: Record<string, PlaceRecord> = {}
-  if (raw.places && Array.isArray(raw.places)) {
-    for (const item of raw.places as Array<Record<string, unknown>>) {
-      const id = item.id as string
+
+  const arrayForm = asArrayOfRecords(top.places)
+  if (arrayForm) {
+    for (const item of arrayForm) {
+      const id = pickString(item, 'id')
       if (!id) continue
       result[id] = {
         id,
-        label: item.label as string,
-        modern: item.modern as string | undefined,
-        lat: item.lat as number | undefined,
-        lon: item.lon as number | undefined,
+        label: pickString(item, 'label') ?? '',
+        modern: pickString(item, 'modern'),
+        lat: pickNumber(item, 'lat'),
+        lon: pickNumber(item, 'lon'),
       }
     }
     return result
   }
-  for (const [id, val] of Object.entries(raw)) {
-    if (typeof val !== 'object' || val === null) continue
-    const item = val as Record<string, unknown>
+
+  for (const [id, val] of Object.entries(top)) {
+    const item = asRecord(val)
+    if (!item) continue
     if (!('name' in item) && !('label' in item)) continue
-    const geo = Array.isArray(item.geo) ? item.geo as number[] : undefined
+    const geo = item.geo
+    const coords = extractLatLon(geo)
     result[id] = {
       id,
-      label: (item.name || item.label) as string,
-      modern: item.modern as string | undefined,
-      lat: geo?.[0],
-      lon: geo?.[1],
+      label: pickString(item, 'name') ?? pickString(item, 'label') ?? '',
+      modern: pickString(item, 'modern'),
+      ...coords,
     }
   }
   return result
 }
 
+/** Reads `[lat, lon]` from a geo array, or returns `{}` if malformed. */
+function extractLatLon(geo: unknown): { lat?: number; lon?: number } {
+  if (!Array.isArray(geo) || geo.length < 2) return {}
+  const lat = geo[0]
+  const lon = geo[1]
+  if (typeof lat !== 'number' || typeof lon !== 'number') return {}
+  return { lat, lon }
+}
+
 function loadEvents(dataDir: string): Record<string, EventRecord> {
-  const raw = loadYaml(join(dataDir, 'events.yaml'))
+  const top = asRecord(loadYaml(join(dataDir, 'events.yaml')))
+  if (!top) return {}
   const result: Record<string, EventRecord> = {}
-  if (raw.events && Array.isArray(raw.events)) {
-    for (const item of raw.events as Array<Record<string, unknown>>) {
-      const id = item.id as string
+
+  const arrayForm = asArrayOfRecords(top.events)
+  if (arrayForm) {
+    for (const item of arrayForm) {
+      const id = pickString(item, 'id')
       if (!id) continue
       result[id] = {
         id,
-        label: item.label as string,
-        dynasty: item.dynasty as string | undefined,
-        era: item.era as string | undefined,
-        eraCode: item.eraCode as string | undefined,
-        year: item.year as number | undefined,
+        label: pickString(item, 'label') ?? '',
+        dynasty: pickString(item, 'dynasty'),
+        era: pickString(item, 'era'),
+        eraCode: pickString(item, 'eraCode'),
+        year: pickNumber(item, 'year'),
       }
     }
     return result
   }
-  for (const [id, val] of Object.entries(raw)) {
-    if (typeof val !== 'object' || val === null) continue
-    const item = val as Record<string, unknown>
+
+  for (const [id, val] of Object.entries(top)) {
+    const item = asRecord(val)
+    if (!item) continue
     if (!('name' in item) && !('label' in item)) continue
     result[id] = {
       id,
-      label: (item.name || item.label) as string,
-      dynasty: item.dynasty as string | undefined,
-      era: item.era as string | undefined,
-      eraCode: item.eraCode as string | undefined,
-      year: item.year as number | undefined,
+      label: pickString(item, 'name') ?? pickString(item, 'label') ?? '',
+      dynasty: pickString(item, 'dynasty'),
+      era: pickString(item, 'era'),
+      eraCode: pickString(item, 'eraCode'),
+      year: pickNumber(item, 'year'),
     }
   }
   return result
 }
 
 function loadLexicon(dataDir: string): LexiconEntry[] {
-  const raw = loadYaml(join(dataDir, 'lexicon.yaml'))
-  if (!raw.entries || !Array.isArray(raw.entries)) return []
-  return (raw.entries as Array<Record<string, unknown>>).map(e => {
-    if (e.readings && Array.isArray(e.readings)) {
+  const top = asRecord(loadYaml(join(dataDir, 'lexicon.yaml')))
+  if (!top) return []
+  const arrayForm = asArrayOfRecords(top.entries)
+  if (!arrayForm) return []
+  return arrayForm.map(e => {
+    const char = pickString(e, 'char') ?? ''
+    const readings = asArrayOfRecords(e.readings)
+    if (readings) {
       return {
-        char: e.char as string,
-        readings: (e.readings as Array<Record<string, string>>).map(r => ({
-          lang: r.lang,
-          value: r.value,
+        char,
+        readings: readings.map(r => ({
+          lang: pickString(r, 'lang') ?? 'cmn',
+          value: pickString(r, 'value') ?? '',
         })),
       }
     }
-    const lang = (e.lang as string) || 'cmn'
-    const value = (e.value as string) || ''
     return {
-      char: e.char as string,
-      readings: [{ lang, value }],
+      char,
+      readings: [{
+        lang: pickString(e, 'lang') ?? 'cmn',
+        value: pickString(e, 'value') ?? '',
+      }],
     }
   })
 }
 
 function loadWorks(dataDir: string): Record<string, WorkRecord> {
-  const raw = loadYaml(join(dataDir, 'works.yaml'))
+  const top = asRecord(loadYaml(join(dataDir, 'works.yaml')))
+  if (!top) return {}
   const result: Record<string, WorkRecord> = {}
-  if (!raw.works || !Array.isArray(raw.works)) {
-    for (const [key, val] of Object.entries(raw)) {
-      if (typeof val === 'object' && val !== null && 'label' in (val as Record<string, unknown>)) {
-        const w = val as Record<string, unknown>
-        result[key] = {
-          id: key,
-          label: w.label as string,
-          altLabels: w.altLabels as string[] | undefined,
-          creator: w.creator as string | undefined,
-          genre: w.genre as string | undefined,
-          hierarchy: w.hierarchy as string[] | undefined,
-          wikidata: w.wikidata as string | undefined,
-          ctextId: w.ctextId as string | undefined,
-          wikipediaZh: w.wikipediaZh as string | undefined,
-        }
-      }
+
+  const arrayForm = asArrayOfRecords(top.works)
+  if (!arrayForm) {
+    // Mapping form: key → record with `label`.
+    for (const [key, val] of Object.entries(top)) {
+      const w = asRecord(val)
+      if (!w || !('label' in w)) continue
+      result[key] = workRecordFromItem(key, w)
     }
     return result
   }
-  for (const item of raw.works as Array<Record<string, unknown>>) {
-    const id = item.id as string
+
+  for (const item of arrayForm) {
+    const id = pickString(item, 'id')
     if (!id) continue
-    result[id] = {
-      id,
-      label: item.label as string,
-      altLabels: item.altLabels as string[] | undefined,
-      creator: item.creator as string | undefined,
-      genre: item.genre as string | undefined,
-      hierarchy: item.hierarchy as string[] | undefined,
-      wikidata: item.wikidata as string | undefined,
-      ctextId: item.ctextId as string | undefined,
-      wikipediaZh: item.wikipediaZh as string | undefined,
-    }
+    result[id] = workRecordFromItem(id, item)
   }
   return result
 }
 
+function workRecordFromItem(id: string, item: Record<string, unknown>): WorkRecord {
+  return {
+    id,
+    label: pickString(item, 'label') ?? '',
+    altLabels: pickStringArray(item, 'altLabels'),
+    creator: pickString(item, 'creator'),
+    genre: pickString(item, 'genre'),
+    hierarchy: pickStringArray(item, 'hierarchy'),
+    wikidata: pickString(item, 'wikidata'),
+    ctextId: pickString(item, 'ctextId'),
+    wikipediaZh: pickString(item, 'wikipediaZh'),
+  }
+}
+
 function loadSources(dataDir: string): Record<string, SourceRecord> {
-  const raw = loadYaml(join(dataDir, 'sources.yaml'))
+  const top = asRecord(loadYaml(join(dataDir, 'sources.yaml')))
+  if (!top) return {}
   const result: Record<string, SourceRecord> = {}
-  for (const [key, val] of Object.entries(raw)) {
-    if (typeof val !== 'object' || val === null) continue
-    const item = val as Record<string, unknown>
-    if (!('title' in item)) continue
+  for (const [key, val] of Object.entries(top)) {
+    const item = asRecord(val)
+    if (!item || !('title' in item)) continue
     result[key] = {
-      names: (item.names as string[]) || [],
-      title: item.title as string,
-      titleEn: item['title-en'] as string | undefined,
+      names: pickStringArray(item, 'names') ?? [],
+      title: pickString(item, 'title') ?? '',
+      titleEn: pickString(item, 'title-en'),
     }
   }
   return result

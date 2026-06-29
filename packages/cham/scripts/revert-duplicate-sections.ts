@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
+import { walkFiles, primaryTextFiles } from './_walk.js'
 
 /**
  * Reverts empty `## 注釋` sections from primary text files when a subordinate
@@ -19,8 +20,8 @@ function hasSubordinateWithSection(pieceDir: string): boolean {
 }
 
 function hasEmptySection(content: string): boolean {
-  // Match "## 注釋\n" at end of file with nothing after it
-  return /\n\n## 注釋\n$/.test(content) || /\n## 注釋\n$/.test(content)
+  // Match an empty `## 注釋` section at end of file (with or without a blank line before it).
+  return /\n## 注釋\n$/.test(content)
 }
 
 function fixFile(filePath: string): boolean {
@@ -31,26 +32,13 @@ function fixFile(filePath: string): boolean {
   if (!hasSubordinateWithSection(pieceDir)) return false
 
   // Remove the empty ## 注釋 section
-  const result = content.replace(/\n\n## 注釋\n$/, '\n').replace(/\n## 注釋\n$/, '\n')
+  const result = content.replace(/\n## 注釋\n$/, '\n')
   writeFileSync(filePath, result, 'utf-8')
   return true
 }
 
-function walkDir(dir: string): string[] {
-  const results: string[] = []
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      results.push(...walkDir(fullPath))
-    } else if (entry.name === 'text.cham.md') {
-      results.push(fullPath)
-    }
-  }
-  return results
-}
-
 export function revertDuplicateSections(contentDir: string): void {
-  const files = walkDir(contentDir)
+  const files = walkFiles(contentDir, primaryTextFiles)
   let fixed = 0
   for (const f of files) {
     if (fixFile(f)) {

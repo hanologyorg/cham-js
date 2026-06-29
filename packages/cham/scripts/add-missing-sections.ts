@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs'
-import { join } from 'path'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { walkFiles, primaryTextFiles } from './_walk.js'
 
 /**
  * Adds missing `## 注釋` sections to text.cham.md files that have markers
@@ -21,21 +21,8 @@ function fixFile(filePath: string): boolean {
   return true
 }
 
-function walkDir(dir: string): string[] {
-  const results: string[] = []
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const fullPath = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      results.push(...walkDir(fullPath))
-    } else if (entry.name === 'text.cham.md') {
-      results.push(fullPath)
-    }
-  }
-  return results
-}
-
 export function addMissingSections(contentDir: string): void {
-  const files = walkDir(contentDir)
+  const files = walkFiles(contentDir, primaryTextFiles)
   let fixed = 0
   for (const f of files) {
     if (fixFile(f)) {

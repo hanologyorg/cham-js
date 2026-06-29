@@ -434,6 +434,60 @@ describe('ChamSerializer', () => {
   })
 })
 
+// ─── buildMeta YAML Boundary Validation ───────────────────────
+// buildMeta sits at the YAML → typed-model boundary. Malformed input
+// must produce a clear ChamParseError, not silently coerce.
+
+import { buildMeta, ChamParseError } from '../parser/frontmatter-parser.js'
+
+describe('buildMeta boundary validation', () => {
+  it('rejects non-record YAML', () => {
+    expect(() => buildMeta(42)).toThrow(ChamParseError)
+    expect(() => buildMeta(null)).toThrow(ChamParseError)
+    expect(() => buildMeta([1, 2, 3])).toThrow(ChamParseError)
+  })
+
+  it('rejects primary meta missing title', () => {
+    expect(() => buildMeta({ id: 1 })).toThrow(/title/)
+  })
+
+  it('rejects contributor with no ref', () => {
+    expect(() => buildMeta({
+      id: 1, title: 'T',
+      contributors: [{ role: 'author' }],
+    })).toThrow(/ref/)
+  })
+
+  it('rejects contributor with no role', () => {
+    expect(() => buildMeta({
+      id: 1, title: 'T',
+      contributors: [{ ref: 'A001' }],
+    })).toThrow(/role/)
+  })
+
+  it('rejects hierarchy entry missing level', () => {
+    expect(() => buildMeta({
+      id: 1, title: 'T',
+      hierarchy: [{ index: 0 }],
+    })).toThrow(/level/)
+  })
+
+  it('accepts well-formed primary meta', () => {
+    const meta = buildMeta({ id: 1, title: 'T' })
+    expect(meta.type).toBe('primary')
+  })
+
+  it('accepts well-formed secondary meta', () => {
+    const meta = buildMeta({ base: 'text.cham.md', contributor: 'C020', role: 'annotator' })
+    expect(meta.type).toBe('secondary')
+  })
+
+  it('accepts well-formed part meta', () => {
+    const meta = buildMeta({ part: 1, group: 'g', title: 'pt' })
+    expect(meta.type).toBe('part')
+  })
+})
+
 // ─── All Annotation Kinds Round-Trip ─────────────────────────────
 
 describe('all annotation kinds round-trip', () => {
