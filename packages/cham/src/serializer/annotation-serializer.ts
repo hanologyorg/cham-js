@@ -6,8 +6,8 @@
 import type {
   AnnotationSection, AnnotationEntry,
 } from '../types.js'
-import { AnnotationKindRegistry } from '../model/annotation-kind.js'
-import { targetSortKey } from '../model/target.js'
+import { AnnotationKindRegistry } from '../model.js'
+import { targetSortKey } from '../model.js'
 import { serializeTarget } from './target-serializer.js'
 
 // ─── Canonical Kind Ordering ───────────────────────────────────

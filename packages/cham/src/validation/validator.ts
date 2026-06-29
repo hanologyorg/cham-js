@@ -11,8 +11,8 @@ import { join, basename } from 'path'
 import { parse } from '../parser.js'
 import { parseYaml } from '../yaml.js'
 import { RegistryLoader } from '../registry.js'
-import { TargetResolver } from '../resolver/target-resolver.js'
-import { AnnotationKindRegistry } from '../model/annotation-kind.js'
+import { TargetResolver } from '../resolver.js'
+import { AnnotationKindRegistry } from '../model.js'
 import type {
   ChamDocument, ValidationIssue, ValidationResult,
   BookConfig, ChamRegistries, PrimaryMeta,
@@ -62,8 +62,13 @@ export class ChamValidator {
   /**
    * Validates a single .cham.md file.
    * Runs all rules that can operate on a single document (no book context).
+   *
+   * Pass `registries` to enable registry-aware rules (author/place/event
+   * ref checks, date consistency against era registry, etc.). Without it,
+   * registry-category rules run but find no registries on the context and
+   * effectively skip.
    */
-  validateFile(filePath: string): ValidationResult {
+  validateFile(filePath: string, registries?: ChamRegistries): ValidationResult {
     const issues: ValidationIssue[] = []
     const src = readFileSync(filePath, 'utf-8')
 
@@ -85,7 +90,7 @@ export class ChamValidator {
       : undefined
 
     for (const rule of this.registry.all()) {
-      const ctx: ValidationContext = { doc, filePath, resolver, kindRegistry: this.kindRegistry }
+      const ctx: ValidationContext = { doc, filePath, resolver, kindRegistry: this.kindRegistry, registries }
       issues.push(...rule.check(ctx))
     }
     return { valid: !issues.some(i => i.severity === 'error'), issues }
@@ -95,8 +100,12 @@ export class ChamValidator {
 
   /**
    * Validates an entire book directory (all pieces + book.yaml).
+   *
+   * Pass `registries` to enable registry-aware rules in the same pass —
+   * no second traversal needed. Without it, registry-category rules
+   * effectively skip.
    */
-  validateBook(bookDir: string): ValidationResult {
+  validateBook(bookDir: string, registries?: ChamRegistries): ValidationResult {
     const issues: ValidationIssue[] = []
     const config = this.loadBookYaml(bookDir, issues)
     if (!config) return { valid: false, issues }
@@ -112,31 +121,25 @@ export class ChamValidator {
       doc: { meta: { type: 'primary', id: '', title: '' } } as ChamDocument,
       filePath: join(bookDir, 'book.yaml'),
       bookConfig: config,
+      registries,
     }
     for (const rule of this.registry.byCategory('config')) {
       issues.push(...rule.check(bookConfigCtx))
     }
 
     for (const dir of pieceDirs) {
-      this.validatePieceDir(dir, config, issues)
+      this.validatePieceDir(dir, config, issues, registries)
     }
 
     return { valid: !issues.some(i => i.severity === 'error'), issues }
   }
 
   /**
-   * Validates an entire book with registries loaded.
-   * Runs all rules including those that need registry lookups.
+   * Validates an entire book with registries loaded from `dataDir`.
+   * Equivalent to `validateBook(bookDir, new RegistryLoader().loadAll(dataDir))`.
    */
   validateBookWithRegistries(bookDir: string, dataDir: string): ValidationResult {
-    const result = this.validateBook(bookDir)
-    if (!result.valid) return result
-
-    const registries = new RegistryLoader().loadAll(dataDir)
-    const registryIssues = this.runRegistryRules(bookDir, registries, result.issues.length)
-    result.issues.push(...registryIssues)
-    result.valid = !result.issues.some(i => i.severity === 'error')
-    return result
+    return this.validateBook(bookDir, new RegistryLoader().loadAll(dataDir))
   }
 
   // ─── Internal Helpers ────────────────────────────────────────
@@ -145,6 +148,7 @@ export class ChamValidator {
     pieceDir: string,
     config: BookConfig,
     issues: ValidationIssue[],
+    registries?: ChamRegistries,
   ): void {
     const textPath = join(pieceDir, 'text.cham.md')
     if (!existsSync(textPath)) {
@@ -203,7 +207,9 @@ export class ChamValidator {
       }
     }
 
-    // ─── Pass 2: Run rules ────────────────────────────────────
+    // ─── Run rules ───────────────────────────────────────────
+    // Single pass: all categories run with the same parsed docs.
+    // Registry-category rules see `registries` when provided.
     const primaryResolver = new TargetResolver(primaryDoc.markers, primaryDoc.textBlocks)
 
     // Validate primary document
@@ -212,7 +218,7 @@ export class ChamValidator {
       const ctx: ValidationContext = {
         doc: primaryDoc, filePath: textPath,
         bookConfig: config, resolver: primaryResolver,
-        secondaryMarkerRefs, kindRegistry: this.kindRegistry,
+        secondaryMarkerRefs, kindRegistry: this.kindRegistry, registries,
       }
       issues.push(...rule.check(ctx))
     }
@@ -228,71 +234,11 @@ export class ChamValidator {
         const ctx: ValidationContext = {
           doc: layerDoc, filePath,
           primaryDoc, bookConfig: config, resolver: layerResolver,
-          kindRegistry: this.kindRegistry,
+          kindRegistry: this.kindRegistry, registries,
         }
         issues.push(...rule.check(ctx))
       }
     }
-  }
-
-  private runRegistryRules(
-    bookDir: string,
-    registries: ChamRegistries,
-    _startIndex: number,
-  ): ValidationIssue[] {
-    const issues: ValidationIssue[] = []
-    const config = this.loadBookYaml(bookDir, issues)
-    if (!config) return issues
-
-    const registryRules = [
-      ...this.registry.byCategory('registry'),
-      ...this.registry.byCategory('quality').filter(r => r.id === 'date-consistency'),
-    ]
-
-    for (const dir of this.scanPieceDirs(bookDir)) {
-      const textPath = join(dir, 'text.cham.md')
-      if (!existsSync(textPath)) continue
-      let primaryDoc: ChamDocument | undefined
-      try { primaryDoc = parse(readFileSync(textPath, 'utf-8')) } catch { continue }
-      const primaryResolver = new TargetResolver(primaryDoc.markers, primaryDoc.textBlocks)
-
-      // Collect secondary marker refs for cross-file context
-      const secondaryMarkerRefs = new Set<number>()
-      const secondaryDocs: ChamDocument[] = []
-      for (const f of readdirSync(dir).sort()) {
-        if (!f.endsWith('.cham.md') || f === 'text.cham.md') continue
-        let layerDoc: ChamDocument | undefined
-        try { layerDoc = parse(readFileSync(join(dir, f), 'utf-8')) } catch { continue }
-        if (layerDoc.meta.type !== 'secondary') continue
-        secondaryDocs.push(layerDoc)
-        for (const section of layerDoc.sections) {
-          for (const entry of section.entries) {
-            if (entry.target.type === 'marker') secondaryMarkerRefs.add(entry.target.markerId)
-          }
-        }
-      }
-
-      for (const rule of registryRules) {
-        const ctx: ValidationContext = {
-          doc: primaryDoc, filePath: textPath,
-          bookConfig: config, registries, resolver: primaryResolver,
-          secondaryMarkerRefs, kindRegistry: this.kindRegistry,
-        }
-        issues.push(...rule.check(ctx))
-      }
-
-      for (const layerDoc of secondaryDocs) {
-        for (const rule of registryRules) {
-          const ctx: ValidationContext = {
-            doc: layerDoc, filePath: join(dir, 'secondary'),
-            primaryDoc, bookConfig: config, registries,
-            resolver: primaryResolver, kindRegistry: this.kindRegistry,
-          }
-          issues.push(...rule.check(ctx))
-        }
-      }
-    }
-    return issues
   }
 
   private loadBookYaml(bookDir: string, issues: ValidationIssue[]): BookConfig | null {

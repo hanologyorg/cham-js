@@ -48,14 +48,53 @@ export type TextBlockRole =
 
 // ─── Date Encoding ────────────────────────────────────────────
 
-export interface HcnDate {
+/**
+ * CHAM date — supports two formats:
+ *
+ * 1. **Name-based** (CHAM's traditional form): `h-CN.1.周.武王.1`.
+ *    Human-readable; dynasty, ruler, era, and cycle are Trad Chinese names.
+ *
+ * 2. **GB/T numeric** (the GB/T XXXXX standard): `h-CN.1.04.011.001`.
+ *    Machine-readable; all segments are numeric codes.
+ *
+ * `parseEraDate` auto-detects the format. When the input is GB/T numeric,
+ * the parser resolves Trad Chinese names via `@hanology/era` and populates
+ * both the name fields and `gbt` (the structured GB/T code). When the input
+ * is name-based, only the name fields are populated.
+ *
+ * `formatEraDate` round-trips: it emits the same format that was parsed.
+ * GB/T codes are preserved exactly; name-based codes are emitted as-is.
+ */
+export interface EraDate {
   type: 1 | 2 | 3 | 4
+  /** Dynasty name (Trad Chinese) — e.g. 周, 漢, 唐. */
   dynasty?: string
+  /** Ruler name (Trad Chinese) — e.g. 武王, 玄宗. Populated for type 1 GB/T input. */
   ruler?: string
+  /** Era name (Trad Chinese) — e.g. 開元, 建元. */
   era?: string
+  /** Year — ordinal within reign (type 1), within era (type 2), or ROC year (type 3). */
   year?: number
+  /** Ganzhi label (Trad Chinese, e.g. 甲子) or numeric CC.OO form. */
   cycle?: string
+  /**
+   * Structured GB/T code, populated when the input was GB/T numeric.
+   * Use `formatEraDate` to round-trip; access directly when you need
+   * the numeric codes.
+   */
+  gbt?: EraDateGbt
 }
+
+/**
+ * Structured GB/T code fields. One variant per era type. Import `ParsedCode`
+ * from `@hanology/era` for the canonical form; this interface is the
+ * subset stored on `EraDate`.
+ */
+export type EraDateGbt =
+  | { type: 1; dynastyCode: number; rulerCode: number; reignCount: number; yearOrdinal: number }
+  | { type: 2; dynastyCode: number; rulerCode: number; reignCount: number; eraCode: number; eraInstance: number; eraYear: number }
+  | { type: 3; rocYear: number }
+  | { type: 4; ganzhiCode: number; occurrenceOrdinal: number }
 
 // ─── Contributors & Dates ─────────────────────────────────────
 
@@ -397,7 +436,8 @@ export interface OutputProseSection {
   order: number
 }
 
-export interface OutputPiece {
+/** Identity fields shared across all pieces in a book. */
+export interface PieceIdentity {
   bookId: string
   num: number
   title: string
@@ -408,16 +448,39 @@ export interface OutputPiece {
   eraCode?: string
   genre: BookGenre
   hierarchy?: HierarchyLevel[]
+  contributors?: PieceContributor[]
+}
+
+/** The piece's textual content: verses + prose sections. */
+export interface PieceContent {
   verses: { text: string }[]
   sections: Record<string, string>
   structuredSections?: OutputProseSection[]
+  source?: PieceSource
+}
+
+/** Annotations on the piece's content (primary + per-layer). */
+export interface PieceAnnotations {
   annotations: OutputAnnotation[]
   layers?: Record<string, OutputAnnotation[]>
   annotationLayers?: OutputAnnotationLayer[]
-  source?: PieceSource
-  contributors?: PieceContributor[]
+}
+
+/** Sub-parts within a piece (e.g. chapters of a longer work). */
+export interface PieceParts {
   parts?: OutputPart[]
 }
+
+/**
+ * Full piece output: identity + content + annotations + parts.
+ *
+ * Consumers needing only one facet can use the sub-interfaces
+ * ({@link PieceIdentity}, {@link PieceContent}, {@link PieceAnnotations},
+ * {@link PieceParts}); the flat composition preserves backwards
+ * compatibility for existing callers.
+ */
+export interface OutputPiece
+  extends PieceIdentity, PieceContent, PieceAnnotations, PieceParts {}
 
 export interface PieceContributor {
   id: string
@@ -441,6 +504,26 @@ export interface PieceSources {
   readonly proseFiles?: ReadonlyMap<string, string>
   readonly layerFiles?: ReadonlyMap<string, string>
   readonly partFiles?: ReadonlyMap<string, string>
+}
+
+/**
+ * Pre-loaded sources for a complete book: its config and the
+ * PieceSources for each piece. LibraryBuilder consumes these.
+ */
+export interface BookSources {
+  readonly config: BookConfig
+  readonly pieces: readonly PieceSources[]
+}
+
+/**
+ * LibraryBuilder output: the assembled LibraryIndex plus the
+ * per-book BookData and the flat piece list. I/O adapters choose
+ * which slices to write.
+ */
+export interface LibraryData {
+  readonly library: LibraryIndex
+  readonly books: readonly BookData[]
+  readonly allPieces: readonly OutputPiece[]
 }
 
 // ─── Registry Types ────────────────────────────────────────────

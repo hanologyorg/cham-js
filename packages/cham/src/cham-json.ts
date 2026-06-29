@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
-import { buildCrossRefs, BookBuilder } from './pipeline.js'
+import { BookBuilder, LibraryBuilder } from './pipeline.js'
 import { loadBookConfig } from './book-config-loader.js'
 import type {
-  BookConfig, BookMeta, BookData, LibraryIndex, LibraryScale,
+  BookConfig, BookMeta, BookData, BookSources, LibraryData, LibraryIndex, LibraryScale,
   OutputPiece, AuthorRecord, PieceSources,
 } from './types.js'
 
@@ -50,35 +50,54 @@ export class ChamJsonConverter {
     mkdirSync(opts.outputDir, { recursive: true })
     mkdirSync(join(opts.outputDir, 'books'), { recursive: true })
 
-    const books = this.scanBooks(opts.libraryDir)
-    const scale = this.detectScale(books)
+    const bookSources = this.scanLibraryBookSources(opts.libraryDir)
+    const data = new LibraryBuilder(opts.authors || {}).buildFromBooks(bookSources)
+    const scale = this.detectScale(opts.libraryDir)
 
-    const allPieces: OutputPiece[] = []
-    const bookMetas: BookMeta[] = []
-    const bookDataList: BookData[] = []
-
-    for (const { config, dir } of books) {
-      const bookData = this.convertBook({
-        bookDir: dir,
-        outputDir: join(opts.outputDir, 'books'),
-        authors: opts.authors,
-      })
-      bookMetas.push(bookData.meta)
-      bookDataList.push(bookData)
-      allPieces.push(...bookData.pieces)
+    for (const bd of data.books) {
+      writeFileSync(
+        join(opts.outputDir, 'books', `${bd.meta.id}.json`),
+        JSON.stringify(bd, null, 2),
+        'utf-8',
+      )
     }
 
-    const crossRefs = buildCrossRefs(allPieces)
-    const library: LibraryIndex = { scale, books: bookMetas, crossRefs }
-
+    const library: LibraryIndex = { scale, books: data.books.map(b => b.meta), crossRefs: data.library.crossRefs }
     writeFileSync(
       join(opts.outputDir, 'library.json'),
       JSON.stringify(library, null, 2),
       'utf-8',
     )
 
-    console.log(`Library: ${scale}, ${bookMetas.length} book(s), ${allPieces.length} piece(s)`)
-    return { library, bookData: bookDataList, allPieces }
+    console.log(`Library: ${scale}, ${data.books.length} book(s), ${data.allPieces.length} piece(s)`)
+    return { library, bookData: [...data.books], allPieces: [...data.allPieces] }
+  }
+
+  /** Walks a library directory and produces BookSources[] for LibraryBuilder. */
+  private scanLibraryBookSources(libraryDir: string): BookSources[] {
+    const out: BookSources[] = []
+    for (const entry of readdirSync(libraryDir).sort()) {
+      const dir = join(libraryDir, entry)
+      if (!existsSync(join(dir, 'book.yaml'))) continue
+      out.push({
+        config: loadBookConfig(dir),
+        pieces: this.readPieceSources(dir),
+      })
+    }
+    return out
+  }
+
+  private detectScale(libraryDir: string): LibraryScale {
+    const books = this.scanBooks(libraryDir)
+    if (books.length === 0) return 'single-piece'
+    if (books.length === 1) {
+      let count = 0
+      for (const entry of readdirSync(books[0].dir)) {
+        if (existsSync(join(books[0].dir, entry, 'text.cham.md'))) count++
+      }
+      return count <= 1 ? 'single-piece' : 'single-book'
+    }
+    return 'library'
   }
 
   // ─── File I/O Helpers ─────────────────────────────────────
@@ -140,17 +159,5 @@ export class ChamJsonConverter {
       books.push({ config: loadBookConfig(dir), dir })
     }
     return books
-  }
-
-  private detectScale(books: { config: BookConfig; dir: string }[]): LibraryScale {
-    if (books.length === 0) return 'single-piece'
-    if (books.length === 1) {
-      let count = 0
-      for (const entry of readdirSync(books[0].dir)) {
-        if (existsSync(join(books[0].dir, entry, 'text.cham.md'))) count++
-      }
-      return count <= 1 ? 'single-piece' : 'single-book'
-    }
-    return 'library'
   }
 }

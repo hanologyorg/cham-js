@@ -9,8 +9,8 @@ import type {
   ChamDocument, ValidationIssue,
   BookConfig, ChamRegistries,
 } from '../types.js'
-import type { TargetResolver } from '../resolver/target-resolver.js'
-import type { AnnotationKindRegistry } from '../model/annotation-kind.js'
+import type { TargetResolver } from '../resolver.js'
+import type { AnnotationKindRegistry } from '../model.js'
 
 /**
  * Context passed to every validation rule.
