@@ -3,17 +3,24 @@
 // XHTML files, parse each into ParsedFile, then build CHAM documents
 // (primary + commentary) per section and write them to disk.
 //
-// This is the only module in epub/ that performs I/O. Parsing and
-// annotation-splitting are pure and live in their sibling modules.
+// This is the only module in epub/ that performs high-level I/O.
+// Filesystem helpers live in epub-io.ts; volume/title detection
+// heuristics live in volume-detector.ts; XHTML parsing in
+// xhtml-parser.ts; annotation splitting in annotation-splitter.ts.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join, basename } from 'path'
-import { unzipSync } from 'fflate'
 import type {
   BookConfig, AnnotationEntry, ChamDocument,
 } from '../types.js'
 import { ChamSerializer } from '../serializer.js'
 import { padNum } from './utils.js'
+import {
+  extractEpub, findOpsDir, discoverXhtmlFiles,
+} from './epub-io.js'
+import {
+  detectVolumeFromFilename, detectHeaderTitle,
+} from './volume-detector.js'
 import {
   parseXhtmlFile,
   type ParsedFile, type ParsedSection, type ParseContext,
@@ -278,79 +285,27 @@ export class EpubConverter {
   }
 
   // ─── ePub zip helpers ─────────────────────────────────────
+  // All I/O and volume/title detection is delegated to epub-io.ts
+  // and volume-detector.ts. These thin wrappers preserve the class's
+  // self-contained API while keeping this file focused on orchestration.
 
   private extractEpub(epubPath: string): string {
-    const data = readFileSync(epubPath)
-    const unzipped = unzipSync(new Uint8Array(data))
-    const epubBasename = basename(epubPath, '.epub')
-    const tmpDir = join(epubPath, '..', `.epub_extracted_${epubBasename}`)
-    if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true })
-    mkdirSync(tmpDir, { recursive: true })
-
-    for (const [fpath, content] of Object.entries(unzipped)) {
-      const filePath = join(tmpDir, fpath)
-      mkdirSync(join(filePath, '..'), { recursive: true })
-      writeFileSync(filePath, Buffer.from(content))
-    }
-
-    return tmpDir
+    return extractEpub(epubPath)
   }
 
   private findOpsDir(workDir: string): string {
-    if (existsSync(join(workDir, 'OPS'))) return join(workDir, 'OPS')
-    return workDir
+    return findOpsDir(workDir)
   }
 
   private discoverXhtmlFiles(dir: string): string[] {
-    const files: string[] = []
-    const skipPatterns = ['quan_lan', '_index', 'about', 'nav', 'title', 'toc']
-    for (const entry of readdirSync(dir)) {
-      if (!entry.endsWith('.xhtml')) continue
-      if (skipPatterns.some(p => entry.includes(p))) continue
-      if (entry.startsWith('c')) {
-        files.push(join(dir, entry))
-      }
-    }
-    files.sort((a, b) => {
-      const numA = parseInt(basename(a).match(/^c(\d+)/)?.[1] || '0', 10)
-      const numB = parseInt(basename(b).match(/^c(\d+)/)?.[1] || '0', 10)
-      return numA - numB
-    })
-    if (files.length === 0) {
-      for (const entry of readdirSync(dir).sort()) {
-        if (!entry.endsWith('.xhtml')) continue
-        if (skipPatterns.some(p => entry.includes(p))) continue
-        files.push(join(dir, entry))
-      }
-    }
-    return files
+    return discoverXhtmlFiles(dir)
   }
 
   private detectVolume(filename: string): string | null {
-    if (filename.startsWith('c0_')) return '序'
-    const m = filename.match(/juan(\d+)/)
-    if (m) return '卷' + this.numToChinese(parseInt(m[1], 10))
-    return null
-  }
-
-  private numToChinese(n: number): string {
-    const digits = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九']
-    if (n <= 0) return ''
-    if (n < 10) return digits[n]
-    if (n < 20) return '十' + (n % 10 ? digits[n % 10] : '')
-    if (n < 100) return digits[Math.floor(n / 10)] + '十' + (n % 10 ? digits[n % 10] : '')
-    return String(n)
+    return detectVolumeFromFilename(filename)
   }
 
   private detectHeaderTitle(pf: ParsedFile): string {
-    for (const line of pf.headerLines) {
-      const t = line.cleanText.trim()
-      if (t.length <= 10 && t.includes('提要')) return '提要'
-      if (t.length <= 10 && t.includes('序')) return this.bookTitle ? `${this.bookTitle}序` : '序'
-      if (/^提要/.test(t)) return '提要'
-      if (/^序/.test(t)) return this.bookTitle ? `${this.bookTitle}序` : '序'
-    }
-    if (pf.volumeLabel) return pf.volumeLabel
-    return '外序'
+    return detectHeaderTitle(pf, this.bookTitle)
   }
 }

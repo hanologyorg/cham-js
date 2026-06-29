@@ -6,25 +6,24 @@ Node.js toolchain for [CHAM (Classical Han with Annotations Markup)](https://git
 
 ## Architecture
 
-The package follows a layered, single-source-of-truth architecture:
+Layered, single-source-of-truth architecture with barrel exports. See [`ARCHITECTURE-SPEC.md`](../../library/TODO.annotation-refactor/ARCHITECTURE-SPEC.md) for the full specification.
 
 ```
 src/
-├── model/           # Domain models (SSOT for kinds, targets)
-├── resolver/        # Target resolution (text index, target resolver)
-├── parser/          # Parsing: text → ChamDocument
-├── serializer/      # Serialization: ChamDocument → text
-├── pipeline/        # Transformation: ChamDocument → OutputPiece/Book/Library
-├── validation/      # Rule-based validator (OCP)
-│   ├── rules/       # 25 individual rule classes
-│   └── ...
+├── model/           # SSOT: AnnotationKindRegistry, target operations
+├── resolver/        # Target resolution (TextIndex, TargetResolver)
+├── parser/          # CHAM markdown → ChamDocument
+├── serializer/      # ChamDocument → CHAM markdown
+├── pipeline/        # Pure transformation + BookBuilder + LibraryBuilder
+├── validation/      # Rule-based validator (25 rules, OCP)
+│   └── rules/
+├── epub/            # ePub → CHAM conversion
+├── types/           # Domain-segregated type definitions
+├── yaml-typer.ts    # YAML boundary type helpers
+├── book-config-loader.ts  # Hierarchical book.yaml loading
 ├── registry.ts      # Registry loading (authors, dynasties, etc.)
-├── epub.ts          # ePub converter
-├── cham-json.ts     # JSON converter
 └── cli*.ts          # CLIs (cham-epub, cham-validate)
 ```
-
-See [`ARCHITECTURE-SPEC.md`](../../library/TODO.annotation-refactor/ARCHITECTURE-SPEC.md) for the full specification.
 
 ## Install
 
@@ -74,38 +73,16 @@ CHAM supports two ways to reference annotation targets:
 @v:0 meaning [note on entire verse]  # entire-verse reference
 ```
 
-Both styles work for all annotation kinds and compose freely. External references enable:
-- Clean primary text (no annotation markup)
-- Independent multi-scholar commentary files
-- Natural overlapping ranges
-- Self-documenting references
-
-### All Target Syntaxes
-
-| Syntax | Target | Description |
-|---|---|---|
-| `{N}` | `marker` | Inline marker reference |
-| `@title` | `title` | Document title |
-| `@full` | `full` | Full document |
-| `@verse:L:C[-E]` | `verse` | Direct verse/char position |
-| `@position:L:C[-E]` | `verse` | Alias for `@verse` |
-| `@v:L` | `verse-all` | Entire verse L |
-| `@[text]` | `text` | Text-quote (search all verses) |
-| `@L[text]` | `text` | Text-quote with verse hint |
+Both styles work for all annotation kinds and compose freely.
 
 ### Target Resolution
 
 ```typescript
-import { TargetResolver, TextIndex } from '@hanology/cham'
+import { TargetResolver } from '@hanology/cham'
 
-// Resolve any target to a concrete verse + char range
 const resolver = new TargetResolver(doc.markers, doc.textBlocks)
 const resolved = resolver.resolve({ type: 'text', quote: '明月' })
 // → { verseIndex: 0, charStart: 2, charEnd: 4, scope: 'verse' }
-
-// Non-throwing variant for validation
-const maybe = resolver.tryResolve(target)
-if (!maybe) console.warn('unresolvable target')
 ```
 
 ### Validator (Rule-Based, OCP)
@@ -135,18 +112,60 @@ registry.register(new NoAbcRule())
 const customValidator = new ChamValidator(registry)
 ```
 
-**Built-in rules (25):**
+### Custom Annotation Kind Registry
 
-| Category | Rules |
-|---|---|
-| `frontmatter` | `frontmatter-required` |
-| `marker` | `interleaving`, `uniqueness`, `integrity`, `sequential`, `annotated` |
-| `target` | `target-resolution`, `verse-bounds` |
-| `kind` | `kind-params`, `kind-values`, `known-kind`, `speaker` |
-| `structure` | `bracket-balance`, `nested-brackets`, `text-section`, `duplicate-section` |
-| `quality` | `compound-annotation`, `pinyin-ipa`, `annotation-quality`, `date-consistency`, `nature-valid` |
-| `registry` | `registry-refs`, `dynasty-refs` |
-| `config` | `book-config`, `hierarchy` |
+```typescript
+import { ChamValidator, AnnotationKindRegistry } from '@hanology/cham'
+
+// Register project-specific annotation kinds without forking
+const customKinds = new AnnotationKindRegistry([
+  {
+    kind: 'phonology-gloss' as any,
+    outputKind: 'phonology-gloss',
+    displayOrder: 50,
+    params: { required: [], optional: [] },
+  },
+])
+const validator = new ChamValidator({ kindRegistry: customKinds })
+```
+
+### BookBuilder & LibraryBuilder (OOP Orchestrators)
+
+```typescript
+import { BookBuilder, LibraryBuilder } from '@hanology/cham'
+import type { PieceSources, BookSources } from '@hanology/cham'
+
+// Build a single book from pre-loaded sources
+const bookData = new BookBuilder(config, authors).buildFromSources(pieceSources)
+
+// Build a complete library
+const libraryData = new LibraryBuilder(authors).buildFromBooks(bookSources)
+```
+
+These are pure — no filesystem access. `ChamJsonConverter` is a thin I/O adapter around them.
+
+### YAML Boundary Type Helpers
+
+Type-safe accessors for untrusted YAML data:
+
+```typescript
+import { asRecord, pickString, pickNumber } from '@hanology/cham'
+
+const raw = asRecord(loadedYaml)
+const name = pickString(raw, 'name') ?? 'anonymous'
+const year = pickNumber(raw, 'year')  // undefined if not a number
+```
+
+### Book Config Loader
+
+Hierarchical `book.yaml` loading with ancestor merging:
+
+```typescript
+import { loadBookConfig } from '@hanology/cham'
+
+// Walks dir + ancestors; closer config overrides parent
+const config = loadBookConfig('./content/my-book')
+```
 
 ### Annotation Kind Registry (SSOT)
 
@@ -158,25 +177,11 @@ const registry = AnnotationKindRegistry.DEFAULT
 registry.mapToOutput('pron')     // → 'pronunciation'
 registry.mapToOutput('meaning')  // → 'semantic'
 registry.requiredParams('fanqie') // → ['upper', 'lower']
-registry.has('collation')        // → true
 ```
-
-### Multi-file Merge
-
-Parse an entire piece directory (primary + secondary files):
-
-```typescript
-import { ChamParser } from '@hanology/cham'
-
-const parser = new ChamParser()
-const merged = parser.parsePiece('./content/poem-001', bookConfig)
-```
-
-Merges secondary files, validates marker cross-references, inherits `contributors`/`date`/`genre` from `book.yaml`, and discovers `part-*.cham.md` files.
 
 ### Per-Annotation Contributor
 
-Multi-scholar commentary files can use section-level `@contributor` to attribute annotations:
+Multi-scholar commentary files use section-level `@contributor`:
 
 ```markdown
 ## 注釋
@@ -194,9 +199,16 @@ Multi-scholar commentary files can use section-level `@contributor` to attribute
 
 The pipeline propagates `@contributor` to each `OutputAnnotation.contributor`.
 
-### ChamJsonConverter
+### Multi-file Merge
 
-Convert book/library directories to JSON for frontend consumption:
+```typescript
+import { ChamParser } from '@hanology/cham'
+
+const parser = new ChamParser()
+const merged = parser.parsePiece('./content/poem-001', bookConfig)
+```
+
+### ChamJsonConverter
 
 ```typescript
 import { ChamJsonConverter } from '@hanology/cham'
@@ -209,36 +221,12 @@ const bookData = converter.convertBook({
 })
 ```
 
-### Pipeline (Pure Transformations)
-
-Headless transformation functions with no filesystem dependency:
-
-```typescript
-import {
-  buildPieceFromCham, buildBookMeta, buildBookData,
-  buildLibraryIndex, buildCrossRefs, detectScale,
-  buildAuthorsJson, buildDynastiesJson,
-  buildAnnotations, getHeadword, buildAnnotationsText,
-} from '@hanology/cham/pipeline'
-```
-
-### Registry & Lexicon
-
-Load CHAM registry data and apply lexicon-based pronunciation annotations:
-
-```typescript
-import { RegistryLoader, LexiconApplier } from '@hanology/cham'
-
-const registries = new RegistryLoader().loadAll('./data')
-// registries.authors, .dynasties, .eras, .places, .events, .lexicon, .works, .sources
-```
-
 ### Sub-path Exports
 
 ```typescript
 import { parse } from '@hanology/cham/parser'
 import { serialize } from '@hanology/cham/serializer'
-import type { ChamDocument, PrimaryMeta } from '@hanology/cham/types'
+import type { ChamDocument } from '@hanology/cham/types'
 import { parseYaml, loadYaml } from '@hanology/cham/yaml'
 import { buildPieceFromCham } from '@hanology/cham/pipeline'
 ```
@@ -258,6 +246,8 @@ npx cham-epub <input.epub> --id <collection-id> --title <title>
 Located in `scripts/`:
 
 - `split-commentary-layers.ts` — Split multi-scholar commentary into per-scholar files
+- `migrate-book-commentary.ts` — Batch migration with archiving
+- `clean-text-markers.ts` — Strip `{N}` markers after migration
 - `renumber-markers.ts` — Renumber marker IDs sequentially
 - `repair-markers.ts` — Fix swapped marker positions
 - `fix-commentary-ids.ts` — Fix commentary annotation IDs
