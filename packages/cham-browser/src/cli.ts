@@ -59,6 +59,7 @@ function loadBookConfig(bookDir: string): BookConfig {
     hero: raw.hero as string[] | undefined,
     layers: raw.layers as BookConfig['layers'],
     annotation: raw.annotation as BookConfig['annotation'],
+    hierarchy: raw.hierarchy as BookConfig['hierarchy'],
   }
 }
 
@@ -416,15 +417,20 @@ function getSiteMeta(config: SiteConfig, configDir: string) {
 function chamHtmlPlugin(siteTitle: string, logoUrl?: string) {
   return {
     name: 'cham-html-transform',
-    transformIndexHtml(html: string) {
-      let result = html.replace(/<title>CHAM<\/title>/, `<title>${siteTitle}</title>`)
-      if (logoUrl) {
-        result = result.replace(
-          'id="loading-logo"></div>',
-          `id="loading-logo"><img src="${logoUrl}" alt="" class="ld-base" /><div class="ld-liquid"><img src="${logoUrl}" alt="" class="ld-fill" /></div></div>`
-        )
-      }
-      return result
+    enforce: 'post' as const,
+    transformIndexHtml: {
+      order: 'post' as const,
+      handler(html: string) {
+        let result = html.replace(/<title>CHAM<\/title>/, `<title>${siteTitle}</title>`)
+        result = result.replace(/<html\s+lang="en"/, '<html lang="zh-Hant"')
+        if (logoUrl) {
+          result = result.replace(
+            'id="loading-logo"></div>',
+            `id="loading-logo"><img src="${logoUrl}" alt="" class="ld-base" /><div class="ld-liquid"><img src="${logoUrl}" alt="" class="ld-fill" /></div></div>`
+          )
+        }
+        return result
+      },
     },
   }
 }

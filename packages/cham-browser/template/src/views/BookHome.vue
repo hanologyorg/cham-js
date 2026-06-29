@@ -62,7 +62,7 @@ function scrollToCatalog() {
 <template>
   <!-- ═══════ 直排模式 ═══════ -->
   <div v-if="isVertical && meta" class="v-root">
-    <SideNav @home="router.push('/')" @back="router.push('/')" />
+    <SideNav has-back @home="router.push('/')" @back="router.push('/')" />
     <div ref="vPageRef" class="v-page">
       <!-- Hero -->
       <section class="v-hero">

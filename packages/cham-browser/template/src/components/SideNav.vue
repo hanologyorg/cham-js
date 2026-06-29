@@ -11,6 +11,7 @@ defineProps<{
   poemTitle?: string
   poemAuthor?: string
   titleCollapsed?: boolean
+  hasBack?: boolean
   hasPrev?: boolean
   hasNext?: boolean
 }>()
@@ -38,7 +39,7 @@ function toggleSettings() { settingsOpen.value = !settingsOpen.value }
       <span v-else class="sn-seal">文</span>
     </button>
 
-    <button class="sn-btn" @click="emit('back')" :aria-label="t('nav.back')">
+    <button v-if="hasBack" class="sn-btn" @click="emit('back')" :aria-label="t('nav.back')">
       <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
     </button>
 

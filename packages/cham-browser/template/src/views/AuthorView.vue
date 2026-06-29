@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLibrary } from '../composables/useLibrary'
-import { useBook } from '../composables/useBook'
 import { useData } from '../composables/useData'
 import { useTitle } from '../composables/useTitle'
 import { useReadingMode } from '../composables/useReadingMode'
@@ -10,7 +9,15 @@ import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useI18n } from '../composables/useI18n'
 import SideNav from '../components/SideNav.vue'
 import BackToTop from '../components/BackToTop.vue'
-import type { Piece } from '../types'
+
+interface WorkEntry {
+  bookId: string
+  num: number
+  title: string
+  preview: string
+  author: string
+  era: string
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -19,12 +26,8 @@ const { t } = useI18n()
 const { loadLibrary, books, singleBook } = useLibrary()
 await loadLibrary()
 
-const { loadShared, getAuthor } = useData()
+const { loadShared, getAuthor, getAuthorIndex, getAuthorWorks } = useData()
 await loadShared()
-
-const { load, getPiecesByAuthor, meta } = useBook()
-const bookId = singleBook.value?.id || books.value[0]?.id
-if (bookId) await load(bookId)
 
 const { layout } = useReadingMode()
 const isVertical = computed(() => layout.value === 'vertical')
@@ -32,14 +35,25 @@ const vPageRef = ref<HTMLElement | null>(null)
 useHorizontalScroll(vPageRef)
 
 const authorName = computed(() => decodeURIComponent(String(route.params.name || '')))
+const authorIndexEntry = computed(() => getAuthorIndex(authorName.value))
 const author = computed(() => getAuthor(authorName.value))
-const authorPieces = computed(() => getPiecesByAuthor(authorName.value))
 
-useTitle(`${authorName.value} — ${meta.value?.title || ''}`)
+const authorPieces = computed<WorkEntry[]>(() => {
+  const entry = authorIndexEntry.value
+  if (!entry) return []
+  return getAuthorWorks(entry.id).map(p => ({
+    bookId: p.b,
+    num: p.n,
+    title: p.t,
+    preview: p.v1,
+    author: p.a,
+    era: p.e,
+  }))
+})
 
-function openPiece(piece: Piece) {
-  router.push(`/${piece.bookId}/${piece.num}`)
-}
+const siteTitle = singleBook.value?.title || books.value[0]?.title || ''
+useTitle(`${authorName.value} — ${siteTitle}`)
+
 function goBack() { router.push('/') }
 function goHome() { router.push('/') }
 </script>
@@ -48,7 +62,7 @@ function goHome() { router.push('/') }
   <div v-if="author">
     <!-- ═══════ 直排模式 ═══════ -->
     <div v-if="isVertical" class="v-root">
-      <SideNav :context="authorName" @back="goBack" @home="goHome" />
+      <SideNav has-back :context="authorName" @back="goBack" @home="goHome" />
       <div ref="vPageRef" class="v-page">
         <section class="v-author-info">
           <div class="v-seal">{{ authorName.charAt(0) }}</div>
@@ -135,7 +149,7 @@ function goHome() { router.push('/') }
                 >
                   <div class="h-work-num">{{ String(piece.num).padStart(3, '0') }}</div>
                   <div class="h-work-title">{{ piece.title }}</div>
-                  <div class="h-work-preview">{{ piece.verses.map(v => v.text).join('').slice(0, 40) }}</div>
+                  <div class="h-work-preview">{{ piece.preview }}</div>
                 </div>
               </router-link>
             </div>
