@@ -1,57 +1,39 @@
-// ─── Library ────────────────────────────────────────────────────
+// ─── Types namespace ───────────────────────────────────────────
+// cham-browser re-exports canonical types from @hanology/cham to avoid
+// type drift. Frontend-specific display types (Piece, Annotation,
+// AnnotationEntry, etc.) live here — they wrap cham's pipeline output
+// with display-only fields (pronSegments, numDisplay, etc.).
 
-export type LibraryScale = 'single-piece' | 'single-book' | 'library'
-export type BookGenre = 'poetry' | 'prose' | 'mixed' | 'drama'
+// ─── Re-exported from @hanology/cham (canonical source of truth) ──
+export type {
+  LibraryScale,
+  BookGenre,
+  BookLayer,
+  BookAnnotationDefaults,
+  BookMeta,
+  CrossRef,
+  LibraryIndex,
+  PieceContributor,
+  HierarchyLevel,
+  PieceSource,
+} from '@hanology/cham/types'
 
-export interface BookLayer {
-  id: string
-  label: string
-  shortLabel?: string
-  contributor: string
-  role?: string
-  nature?: string
-  displayOrder?: number
-  enabled?: boolean
-}
+// Re-import for use in frontend-specific types below.
+import type {
+  BookGenre,
+  PieceSource,
+  PieceContributor,
+  HierarchyLevel,
+} from '@hanology/cham/types'
 
-export interface BookAnnotationDefaults {
-  defaultLabel?: string
-  defaultShortLabel?: string
-}
-
-export interface BookMeta {
-  id: string
-  title: string
-  subtitle?: string
-  'title-en'?: string
-  publisher?: string
-  genre: BookGenre
-  count: number
-  hero?: string[]
-  layers?: BookLayer[]
-  annotation?: BookAnnotationDefaults
-}
-
-export interface CrossRef {
-  focusedBookId: string
-  focusedNum: number
-  fullBookId: string
-  fullNum?: number
-  relation: 'section' | 'excerpt'
-}
-
-export interface LibraryIndex {
-  scale: LibraryScale
-  books: BookMeta[]
-  crossRefs?: CrossRef[]
-}
+// ─── Book data (frontend Piece, not cham's OutputPiece) ─────────
 
 export interface BookData {
-  meta: BookMeta
+  meta: import('@hanology/cham/types').BookMeta
   pieces: Piece[]
 }
 
-// ─── Piece ──────────────────────────────────────────────────────
+// ─── Annotation model (display-flavored) ────────────────────────
 
 export interface TextRange {
   type: 'point' | 'range' | 'full'
@@ -101,26 +83,7 @@ export interface AnnotationLayer {
   annotations: Annotation[]
 }
 
-export interface PieceContributor {
-  id: string
-  name: string
-  role: string
-  title?: string
-}
-
-export interface SourceRange {
-  start?: string
-  end?: string
-  chapter?: string
-}
-
-export interface PieceSource {
-  text?: string
-  textRef?: string
-  pieceRef?: number
-  relation: 'section' | 'excerpt' | 'standalone'
-  range?: SourceRange
-}
+// ─── Prose, parts, pieces ───────────────────────────────────────
 
 export interface ProseSection {
   key: string
@@ -138,13 +101,6 @@ export interface Part {
   verses: VerseLine[]
   annotations: Annotation[]
   annotationText?: string
-}
-
-export interface HierarchyLevel {
-  level: string
-  index: number
-  label?: string
-  parent?: number | string
 }
 
 export interface Piece {
@@ -168,10 +124,10 @@ export interface Piece {
   parts?: Part[]
 }
 
-// Backward compatibility alias
+/** Backward-compatibility alias. */
 export type Poem = Piece
 
-// ─── Author & Dynasty ───────────────────────────────────────────
+// ─── Author & Dynasty (JSON-LD display shapes) ──────────────────
 
 export interface Author {
   '@id': string

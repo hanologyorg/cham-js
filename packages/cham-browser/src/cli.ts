@@ -1,351 +1,28 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync, readdirSync, existsSync, mkdirSync, statSync, cpSync, symlinkSync, rmSync } from 'fs'
-import { join, resolve, dirname, basename, sep } from 'path'
+import { readFileSync, readdirSync, existsSync, mkdirSync, cpSync, symlinkSync, rmSync } from 'fs'
+import { join, resolve, dirname, sep } from 'path'
 import { fileURLToPath } from 'url'
-import { parse as parseYaml } from 'yaml'
 import {
-  LibraryBuilder, buildAuthorsJson, buildDynastiesJson,
-} from './pipeline.js'
-import type { AuthorRecord, BookSources, PieceSources } from './pipeline.js'
-import type { BookConfig, BookMeta, OutputPiece } from '@hanology/cham/types'
-
-// ─── Config ───────────────────────────────────────────────────
-
-interface SiteConfig {
-  name: string
-  nameEn?: string
-  subtitle?: string
-  subtitleEn?: string
-  logo?: string
-  logoDark?: string
-  aboutFile?: string
-  libraryDir: string
-  outputDir?: string
-  publicDir?: string
-  pretty?: boolean
-}
-
-function loadConfig(configPath: string): SiteConfig {
-  const raw = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>
-  return {
-    name: raw.name as string || 'CHAM',
-    nameEn: raw.nameEn as string | undefined,
-    subtitle: raw.subtitle as string | undefined,
-    subtitleEn: raw.subtitleEn as string | undefined,
-    logo: raw.logo as string | undefined,
-    logoDark: raw.logoDark as string | undefined,
-    aboutFile: raw.aboutFile as string | undefined,
-    libraryDir: raw.libraryDir as string || 'library/content',
-    outputDir: raw.outputDir as string || 'dist',
-    publicDir: raw.publicDir as string | undefined,
-    pretty: raw.pretty as boolean | undefined ?? true,
-  }
-}
-
-// ─── Book Config ──────────────────────────────────────────────
-
-function loadBookConfig(bookDir: string): BookConfig {
-  const raw = parseYaml(readFileSync(join(bookDir, 'book.yaml'), 'utf-8')) as Record<string, unknown>
-  return {
-    id: raw.id as string || basename(bookDir),
-    title: raw.title as string || '',
-    subtitle: raw.subtitle as string | undefined,
-    'title-en': raw['title-en'] as string | undefined,
-    publisher: raw.publisher as string | undefined,
-    genre: raw.genre as BookConfig['genre'],
-    contributors: raw.contributors as BookConfig['contributors'],
-    date: raw.date as BookConfig['date'],
-    hero: raw.hero as string[] | undefined,
-    layers: raw.layers as BookConfig['layers'],
-    annotation: raw.annotation as BookConfig['annotation'],
-    hierarchy: raw.hierarchy as BookConfig['hierarchy'],
-  }
-}
-
-// ─── I/O Adapters ─────────────────────────────────────────────
-
-function loadAuthors(configDir: string): Record<string, AuthorRecord> {
-  const authorsDir = join(configDir, 'library', 'authors')
-  const indexPath = join(authorsDir, '_index.yaml')
-  if (!existsSync(indexPath)) {
-    console.warn('No authors/_index.yaml found, authors will be empty')
-    return {}
-  }
-
-  const indexData = parseYaml(readFileSync(indexPath, 'utf-8')) as { authors: Record<string, string> }
-  const personIndex = indexData.authors
-
-  // Build dynasty label → gbCode lookup
-  const dynastyToGbCode = new Map<string, string>()
-  const dynastiesPath = join(configDir, 'library', 'register', 'dynasties.yaml')
-  if (existsSync(dynastiesPath)) {
-    const dynasties = parseYaml(readFileSync(dynastiesPath, 'utf-8')) as Array<{
-      label: string; names?: string[]; gb_code?: string
-    }>
-    for (const d of dynasties) {
-      if (d.gb_code) {
-        dynastyToGbCode.set(d.label, d.gb_code)
-        if (d.names) for (const n of d.names) dynastyToGbCode.set(n, d.gb_code)
-      }
-    }
-  }
-
-  const seenDirs = new Set<string>()
-  const records: Record<string, AuthorRecord> = {}
-
-  for (const [ref, dirName] of Object.entries(personIndex)) {
-    if (seenDirs.has(dirName)) continue
-    seenDirs.add(dirName)
-
-    const yamlPath = join(authorsDir, dirName, 'author.yaml')
-    if (!existsSync(yamlPath)) continue
-
-    const data = parseYaml(readFileSync(yamlPath, 'utf-8')) as Record<string, unknown>
-    const era = (data.dynasty as string) || (data.era as string) || ''
-    const eraCode = dynastyToGbCode.get(era) || ''
-
-    let bio = ''
-    const bioSources = data.bio_sources as Array<{ file: string }> | undefined
-    if (bioSources?.length) {
-      const bioFile = join(authorsDir, dirName, bioSources[0].file)
-      if (existsSync(bioFile)) {
-        bio = readFileSync(bioFile, 'utf-8').replace(/^---\n[\s\S]*?\n---\n/, '').trim()
-      }
-    }
-
-    const ctextId = typeof data['@id'] === 'string' && data['@id'].startsWith('ctext:')
-      ? data['@id'].replace('ctext:', '') : undefined
-
-    records[ref] = {
-      name: (data.label as string) || ref,
-      dynasty: era,
-      era,
-      eraCode: eraCode || undefined,
-      bio: bio || undefined,
-      born: (data['cprop:born'] as { '@value': string })?.['@value'],
-      died: (data['cprop:died'] as { '@value': string })?.['@value'],
-      courtesyName: data['cprop:name-style'] as string | undefined,
-      artName: data['cprop:name-art'] as string | undefined,
-      wikidata: data['cprop:authority-wikidata'] as string | undefined,
-      ctextId,
-      wikipediaZh: data['cprop:link-wikipedia_zh'] as string | undefined,
-      wikipediaEn: data['cprop:link-wikipedia_en'] as string | undefined,
-    }
-  }
-
-  // Map alias refs to the same record
-  for (const [ref, dirName] of Object.entries(personIndex)) {
-    if (!records[ref]) {
-      const canonical = Object.entries(personIndex).find(
-        ([r, d]) => d === dirName && records[r],
-      )
-      if (canonical) records[ref] = records[canonical[0]]
-    }
-  }
-
-  console.log(`Authors: ${seenDirs.size} directories, ${Object.keys(records).length} refs`)
-  return records
-}
-
-function loadAboutHtml(config: SiteConfig, configDir: string): string {
-  const candidates = [
-    config.aboutFile ? resolve(configDir, config.aboutFile) : null,
-    join(configDir, 'about.html'),
-    join(configDir, 'about.md'),
-  ].filter(Boolean) as string[]
-
-  for (const p of candidates) {
-    if (existsSync(p)) {
-      const content = readFileSync(p, 'utf-8')
-      if (p.endsWith('.html')) return content
-      return content
-    }
-  }
-  return ''
-}
-
-function readPieceFiles(pieceDir: string): PieceSources | null {
-  let chamSource: string | null = null
-  const proseFiles = new Map<string, string>()
-  const layerFiles = new Map<string, string>()
-  const partFiles = new Map<string, string>()
-
-  if (!existsSync(pieceDir)) return null
-
-  for (const f of readdirSync(pieceDir).sort()) {
-    const filePath = join(pieceDir, f)
-    if (f === 'text.cham.md') {
-      chamSource = readFileSync(filePath, 'utf-8')
-    } else if (f.startsWith('part-') && f.endsWith('.cham.md')) {
-      partFiles.set(f, readFileSync(filePath, 'utf-8'))
-    } else if (f.endsWith('.cham.md')) {
-      layerFiles.set(f, readFileSync(filePath, 'utf-8'))
-    } else if (f.endsWith('.md') && !f.startsWith('_')) {
-      proseFiles.set(f, readFileSync(filePath, 'utf-8'))
-    }
-  }
-
-  if (!chamSource) return null
-  return { chamSource, proseFiles, layerFiles, partFiles }
-}
-
-/** Walks a book directory and produces PieceSources[] for LibraryBuilder. */
-function scanPieceSources(bookDir: string): PieceSources[] {
-  const out: PieceSources[] = []
-  if (!existsSync(bookDir)) return out
-  for (const entry of readdirSync(bookDir).sort()) {
-    const pieceDir = join(bookDir, entry)
-    if (!statSync(pieceDir, { throwIfNoEntry: false })?.isDirectory()) continue
-    const sources = readPieceFiles(pieceDir)
-    if (sources) out.push(sources)
-  }
-  return out
-}
-
-/** Walks a library directory and produces BookSources[] for LibraryBuilder. */
-function scanLibraryBookSources(libraryDir: string): BookSources[] {
-  const books: BookSources[] = []
-  if (!existsSync(libraryDir)) return books
-  for (const entry of readdirSync(libraryDir).sort()) {
-    const dir = join(libraryDir, entry)
-    if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) continue
-    if (!existsSync(join(dir, 'book.yaml'))) continue
-    books.push({
-      config: loadBookConfig(dir),
-      pieces: scanPieceSources(dir),
-    })
-  }
-  return books
-}
+  loadSiteConfig, loadAuthors, loadAboutHtml, scanLibraryBookSources,
+  type SiteConfig,
+} from './library-fs-adapter.js'
+import { SiteWriter } from './site-writer.js'
+import { LibraryBuilder } from './pipeline.js'
 
 // ─── Data Generation ──────────────────────────────────────────
 
-function generateData(config: SiteConfig, configDir: string): {
-  bookMetas: BookMeta[]
-  allPieces: OutputPiece[]
-} {
+function generateData(config: SiteConfig, configDir: string): void {
   const libraryDir = resolve(configDir, config.libraryDir)
   const authors = loadAuthors(configDir)
   const bookSources = scanLibraryBookSources(libraryDir)
   const data = new LibraryBuilder(authors).buildFromBooks(bookSources)
 
-  const bookMetas = data.books.map(b => b.meta)
-  const allPieces = [...data.allPieces]
-
-  const outputDir = resolve(configDir, config.outputDir || 'dist')
-  const dataDir = join(outputDir, 'data')
-
-  mkdirSync(dataDir, { recursive: true })
-  mkdirSync(join(dataDir, 'books'), { recursive: true })
-  mkdirSync(join(dataDir, 'pieces'), { recursive: true })
-  mkdirSync(join(dataDir, 'authors'), { recursive: true })
-
-  const indent = config.pretty ? 2 : 0
-
-  // library.json
-  writeFileSync(
-    join(dataDir, 'library.json'),
-    JSON.stringify(data.library, null, indent),
-    'utf-8',
-  )
-
-  // Per-book data (full + meta)
-  for (const bd of data.books) {
-    writeFileSync(
-      join(dataDir, 'books', `${bd.meta.id}.json`),
-      JSON.stringify(bd, null, indent),
-      'utf-8',
-    )
-    writeFileSync(
-      join(dataDir, 'books', `${bd.meta.id}.meta.json`),
-      JSON.stringify(bd.meta, null, indent),
-      'utf-8',
-    )
-  }
-
-  // Piece index (lightweight summaries for ALL pieces)
-  const pieceIndex = allPieces.map(p => ({
-    id: `${p.bookId}/${p.num}`,
-    t: p.title,
-    a: p.author,
-    ar: p.authorId,
-    e: p.era || p.dynasty,
-    ec: p.eraCode || '',
-    b: p.bookId,
-    g: p.genre,
-    n: p.num,
-    v1: p.verses[0]?.text?.slice(0, 20) || '',
-  }))
-  writeFileSync(
-    join(dataDir, 'index.json'),
-    JSON.stringify(pieceIndex, null, indent),
-    'utf-8',
-  )
-
-  // Per-piece JSON files
-  for (const piece of allPieces) {
-    const pieceDir = join(dataDir, 'pieces', piece.bookId)
-    mkdirSync(pieceDir, { recursive: true })
-    writeFileSync(join(pieceDir, `${piece.num}.json`), JSON.stringify(piece, null, indent), 'utf-8')
-  }
-
-  // Per-author split data
-  const workCounts = new Map<string, { works: string[]; era: string; eraCode: string }>()
-  for (const p of allPieces) {
-    if (!workCounts.has(p.authorId)) {
-      const author = authors[p.authorId]
-      workCounts.set(p.authorId, {
-        works: [],
-        era: author?.era || author?.dynasty || p.era || p.dynasty,
-        eraCode: author?.eraCode || p.eraCode || '',
-      })
-    }
-    workCounts.get(p.authorId)!.works.push(`${p.bookId}/${p.num}`)
-  }
-
-  const authorIndex: Array<{ id: string; name: string; era: string; eraCode: string; workCount: number }> = []
-  for (const [ref, data] of Object.entries(authors)) {
-    if (!data.name) continue
-    const wc = workCounts.get(ref)
-    const entry = {
-      id: ref,
-      name: data.name,
-      era: wc?.era || data.era || data.dynasty || '',
-      eraCode: wc?.eraCode || data.eraCode || '',
-      workCount: wc?.works.length || 0,
-    }
-    authorIndex.push(entry)
-
-    // Per-author detail JSON
-    writeFileSync(
-      join(dataDir, 'authors', `${ref}.json`),
-      JSON.stringify({
-        ...entry,
-        names: [],
-        bio: data.bio || '',
-        bioSource: '',
-        ctext: data.ctextId ? Number(data.ctextId) : undefined,
-        wikidata: data.wikidata,
-        wikipediaZh: data.wikipediaZh,
-        wikipediaEn: data.wikipediaEn,
-        works: wc?.works || [],
-      }, null, indent),
-      'utf-8',
-    )
-  }
-  writeFileSync(join(dataDir, 'authors', 'index.json'), JSON.stringify(authorIndex, null, indent), 'utf-8')
-
-  // Dynasties/eras (using era field)
-  const dynastiesJson = buildDynastiesJson(allPieces)
-  writeFileSync(
-    join(dataDir, 'dynasties.json'),
-    JSON.stringify(dynastiesJson, null, indent),
-    'utf-8',
-  )
-
-  console.log(`Data: ${bookMetas.length} book(s), ${allPieces.length} piece(s), ${authorIndex.length} author(s)`)
-
-  return { bookMetas, allPieces }
+  const writer = new SiteWriter({
+    outputDir: resolve(configDir, config.outputDir || 'dist'),
+    pretty: config.pretty,
+  })
+  const result = writer.writeAll(data, authors)
+  console.log(`Data: ${result.bookCount} book(s), ${result.pieceCount} piece(s), ${result.authorCount} author(s)`)
 }
 
 // ─── Shared Vite Config ───────────────────────────────────────
@@ -355,11 +32,8 @@ function getPackageVersions(): { cham: string; chamBrowser: string } {
   const browserPkg = JSON.parse(readFileSync(join(thisDir, '..', 'package.json'), 'utf-8'))
   let chamVersion = ''
   const candidates = [
-    // workspace layout: dist/ → cham-browser/ → packages/ → root/packages/cham/
     join(thisDir, '..', '..', '..', 'packages', 'cham', 'package.json'),
-    // npm hoisted: @hanology/cham-browser/dist → @hanology/cham-browser/ → node_modules/@hanology/cham/
     join(thisDir, '..', '..', 'cham', 'package.json'),
-    // npm nested
     join(thisDir, '..', 'node_modules', '@hanology', 'cham', 'package.json'),
   ]
   for (const p of candidates) {
@@ -372,53 +46,46 @@ function getPackageVersions(): { cham: string; chamBrowser: string } {
 }
 
 function getTemplateDir(): string {
-  return resolve(dirname(fileURLToPath(import.meta.url)), '..', 'template')
+  const thisDir = dirname(fileURLToPath(import.meta.url))
+  return join(thisDir, '..', 'template')
 }
 
 function copyLogos(config: SiteConfig, configDir: string, outputDir: string): { logoUrl: string | undefined; logoDarkUrl: string | undefined } {
-  function copyLogo(key: string, rawPath: string | undefined): string | undefined {
-    if (!rawPath) return undefined
-    const src = resolve(configDir, rawPath)
-    if (!existsSync(src)) { console.warn(`Logo not found: ${src}`); return undefined }
-    const assetsDir = join(outputDir, 'assets')
-    mkdirSync(assetsDir, { recursive: true })
-    const ext = src.endsWith('.svg') ? 'svg' : src.endsWith('.png') ? 'png' : 'bin'
-    const name = `logo-${key}.${ext}`
-    writeFileSync(join(assetsDir, name), readFileSync(src))
-    const url = `/assets/${name}`
-    console.log(`Logo (${key}): ${rawPath} → ${url}`)
-    return url
-  }
-  const logoUrl = copyLogo('light', config.logo)
-  const logoDarkUrl = copyLogo('dark', config.logoDark)
+  const logoUrl = config.logo
+    ? copyAsset(config.logo, configDir, outputDir)
+    : undefined
+  const logoDarkUrl = config.logoDark
+    ? copyAsset(config.logoDark, configDir, outputDir)
+    : undefined
   return { logoUrl, logoDarkUrl }
 }
 
+function copyAsset(relPath: string, configDir: string, outputDir: string): string | undefined {
+  const src = resolve(configDir, relPath)
+  if (!existsSync(src)) return undefined
+  const dest = join(outputDir, 'assets', relPath)
+  mkdirSync(dirname(dest), { recursive: true })
+  cpSync(src, dest)
+  return `assets/${relPath}`
+}
+
 function getSiteMeta(config: SiteConfig, configDir: string) {
+  const aboutHtml = loadAboutHtml(config, configDir)
   return {
-    siteTitle: config.subtitle || config.name,
-    siteSubtitle: config.subtitleEn || config.nameEn || '',
-    aboutHtml: loadAboutHtml(config, configDir),
+    siteTitle: config.name,
+    siteSubtitle: config.subtitle || '',
+    aboutHtml,
   }
 }
 
 function chamHtmlPlugin(siteTitle: string, logoUrl?: string) {
   return {
     name: 'cham-html-transform',
-    enforce: 'post' as const,
-    transformIndexHtml: {
-      order: 'post' as const,
-      handler(html: string) {
-        let result = html.replace(/<title>CHAM<\/title>/, `<title>${siteTitle}</title>`)
-        result = result.replace(/<html\s+lang="en"/, '<html lang="zh-Hant"')
-        if (logoUrl) {
-          result = result.replace(
-            'id="loading-logo"></div>',
-            `id="loading-logo"><img src="${logoUrl}" alt="" class="ld-base" /><div class="ld-liquid"><img src="${logoUrl}" alt="" class="ld-fill" /></div></div>`
-          )
-        }
-        return result
-      },
+    transformIndexHtml(html: string) {
+      if (logoUrl) html = html.replace(/<link rel="icon"[^>]*>/, '')
+      html = html.replace('<title>', `<title>${siteTitle} — `).replace(` — ${siteTitle}</title>`, '</title>')
+      if (siteTitle && !html.includes('<title>')) html = html.replace('<head>', `<head><title>${siteTitle}</title>`)
+      return html
     },
   }
 }
@@ -429,13 +96,11 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
   const templateDir = getTemplateDir()
   const outputDir = resolve(configDir, config.outputDir || 'dist')
 
-  // Step 1: Generate data
   generateData(config, configDir)
 
   const { logoUrl, logoDarkUrl } = copyLogos(config, configDir, outputDir)
   const { siteTitle, siteSubtitle, aboutHtml } = getSiteMeta(config, configDir)
 
-  // Symlink data dir into template's public so vite dev serves it
   const templatePublicData = join(templateDir, 'public', 'data')
   const dataDir = join(outputDir, 'data')
   rmSync(templatePublicData, { recursive: true, force: true })
@@ -443,7 +108,6 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
   symlinkSync(dataDir, templatePublicData)
   console.log(`Data: ${dataDir} → ${templatePublicData}`)
 
-  // Symlink bundled fonts into template's public
   const bundledFonts = join(templateDir, '..', 'fonts')
   if (existsSync(bundledFonts)) {
     const templateFonts = join(templateDir, 'public', 'fonts')
@@ -452,7 +116,6 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
     console.log(`Fonts: ${bundledFonts} → ${templateFonts}`)
   }
 
-  // Symlink public assets (favicons etc.) into template's public
   const publicDir = config.publicDir
     ? resolve(configDir, config.publicDir)
     : resolve(configDir, 'public')
@@ -467,7 +130,6 @@ async function devServer(config: SiteConfig, configDir: string): Promise<void> {
     console.log(`Public assets linked from ${publicDir}`)
   }
 
-  // Symlink logo assets into template's public/assets
   const templatePublicAssets = join(templateDir, 'public', 'assets')
   const distAssets = join(outputDir, 'assets')
   if (existsSync(distAssets)) {
@@ -519,10 +181,11 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
   const templateDir = getTemplateDir()
   const outputDir = resolve(configDir, config.outputDir || 'dist')
 
+  generateData(config, configDir)
+
   const { logoUrl, logoDarkUrl } = copyLogos(config, configDir, outputDir)
   const { siteTitle, siteSubtitle, aboutHtml } = getSiteMeta(config, configDir)
 
-  // Symlink bundled fonts into template's public
   const bundledFonts = join(templateDir, '..', 'fonts')
   if (existsSync(bundledFonts)) {
     const templatePublic = join(templateDir, 'public')
@@ -596,7 +259,6 @@ async function buildSite(config: SiteConfig, configDir: string): Promise<void> {
 
   console.log(`Site built to ${outputDir}`)
 
-  // Copy public dir assets (favicons, manifest, etc.) to output
   const publicDir = config.publicDir
     ? resolve(configDir, config.publicDir)
     : resolve(configDir, 'public')
@@ -630,17 +292,13 @@ async function main() {
   }
 
   const configDir = dirname(resolve(configPath))
-  const config = loadConfig(configPath)
+  const config = loadSiteConfig(configPath)
 
   console.log(`Site: ${config.name} (${config.nameEn || ''})`)
 
   if (command === 'dev') {
     await devServer(config, configDir)
   } else {
-    console.log(`Building site: ${config.name} (${config.nameEn || ''})`)
-    // Step 1: Generate JSON data
-    generateData(config, configDir)
-    // Step 2: Build static site
     await buildSite(config, configDir)
   }
 }
