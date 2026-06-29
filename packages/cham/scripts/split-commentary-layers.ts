@@ -30,9 +30,11 @@
 
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'fs'
 import { join, basename, resolve, dirname } from 'path'
-import { parse, serialize, type ChamDocument, type AnnotationEntry, type AnnotationSection } from '../src/index.js'
-import { parseYaml } from '../src/yaml.js'
-import { asRecord, pickString, pickBoolean } from '../src/yaml-typer.js'
+import {
+  parse, serialize, parseYaml,
+  asRecord, pickString, pickBoolean,
+  type ChamDocument, type AnnotationEntry, type AnnotationSection,
+} from '../src/index.js'
 
 export interface ScholarMapping {
   readonly file: string

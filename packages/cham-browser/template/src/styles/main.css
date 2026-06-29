@@ -379,3 +379,14 @@ button:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─── Performance: tabular-nums, content-visibility, scroll-margin ─── */
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+[data-section-key] { scroll-margin-top: 56px; }
+
+.ann-pane-entry {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 80px;
+}

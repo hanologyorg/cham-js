@@ -9,10 +9,11 @@
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { join, basename } from 'path'
 import { parse } from '../parser.js'
-import { parseYaml } from '../yaml.js'
+import { parseBookConfig } from '../book-config-loader.js'
 import { RegistryLoader } from '../registry.js'
 import { TargetResolver } from '../resolver.js'
 import { AnnotationKindRegistry } from '../model.js'
+import { loadYaml } from '../yaml.js'
 import type {
   ChamDocument, ValidationIssue, ValidationResult,
   BookConfig, ChamRegistries, PrimaryMeta,
@@ -248,7 +249,8 @@ export class ChamValidator {
       return null
     }
     try {
-      return parseYaml(readFileSync(path, 'utf-8')) as unknown as BookConfig
+      const raw = loadYaml(path) as Record<string, unknown>
+      return parseBookConfig(raw, basename(bookDir))
     } catch (e) {
       issues.push({ severity: 'error', file: path, message: `Invalid YAML: ${(e as Error).message}` })
       return null

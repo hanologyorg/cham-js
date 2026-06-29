@@ -7,6 +7,7 @@ import type {
   OutputPart,
 } from '../types.js'
 import { parse } from '../parser.js'
+import { resolveDynastyLabel } from '../date-utils.js'
 import type { ChamPart, ChamDocument } from '../types.js'
 import {
   buildAnnotations, buildAnnotationsText,
@@ -70,7 +71,8 @@ export function buildPieceFromCham(
   const authorId = contributors[0]?.id || ''
   const authorName = contributors[0]?.name || ''
   const date = pmeta.date || bookConfig.date
-  const dynastyName = authors[authorId]?.dynasty || date?.dynasty || ''
+  const dynastyName = resolveDynastyLabel(authors[authorId]?.dynasty || date?.dynasty || '')
+  const eraName = authors[authorId]?.era || date?.era || dynastyName
 
   // Build layers with remapped verse indices
   const layers = parseCommentaryLayers(layerFiles, doc)
@@ -89,7 +91,7 @@ export function buildPieceFromCham(
     authorId,
     ...(contributors.length > 1 ? { contributors } : {}),
     dynasty: dynastyName,
-    era: dynastyName,
+    era: eraName,
     eraCode: authors[authorId]?.eraCode,
     genre: pmeta.genre || bookConfig.genre || 'poetry',
     verses,

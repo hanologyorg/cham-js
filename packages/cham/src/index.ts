@@ -81,6 +81,9 @@ export {
   pickString, pickNumber, pickBoolean, pickStringArray, pickRecord,
 } from './yaml-typer.js'
 
+// YAML Parser
+export { parseYaml, loadYaml } from './yaml.js'
+
 // Book Config Loader
 export {
   loadBookConfig, loadBookConfigHierarchy, parseBookConfig,

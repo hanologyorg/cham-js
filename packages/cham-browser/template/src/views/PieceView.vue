@@ -7,6 +7,7 @@ import { useReadingMode, FONT_SIZES } from '../composables/useReadingMode'
 import { useHorizontalScroll } from '../composables/useHorizontalScroll'
 import { useAnnotationInteraction } from '../composables/useAnnotationInteraction'
 import { useAnnotationLayers } from '../composables/useAnnotationLayers'
+import { isSpecialSection } from '../composables/sectionDefs'
 import { useAuthorPane } from '../composables/useAuthorPane'
 import { useI18n } from '../composables/useI18n'
 import VerticalScroll from '../components/VerticalScroll.vue'
@@ -270,13 +271,7 @@ const totalPartAnnotationCount = computed(() => {
   return piece.value?.parts?.reduce((sum, p) => sum + p.annotations.length, 0) ?? 0
 })
 
-const SECTION_META: Record<string, { special: boolean }> = {
-  background: { special: false },
-  analysis: { special: false },
-  preparation: { special: true },
-  follow_up: { special: true },
-  think_questions: { special: true },
-}
+// Section registry provides isSpecialSection() — see composables/sectionDefs.ts.
 
 const sectionNavItems = computed(() => {
   const items: { key: string; short: string; label: string }[] = []
@@ -357,7 +352,7 @@ const tocItems = computed(() => {
   }
   let secIdx = 1
   for (const sec of proseSections.value) {
-    const isSpecial = SECTION_META[sec.key]?.special ?? false
+    const isSpecial = isSpecialSection(sec.key)
     items.push({ key: sec.key, label: sec.title, context: t('section.short.' + sec.key as any), level: isSpecial ? 2 : 1 })
     secIdx++
   }
@@ -373,8 +368,8 @@ const proseSections = computed(() => {
   const result: { key: string; title: string; body: string; order: number; special: boolean }[] = []
   for (const [key, i18nKey] of Object.entries({ background: 'section.background', analysis: 'section.analysis', preparation: 'section.preparation', follow_up: 'section.follow_up', think_questions: 'section.think_questions' })) {
     if (sections[key]) {
-      const meta = SECTION_META[key]
-      result.push({ key, title: t(i18nKey), body: sections[key], order: meta ? (key === 'background' ? 1 : key === 'analysis' ? 2 : 3) : 99, special: meta?.special ?? false })
+      const isSpecial = isSpecialSection(key)
+      result.push({ key, title: t(i18nKey), body: sections[key], order: isSpecial ? (key === 'background' ? 1 : key === 'analysis' ? 2 : 3) : 99, special: isSpecial })
     }
   }
   return result
@@ -554,12 +549,12 @@ const authorDisplay = computed(() => {
           :data-section-key="sec.key"
           :num="String(idx + 1).padStart(2, '0')"
           :label="sec.title"
-          :special="SECTION_META[sec.key]?.special ?? false"
+          :special="isSpecialSection(sec.key)"
           :text="sec.body"
           :is-annotations="false"
           :vertical="true"
           class="v-section"
-          :class="SECTION_META[sec.key]?.special ? 'v-indent-2' : 'v-indent-1'"
+          :class="isSpecialSection(sec.key) ? 'v-indent-2' : 'v-indent-1'"
         />
 
         <nav class="v-nav" aria-label="piece navigation">
@@ -755,7 +750,7 @@ const authorDisplay = computed(() => {
               :data-section-key="sec.key"
               :num="String(idx + 1).padStart(2, '0')"
               :label="sec.title"
-              :special="SECTION_META[sec.key]?.special ?? false"
+              :special="isSpecialSection(sec.key)"
               :text="sec.body"
               :is-annotations="false"
               :style="{ animationDelay: idx * 0.08 + 's' }"
