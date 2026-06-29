@@ -10,15 +10,19 @@ TypeScript implementation of [CHAM (Classical Han with Annotations Markup)](http
 
 | Package | Description |
 |---------|-------------|
-| [`@hanology/cham`](./packages/cham/) | Node.js toolchain: parser, serializer, validator (rule-based), CHAM-JSON pipeline, ePub converter |
+| [`@hanology/cham`](./packages/cham/) | Node.js toolchain: parser, serializer, rule-based validator, BookBuilder/LibraryBuilder pipeline, YAML type helpers, ePub converter |
 | [`@hanology/cham-browser`](./packages/cham-browser/) | Site generator: pure pipeline functions, Vue 3 template, CLI (`cham-browser --config config.yaml`) |
 
 ## Architecture Highlights
 
 - **Dual annotation referencing**: inline `{N}...{/N}` markers AND external `@[quote]` text-quote references
 - **Single source of truth** for annotation kinds, target types, and validation rules
-- **Rule-based validator** (OCP): new validation rules added without modifying existing code
+- **Rule-based validator** (OCP): 25 rules; new rules added without modifying existing code
+- **Custom AnnotationKindRegistry injection** for project-specific kinds
+- **BookBuilder / LibraryBuilder** OOP orchestrators — pure pipeline entry points
 - **Per-annotation contributor** attribution for multi-scholar commentaries
+- **YAML boundary type safety**: `asRecord`, `pickString`, `pickNumber` at every system boundary
+- **Hierarchical book.yaml loading**: ancestor configs merged automatically
 - **Open/closed** throughout: extend by adding files, not editing existing ones
 
 See [`library/TODO.annotation-refactor/ARCHITECTURE-SPEC.md`](./library/TODO.annotation-refactor/ARCHITECTURE-SPEC.md) for the full architecture specification.
@@ -44,22 +48,14 @@ const doc = parse(chamSource)
 const roundTripped = serialize(doc)
 ```
 
-### Dual Reference Syntax
+### BookBuilder & LibraryBuilder
 
-CHAM supports two ways to reference annotation targets:
+```typescript
+import { BookBuilder, LibraryBuilder } from '@hanology/cham'
 
-```markdown
-# Primary text (text.cham.md)
-{1}明月{/1}光    ← inline markers (original)
-
-# Commentary (any .cham.md file)
-{1} meaning [moonlight]           ← marker reference (original)
-@[明月] meaning [moonlight]        ← external text-quote reference (new)
-@3[明月] meaning [moonlight]       ← with verse hint for disambiguation
-@v:0 meaning [entire verse note]  ← entire-verse reference
+const bookData = new BookBuilder(config, authors).buildFromSources(pieces)
+const libraryData = new LibraryBuilder(authors).buildFromBooks(books)
 ```
-
-Both reference styles work for **all** annotation kinds and compose freely.
 
 ### Rule-based Validator
 
@@ -86,7 +82,7 @@ npx @hanology/cham-browser --config config.yaml
 ```bash
 npm install         # install all workspace deps
 npm run build       # build all packages
-npm test            # run tests (398 tests across 22 files)
+npm test            # run tests (472 tests across 25 files)
 ```
 
 Requires Node.js 20+.
