@@ -5,7 +5,7 @@
 import type { ValidationRule, ValidationContext } from '../validation-rule.js'
 import type { ValidationIssue } from '../../types.js'
 import { BaseRule } from '../rule-helpers.js'
-import { AnnotationKindRegistry } from '../../model/annotation-kind.js'
+import { AnnotationKindRegistry } from '../../model.js'
 
 export class KnownKindRule extends BaseRule implements ValidationRule {
   readonly id = 'known-kind'

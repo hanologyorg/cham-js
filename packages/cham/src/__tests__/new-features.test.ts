@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { parse, splitFrontmatter, parseAnnotationEntry } from '../parser.js'
 import { serialize } from '../serializer.js'
 import { parseYaml } from '../yaml.js'
-import { parseHcnDate, formatHcnDate, resolveEraToDate } from '../date-utils.js'
+import { parseEraDate, formatEraDate, formatEraDateName, formatEraDateGbt, resolveEraToDate } from '../date-utils.js'
 
 // ─── Hierarchy ────────────────────────────────────────────────
 
@@ -130,7 +130,7 @@ describe('skqs-variant annotation parsing', () => {
 
 describe('h-CN date parsing', () => {
   it('parses type 2 date code (era name year)', () => {
-    const result = parseHcnDate('h-CN.2.漢.建元.6')
+    const result = parseEraDate('h-CN.2.漢.建元.6')
     expect(result).not.toBeNull()
     expect(result!.type).toBe(2)
     expect(result!.dynasty).toBe('漢')
@@ -139,14 +139,14 @@ describe('h-CN date parsing', () => {
   })
 
   it('parses type 4 date code (sexagenary)', () => {
-    const result = parseHcnDate('h-CN.4.甲子')
+    const result = parseEraDate('h-CN.4.甲子')
     expect(result).not.toBeNull()
     expect(result!.type).toBe(4)
     expect(result!.cycle).toBe('甲子')
   })
 
   it('parses type 1 date code (regnal year)', () => {
-    const result = parseHcnDate('h-CN.1.周.武王.1')
+    const result = parseEraDate('h-CN.1.周.武王.1')
     expect(result).not.toBeNull()
     expect(result!.type).toBe(1)
     expect(result!.dynasty).toBe('周')
@@ -155,21 +155,108 @@ describe('h-CN date parsing', () => {
   })
 
   it('parses type 3 date code (ROC year)', () => {
-    const result = parseHcnDate('h-CN.3.15')
+    const result = parseEraDate('h-CN.3.15')
     expect(result).not.toBeNull()
     expect(result!.type).toBe(3)
     expect(result!.year).toBe(15)
   })
 
   it('returns null for invalid prefix', () => {
-    expect(parseHcnDate('invalid')).toBeNull()
-    expect(parseHcnDate('')).toBeNull()
+    expect(parseEraDate('invalid')).toBeNull()
+    expect(parseEraDate('')).toBeNull()
   })
 
   it('round-trips h-CN date codes', () => {
     const code = 'h-CN.2.漢.建元.6'
-    const parsed = parseHcnDate(code)
-    expect(formatHcnDate(parsed!)).toBe(code)
+    const parsed = parseEraDate(code)
+    expect(formatEraDate(parsed!)).toBe(code)
+  })
+})
+
+// ─── GB/T numeric format support ─────────────────────────────
+// parseEraDate auto-detects GB/T numeric codes (e.g. h-CN.1.04.011.001)
+// and resolves Trad Chinese names via @hanology/era's bundled registry.
+// formatEraDate round-trips the format: GB/T input → GB/T output.
+
+describe('h-CN GB/T numeric codes', () => {
+  describe('Type 1 — 王公即位年次紀年', () => {
+    it('parses h-CN.1.04.011.001 (西周武王元年)', () => {
+      const result = parseEraDate('h-CN.1.04.011.001')!
+      expect(result).not.toBeNull()
+      expect(result.type).toBe(1)
+      expect(result.dynasty).toBe('西周')          // Trad Chinese resolved
+      expect(result.ruler).toBe('武王')            // Trad Chinese resolved
+      expect(result.year).toBe(1)
+      expect(result.gbt).toBeDefined()
+      expect(result.gbt!.type).toBe(1)
+    })
+
+    it('round-trips GB/T Type 1 codes', () => {
+      const code = 'h-CN.1.04.011.001'
+      expect(formatEraDate(parseEraDate(code)!)).toBe(code)
+    })
+  })
+
+  describe('Type 2 — 年號紀年', () => {
+    it('parses h-CN.2.24.071.021.01 (唐玄宗開元元年)', () => {
+      const result = parseEraDate('h-CN.2.24.071.021.01')!
+      expect(result).not.toBeNull()
+      expect(result.type).toBe(2)
+      expect(result.dynasty).toBe('唐')
+      expect(result.ruler).toBe('玄宗')
+      expect(result.era).toBe('開元')
+      expect(result.year).toBe(1)
+      expect(result.gbt).toBeDefined()
+      expect(result.gbt!.type).toBe(2)
+    })
+
+    it('round-trips GB/T Type 2 codes', () => {
+      const code = 'h-CN.2.24.071.021.01'
+      expect(formatEraDate(parseEraDate(code)!)).toBe(code)
+    })
+  })
+
+  describe('Type 4 — 天干地支紀年', () => {
+    it('parses h-CN.4.01.50 and resolves to Trad Chinese ganzhi', () => {
+      const result = parseEraDate('h-CN.4.01.50')!
+      expect(result).not.toBeNull()
+      expect(result.type).toBe(4)
+      expect(result.cycle).toBe('甲子')            // Trad Chinese resolved
+      expect(result.gbt).toBeDefined()
+      expect(result.gbt!.type).toBe(4)
+    })
+
+    it('round-trips GB/T Type 4 codes', () => {
+      const code = 'h-CN.4.01.50'
+      expect(formatEraDate(parseEraDate(code)!)).toBe(code)
+    })
+  })
+
+  describe('format selection', () => {
+    it('formatEraDateName always emits name-based form', () => {
+      const result = parseEraDate('h-CN.2.24.071.021.01')!
+      // Name-based form uses resolved Trad Chinese names.
+      // Note: ruler name is omitted from name-based Type 2 (only dynasty/era/year).
+      expect(formatEraDateName(result)).toBe('h-CN.2.唐.開元.1')
+    })
+
+    it('formatEraDateGbt emits GB/T numeric form', () => {
+      const result = parseEraDate('h-CN.2.24.071.021.01')!
+      expect(formatEraDateGbt(result)).toBe('h-CN.2.24.071.021.01')
+    })
+
+    it('formatEraDateGbt falls back to name form when gbt absent', () => {
+      const nameParsed = parseEraDate('h-CN.2.漢.建元.6')!
+      expect(nameParsed.gbt).toBeUndefined()
+      expect(formatEraDateGbt(nameParsed)).toBe('h-CN.2.漢.建元.6')
+    })
+  })
+
+  it('does not confuse name-based input with numeric', () => {
+    // Dynasty "周" is non-numeric; should parse as name-based.
+    const result = parseEraDate('h-CN.1.周.武王.1')!
+    expect(result.gbt).toBeUndefined()
+    expect(result.dynasty).toBe('周')
   })
 })
 

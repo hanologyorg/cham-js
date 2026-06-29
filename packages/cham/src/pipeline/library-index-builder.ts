@@ -48,7 +48,7 @@ export function buildLibraryIndex(
   allPieces: readonly OutputPiece[],
 ): LibraryIndex {
   return {
-    scale: detectScale(bookMetas.length),
+    scale: detectScale(bookMetas.length, allPieces.length),
     books: [...bookMetas],
     crossRefs: buildCrossRefs(allPieces),
   }

@@ -7,7 +7,7 @@ import type {
   OutputAnnotation, PrimaryMeta,
 } from '../types.js'
 import { entryToRange } from './range-builder.js'
-import { AnnotationKindRegistry } from '../model/annotation-kind.js'
+import { AnnotationKindRegistry } from '../model.js'
 
 const KIND_REGISTRY = AnnotationKindRegistry.DEFAULT
 

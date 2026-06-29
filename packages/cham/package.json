@@ -40,6 +40,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hanology/era": "file:../../../era-js",
     "fflate": "^0.8.0"
   },
   "devDependencies": {

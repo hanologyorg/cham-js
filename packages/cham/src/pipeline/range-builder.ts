@@ -5,7 +5,7 @@
 import type {
   AnnotationEntry, ChamDocument, OutputRange,
 } from '../types.js'
-import { TargetResolver } from '../resolver/target-resolver.js'
+import { TargetResolver } from '../resolver.js'
 
 // Per-document resolver cache. WeakMap so GC'd when the doc is.
 const resolverCache = new WeakMap<ChamDocument, TargetResolver>()

@@ -34,6 +34,9 @@ export { buildPieceFromCham } from './pipeline/piece-builder.js'
 // book-builder.ts
 export { BookBuilder, buildBookMeta, buildBookData } from './pipeline/book-builder.js'
 
+// library-builder.ts
+export { LibraryBuilder } from './pipeline/library-builder.js'
+
 // library-index-builder.ts
 export {
   detectScale, buildCrossRefs, buildLibraryIndex,

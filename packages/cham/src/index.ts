@@ -19,25 +19,25 @@ export type {
   PlaceRecord, EventRecord, LexiconEntry, ChamRegistries,
   HierarchyLevelName, HierarchyLevel,
   ClassicalNature, GeneralNature, AnnotationNature,
-  SpeakerRole, TextBlockRole, HcnDate, WorkRecord,
+  SpeakerRole, TextBlockRole, EraDate, WorkRecord,
   TextSection,
 } from './types.js'
 
 export { isSecondaryMeta, isPartMeta, VALID_NATURES } from './types.js'
 
-// Domain Models
-export { AnnotationKindRegistry } from './model/annotation-kind.js'
-export type { AnnotationKindSpec } from './model/annotation-kind.js'
+// Domain Models (via model.ts namespace shim)
+export { AnnotationKindRegistry } from './model.js'
+export type { AnnotationKindSpec } from './model.js'
 export {
   targetCategory, requiresResolution, targetSortKey, describeTarget,
-} from './model/target.js'
-export type { TargetCategory } from './model/target.js'
+} from './model.js'
+export type { TargetCategory } from './model.js'
 
-// Target Resolution
-export { TextIndex, TextQuoteNotFoundError, TextQuoteAmbiguousError } from './resolver/text-index.js'
-export type { TextIndexEntry } from './resolver/text-index.js'
-export { TargetResolver, TargetResolutionError } from './resolver/target-resolver.js'
-export type { ResolvedTarget, TargetResolutionReason } from './resolver/target-resolver.js'
+// Target Resolution (via resolver.ts namespace shim)
+export { TextIndex, TextQuoteNotFoundError, TextQuoteAmbiguousError } from './resolver.js'
+export type { TextIndexEntry } from './resolver.js'
+export { TargetResolver, TargetResolutionError } from './resolver.js'
+export type { ResolvedTarget, TargetResolutionReason } from './resolver.js'
 
 // Target Parser & Serializer (via the parser.ts/serializer.ts namespace shims)
 export { parseTarget } from './parser.js'
@@ -73,7 +73,7 @@ export { RegistryLoader } from './registry.js'
 export type { RegistryLoadOptions } from './registry.js'
 
 // Date Utilities
-export { parseHcnDate, formatHcnDate, resolveEraToDate, normalizeDynasty } from './date-utils.js'
+export { parseEraDate, formatEraDate, resolveEraToDate, normalizeDynasty } from './date-utils.js'
 
 // YAML Boundary Type Helpers
 export {

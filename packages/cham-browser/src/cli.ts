@@ -4,11 +4,10 @@ import { join, resolve, dirname, basename, sep } from 'path'
 import { fileURLToPath } from 'url'
 import { parse as parseYaml } from 'yaml'
 import {
-  buildPieceFromCham, buildBookData, buildLibraryIndex,
-  buildAuthorsJson, buildDynastiesJson,
+  LibraryBuilder, buildAuthorsJson, buildDynastiesJson,
 } from './pipeline.js'
-import type { AuthorRecord } from './pipeline.js'
-import type { BookConfig, BookMeta, OutputPiece, BookData } from '@hanology/cham/types'
+import type { AuthorRecord, BookSources, PieceSources } from './pipeline.js'
+import type { BookConfig, BookMeta, OutputPiece } from '@hanology/cham/types'
 
 // ─── Config ───────────────────────────────────────────────────
 
@@ -165,18 +164,13 @@ function loadAboutHtml(config: SiteConfig, configDir: string): string {
   return ''
 }
 
-function readPieceFiles(pieceDir: string): {
-  chamSource: string | null
-  proseFiles: Map<string, string>
-  layerFiles: Map<string, string>
-  partFiles: Map<string, string>
-} {
+function readPieceFiles(pieceDir: string): PieceSources | null {
   let chamSource: string | null = null
   const proseFiles = new Map<string, string>()
   const layerFiles = new Map<string, string>()
   const partFiles = new Map<string, string>()
 
-  if (!existsSync(pieceDir)) return { chamSource, proseFiles, layerFiles, partFiles }
+  if (!existsSync(pieceDir)) return null
 
   for (const f of readdirSync(pieceDir).sort()) {
     const filePath = join(pieceDir, f)
@@ -191,18 +185,35 @@ function readPieceFiles(pieceDir: string): {
     }
   }
 
+  if (!chamSource) return null
   return { chamSource, proseFiles, layerFiles, partFiles }
 }
 
-function scanBooks(libraryDir: string): { config: BookConfig; dir: string }[] {
-  const books: { config: BookConfig; dir: string }[] = []
-  if (!existsSync(libraryDir)) return books
+/** Walks a book directory and produces PieceSources[] for LibraryBuilder. */
+function scanPieceSources(bookDir: string): PieceSources[] {
+  const out: PieceSources[] = []
+  if (!existsSync(bookDir)) return out
+  for (const entry of readdirSync(bookDir).sort()) {
+    const pieceDir = join(bookDir, entry)
+    if (!statSync(pieceDir, { throwIfNoEntry: false })?.isDirectory()) continue
+    const sources = readPieceFiles(pieceDir)
+    if (sources) out.push(sources)
+  }
+  return out
+}
 
+/** Walks a library directory and produces BookSources[] for LibraryBuilder. */
+function scanLibraryBookSources(libraryDir: string): BookSources[] {
+  const books: BookSources[] = []
+  if (!existsSync(libraryDir)) return books
   for (const entry of readdirSync(libraryDir).sort()) {
     const dir = join(libraryDir, entry)
     if (!statSync(dir, { throwIfNoEntry: false })?.isDirectory()) continue
     if (!existsSync(join(dir, 'book.yaml'))) continue
-    books.push({ config: loadBookConfig(dir), dir })
+    books.push({
+      config: loadBookConfig(dir),
+      pieces: scanPieceSources(dir),
+    })
   }
   return books
 }
@@ -215,35 +226,12 @@ function generateData(config: SiteConfig, configDir: string): {
 } {
   const libraryDir = resolve(configDir, config.libraryDir)
   const authors = loadAuthors(configDir)
-  const books = scanBooks(libraryDir)
+  const bookSources = scanLibraryBookSources(libraryDir)
+  const data = new LibraryBuilder(authors).buildFromBooks(bookSources)
 
-  const allPieces: OutputPiece[] = []
-  const bookMetas: BookMeta[] = []
-  const bookDataList: BookData[] = []
+  const bookMetas = data.books.map(b => b.meta)
+  const allPieces = [...data.allPieces]
 
-  for (const { config: bookConfig, dir } of books) {
-    const pieces: OutputPiece[] = []
-
-    for (const entry of readdirSync(dir).sort()) {
-      const pieceDir = join(dir, entry)
-      if (!statSync(pieceDir, { throwIfNoEntry: false })?.isDirectory()) continue
-      const { chamSource, proseFiles, layerFiles, partFiles } = readPieceFiles(pieceDir)
-      if (!chamSource) continue
-
-      const piece = buildPieceFromCham(
-        chamSource, bookConfig, authors, bookConfig.id,
-        proseFiles, layerFiles, partFiles,
-      )
-      if (piece) pieces.push(piece)
-    }
-
-    const bookData = buildBookData(bookConfig, pieces)
-    bookMetas.push(bookData.meta)
-    bookDataList.push(bookData)
-    allPieces.push(...pieces)
-  }
-
-  const library = buildLibraryIndex(bookMetas, allPieces)
   const outputDir = resolve(configDir, config.outputDir || 'dist')
   const dataDir = join(outputDir, 'data')
 
@@ -257,12 +245,12 @@ function generateData(config: SiteConfig, configDir: string): {
   // library.json
   writeFileSync(
     join(dataDir, 'library.json'),
-    JSON.stringify(library, null, indent),
+    JSON.stringify(data.library, null, indent),
     'utf-8',
   )
 
   // Per-book data (full + meta)
-  for (const bd of bookDataList) {
+  for (const bd of data.books) {
     writeFileSync(
       join(dataDir, 'books', `${bd.meta.id}.json`),
       JSON.stringify(bd, null, indent),
